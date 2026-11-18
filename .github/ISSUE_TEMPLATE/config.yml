@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Dúvidas, conversas e o que você criou
+    url: https://github.com/concretoehlegal/cogito/discussions
+    about: Para perguntas e bate-papo, use as Discussões.
+  - name: 📖 Manual do COGITO
+    url: https://github.com/concretoehlegal/cogito/blob/main/docs/MANUAL.md
+    about: Como usar o Escritor, o Planejador de Campanhas e o Bestiário.
+  - name: ⬇️ Baixar a última versão
+    url: https://github.com/concretoehlegal/cogito/releases/latest
+    about: Instalador e versão portátil para Windows.

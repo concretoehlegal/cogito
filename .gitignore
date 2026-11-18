@@ -1,0 +1,17 @@
+# dependências e saídas de build
+node_modules/
+dist/
+release/
+public/pdfjs/
+
+# logs e sistema
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# editores
+.vscode/*
+!.vscode/extensions.json
+.idea/

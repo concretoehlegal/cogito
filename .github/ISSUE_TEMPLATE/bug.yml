@@ -1,0 +1,72 @@
+name: 🐞 Reportar um bug
+description: Algo deu errado, travou ou não fez o que deveria.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por ajudar a melhorar o COGITO! Quanto mais detalhes, mais rápido dá para corrigir.
+        Antes de enviar, veja se o problema já não foi relatado na lista de [issues](../issues).
+  - type: dropdown
+    id: area
+    attributes:
+      label: Onde aconteceu?
+      options:
+        - Escritor
+        - Planejador de Campanhas
+        - Bestiário
+        - Instalação ou abertura do app
+        - Outro lugar
+    validations:
+      required: true
+  - type: input
+    id: versao
+    attributes:
+      label: Versão do COGITO
+      description: Aparece em ⚙ Configurações (ou no nome do arquivo que você baixou).
+      placeholder: "Ex.: 0.14.0"
+    validations:
+      required: true
+  - type: textarea
+    id: oque
+    attributes:
+      label: O que aconteceu?
+      description: Descreva o problema com suas palavras.
+    validations:
+      required: true
+  - type: textarea
+    id: passos
+    attributes:
+      label: Como repetir o problema
+      description: Os passos, um por linha, a partir da tela inicial.
+      placeholder: |
+        1. Abri o Planejador de Campanhas
+        2. Cliquei em…
+        3. Apareceu…
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: O que você esperava que acontecesse?
+  - type: textarea
+    id: imagens
+    attributes:
+      label: Capturas de tela ou vídeo
+      description: Arraste as imagens para cá. Não envie arquivos com informações pessoais.
+  - type: dropdown
+    id: windows
+    attributes:
+      label: Windows
+      options:
+        - Windows 11
+        - Windows 10
+        - Outro
+  - type: checkboxes
+    id: confere
+    attributes:
+      label: Confirmação
+      options:
+        - label: Procurei e não encontrei esse problema já relatado.
+          required: true

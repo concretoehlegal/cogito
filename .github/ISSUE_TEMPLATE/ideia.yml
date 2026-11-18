@@ -1,0 +1,37 @@
+name: 💡 Sugerir uma ideia
+description: Um recurso novo, uma melhoria ou algo que deixaria o COGITO melhor.
+title: "[Ideia] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideias são muito bem-vindas! Para conversar mais livremente antes de pedir algo, use as [Discussões](../discussions).
+  - type: dropdown
+    id: area
+    attributes:
+      label: Para qual área?
+      options:
+        - Escritor
+        - Planejador de Campanhas
+        - Bestiário
+        - O aplicativo todo
+    validations:
+      required: true
+  - type: textarea
+    id: ideia
+    attributes:
+      label: Qual é a ideia?
+      description: Conte o que você gostaria de poder fazer.
+    validations:
+      required: true
+  - type: textarea
+    id: porque
+    attributes:
+      label: Por que isso ajudaria?
+      description: Em que situação de jogo ou de escrita você sentiu falta disso?
+  - type: textarea
+    id: referencias
+    attributes:
+      label: Exemplos e referências
+      description: Imagens, desenhos ou outros jogos e programas que fazem algo parecido.

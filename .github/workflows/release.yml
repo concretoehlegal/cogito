@@ -1,0 +1,48 @@
+name: Publicar versão
+
+# Ao enviar uma tag como v0.15.0, compila o COGITO no Windows e publica a Release
+# com o instalador (.exe) e a versão portátil (.zip). As notas vêm do CHANGELOG.md.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag já existente para publicar (ex.: v0.14.0)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    name: Instalador e .zip para Windows
+    runs-on: windows-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Conferir a versão
+        shell: bash
+        run: |
+          v="$(node -p "require('./package.json').version")"
+          if [ "v$v" != "$TAG" ]; then echo "A tag $TAG não bate com a versão $v do package.json"; exit 1; fi
+      - run: npm run dist
+      - name: Notas da versão
+        shell: bash
+        run: node scripts/release-notes.cjs "$TAG" > notas.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          name: COGITO ${{ env.TAG }}
+          body_path: notas.md
+          files: |
+            release/COGITO-Instalador-*.exe
+            release/COGITO-*-windows-x64.zip
