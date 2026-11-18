@@ -40,6 +40,6 @@ npm run build   # verificação de tipos e build
 
 ## Como as versões são publicadas
 
-1. A versão em `package.json` e a seção nova do `CHANGELOG.md` são atualizadas.
-2. Uma tag `vX.Y.Z` é criada e enviada.
-3. O GitHub Actions compila o instalador e o `.zip` no Windows e publica a Release com as notas do CHANGELOG.
+1. A versão em `package.json` e a seção nova do `CHANGELOG.md` são atualizadas e enviadas ao `main`.
+2. O GitHub Actions percebe a versão nova, compila o instalador e o `.zip` no Windows, cria a tag `vX.Y.Z` e publica
+   a Release com as notas do CHANGELOG. (Enviar uma tag `vX.Y.Z` também funciona.)

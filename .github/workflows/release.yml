@@ -1,48 +1,66 @@
 name: Publicar versão
 
-# Ao enviar uma tag como v0.15.0, compila o COGITO no Windows e publica a Release
-# com o instalador (.exe) e a versão portátil (.zip). As notas vêm do CHANGELOG.md.
+# Publica uma Release com o instalador (.exe) e a versão portátil (.zip) do COGITO, compilados no Windows.
+# Dispara sozinho quando a versão do package.json muda no main (cria a tag vX.Y.Z se ainda não existir),
+# quando uma tag vX.Y.Z é enviada, ou à mão em Actions › Publicar versão › Run workflow.
+# As notas da Release vêm da seção da versão no CHANGELOG.md.
 on:
   push:
+    branches: [main]
+    paths: [package.json, .github/workflows/release.yml]
     tags: ["v*"]
   workflow_dispatch:
-    inputs:
-      tag:
-        description: "Tag já existente para publicar (ex.: v0.14.0)"
-        required: true
 
 permissions:
   contents: write
+
+concurrency:
+  group: publicar-versao
+  cancel-in-progress: false
 
 jobs:
   windows:
     name: Instalador e .zip para Windows
     runs-on: windows-latest
-    env:
-      TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ env.TAG }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
-      - name: Conferir a versão
+      - name: Ver se esta versão já foi publicada
+        id: versao
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           v="$(node -p "require('./package.json').version")"
-          if [ "v$v" != "$TAG" ]; then echo "A tag $TAG não bate com a versão $v do package.json"; exit 1; fi
-      - run: npm run dist
-      - name: Notas da versão
+          echo "tag=v$v" >> "$GITHUB_OUTPUT"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ "${GITHUB_REF_NAME}" != "v$v" ]; then
+            echo "A tag ${GITHUB_REF_NAME} não bate com a versão $v do package.json"; exit 1
+          fi
+          if gh release view "v$v" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "A versão v$v já tem Release publicada; nada a fazer."
+            echo "publicar=nao" >> "$GITHUB_OUTPUT"
+          else
+            echo "publicar=sim" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.versao.outputs.publicar == 'sim'
+        run: npm ci
+      - if: steps.versao.outputs.publicar == 'sim'
+        run: npm run dist
+      - if: steps.versao.outputs.publicar == 'sim'
+        name: Notas da versão
         shell: bash
-        run: node scripts/release-notes.cjs "$TAG" > notas.md
-      - uses: softprops/action-gh-release@v2
+        run: node scripts/release-notes.cjs "${{ steps.versao.outputs.tag }}" > notas.md
+      - if: steps.versao.outputs.publicar == 'sim'
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ env.TAG }}
-          name: COGITO ${{ env.TAG }}
+          tag_name: ${{ steps.versao.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: COGITO ${{ steps.versao.outputs.tag }}
           body_path: notas.md
+          make_latest: true
           files: |
             release/COGITO-Instalador-*.exe
             release/COGITO-*-windows-x64.zip

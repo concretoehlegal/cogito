@@ -145,7 +145,7 @@ npm run dist       # instalador e .zip para Windows
 ```
 
 Feito com Electron, React, TypeScript e Vite; editor TipTap/ProseMirror, leitor pdf.js e exportação DOCX via `docx`.
-Cada nova versão é compilada e publicada automaticamente pelo GitHub Actions ao criar uma tag `vX.Y.Z`.
+Cada nova versão é compilada e publicada automaticamente pelo GitHub Actions quando a versão do `package.json` muda no `main`.
 
 ## 📄 Licença
 
