@@ -233,6 +233,12 @@ function blocks(nodes: DocNode[], ctx: Ctx, o: Opt): Block[] {
         const pct = Math.min(100, Math.max(5, parseFloat(n.attrs?.width) || 100)) / 100;
         const w = Math.max(16, Math.round(o.widthPx * pct));
         const wrap = n.attrs?.wrap;
+        if (wrap === 'free') {
+          // Posição livre: imagem flutuante na mesma posição da página, por cima do texto.
+          const fw = String(n.attrs?.width).endsWith('px') ? Math.max(16, Math.round(parseFloat(String(n.attrs?.width)))) : w;
+          out.push(para(ctx, o, { children: [freeRun(img.type, img.data, fw, Math.max(1, Math.round((fw * img.h) / img.w)), n.attrs?.x, n.attrs?.y, n.attrs?.alt || 'Imagem')] }));
+          break;
+        }
         if (wrap === 'left' || wrap === 'right') {
           // No Word, o texto contorna a caixa da imagem (o contorno pelo desenho do PNG existe só no PDF).
           out.push(para(ctx, o, {
@@ -264,6 +270,7 @@ function blocks(nodes: DocNode[], ctx: Ctx, o: Opt): Block[] {
         const a = n.attrs as ShapeAttrs;
         const png = ctx.shapes.get(shapeKey(a));
         if (!png) break;
+        if (a.wrap === 'free') { out.push(para(ctx, o, { children: [freeRun('png', png, a.width, a.height, a.x, a.y, a.label || 'Forma')] })); break; }
         const scale = Math.min(1, o.widthPx / a.width);
         const run = new ImageRun({ type: 'png', data: png, transformation: { width: Math.round(a.width * scale), height: Math.round(a.height * scale) }, altText: { name: a.label || 'Forma', description: a.label || '', title: a.label || '' } });
         out.push(para(ctx, o, { alignment: a.wrap === 'left' ? AlignmentType.LEFT : a.wrap === 'right' ? AlignmentType.RIGHT : ALIGN[a.align] ?? AlignmentType.CENTER, spacing: { line: 240, lineRule: LineRuleType.AUTO, after: 120 }, children: [run] }));
@@ -288,6 +295,19 @@ function pageSetup(format: PageFormat) {
   const f = FORMATS[format];
   const m = twips(PAGE_MARGIN_MM);
   return { size: { width: twips(f.w), height: twips(f.h) }, margin: { top: m, bottom: m, left: m, right: m } };
+}
+
+/** Imagem flutuante presa a um ponto da página (x/y em px a partir do canto da área de texto; 1 px = 9525 EMU). */
+function freeRun(type: any, data: Uint8Array, w: number, h: number, x: unknown, y: unknown, name: string) {
+  return new ImageRun({
+    type, data, transformation: { width: w, height: h },
+    floating: {
+      horizontalPosition: { relative: HorizontalPositionRelativeFrom.PAGE, offset: Math.round(((Number(x) || 0) + PAGE_MARGIN_MM * MM_TO_PX) * 9525) },
+      verticalPosition: { relative: VerticalPositionRelativeFrom.PAGE, offset: Math.round(((Number(y) || 0) + PAGE_MARGIN_MM * MM_TO_PX) * 9525) },
+      allowOverlap: true, wrap: { type: TextWrappingType.NONE },
+    },
+    altText: { name, description: name, title: name },
+  });
 }
 
 export async function buildDocx(book: Book): Promise<Uint8Array> {
@@ -355,7 +375,7 @@ export async function buildDocx(book: Book): Promise<Uint8Array> {
       ...(g.columns === 2 ? { column: { count: 2, space: twips(COLUMN_GAP_MM) } } : {}),
     },
     footers: book.showPageNumbers
-      ? { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ children: [PageNumber.CURRENT], size: 18, color: '4A4A4A', font: 'Rajdhani' })] })] }) }
+      ? { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ children: book.pageNumberStyle === 'numero' ? [PageNumber.CURRENT] : book.pageNumberStyle === 'extenso' ? ['Página ', PageNumber.CURRENT, ' de ', PageNumber.TOTAL_PAGES] : [PageNumber.CURRENT, ' / ', PageNumber.TOTAL_PAGES], size: 18, color: '4A4A4A', font: 'Rajdhani' })] })] }) }
       : undefined,
     children: g.children.length ? g.children : [new Paragraph({})],
   }));

@@ -4,6 +4,7 @@ import { produce } from 'immer';
 import { api, errorText } from '../api';
 import { toast, useApp } from '../store';
 import type { Plan } from '../game/types';
+import { fitCardRoom } from './model';
 
 type Snap = Pick<Plan, 'nodes' | 'links' | 'name' | 'description' | 'icon' | 'color'>;
 export type SaveState = 'saved' | 'pending' | 'saving' | 'error';
@@ -24,7 +25,7 @@ let timer = 0;
 let inflight: Promise<void> | null = null;
 
 async function writeNow() {
-  window.clearTimeout(timer); timer = 0;
+  window.clearTimeout(timer); timer = 0; due = 0;
   const { plan } = usePlan.getState();
   if (!plan) return;
   usePlan.setState({ save: 'saving' });
@@ -37,10 +38,19 @@ async function writeNow() {
     toast(`Não foi possível salvar o quadro: ${errorText(e)}`, 'error');
   }
 }
+let due = 0;
 function schedule(ms = 700) {
   usePlan.setState({ save: 'pending' });
+  const at = Date.now() + ms;
+  if (timer && due <= at) return; // já há um salvamento marcado mais cedo: não empurra para depois
   window.clearTimeout(timer);
-  timer = window.setTimeout(() => { inflight = writeNow().finally(() => { inflight = null; }); }, ms);
+  due = at;
+  // Uma gravação de cada vez: a nova espera a anterior terminar, para uma versão velha nunca chegar depois ao disco.
+  timer = window.setTimeout(() => {
+    timer = 0;
+    const p: Promise<void> = (inflight ?? Promise.resolve()).then(writeNow).finally(() => { if (inflight === p) inflight = null; });
+    inflight = p;
+  }, ms);
 }
 /** Grava o que estiver pendente (ao sair do quadro ou fechar o app). */
 export async function flushPlan() {
@@ -85,6 +95,8 @@ export const select = (ids: string[], link: string | null = null) => usePlan.set
 export async function openPlan(id: string) {
   try {
     const plan = await api.planLoad(id);
+    // Chefes antigos (cartas estreitas) passam ao formato largo, empurrando para a direita o que estava ao lado.
+    for (const n of plan.nodes) fitCardRoom(plan.nodes, n);
     usePlan.setState({ plan, sel: [], selLink: null, past: [], future: [], save: 'saved', savedAt: plan.updatedAt, coalesce: null });
     useApp.setState({ screen: 'plano' });
   } catch (e) { toast(errorText(e), 'error'); }

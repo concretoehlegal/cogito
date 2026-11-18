@@ -65,6 +65,8 @@ Para copiar seus livros para outro computador ou fazer um backup externo, basta 
 
 ## Visual e fontes
 
+**Edição de Natal**: luzinhas no alto da janela e gorro no logo. Para desligar: ⚙ Configurações → **Enfeites de Natal**.
+
 Paleta cinza (escuro: `#0A0A0A` `#171717` `#262626` `#373737` … `#FAFAFA`; claro: o inverso) com um único destaque
 **verde-limão fluorescente** `#B8FF2C` nos botões principais, itens ativos e links. A tela inicial tem uma **barra
 lateral** com as três áreas (Escritor, Planejador de Campanhas, Bestiário), Configurações e a pasta dos dados; o logo
@@ -103,6 +105,12 @@ Sons de clique e de dados são gerados pelo próprio app (sem arquivos de áudio
 - **Tabelas com fórmulas**: comece uma célula com `=` (`=A1+B2`, `=SOMA(A1:A5)`, `MÉDIA`, `MÍN`, `MÁX`, `CONT`,
   `ARRED`, `ABS`). Arraste a borda das colunas para mudar a largura. PDF e DOCX levam o resultado calculado.
 - **Contorno de PNG**: numa imagem PNG com fundo transparente, escolha "Contorno" e o texto acompanha o desenho.
+- **Ferramenta Mover** (botão "Mover" na barra ou `Ctrl+M`): arraste imagens e formas para qualquer ponto da página,
+  por cima do texto. Segure **Shift** enquanto arrasta para encaixar nas guias (bordas e centro da página, margens e os
+  outros elementos soltos). `Esc` sai da ferramenta. Um elemento solto mostra **Livre ✥** na barra; clique para
+  devolvê-lo ao texto. A posição é a mesma no PDF e no DOCX.
+- **Número da página**: no centro, embaixo. Em ⚙ escolha só o número ("3"), o contador ("3 / 12", padrão) ou por
+  extenso ("Página 3 de 12").
 - **Visualização**: uma página ou duas lado a lado (pares 1–2, 3–4…), com zoom pelos botões ou por `Ctrl` + rolagem
   do mouse. Quando o texto passa do fim da página, o app avisa e oferece mover o excedente para novas páginas.
 - **Corretor ortográfico**: português do Brasil, sem internet (o dicionário vem no app). Palavras erradas
@@ -118,7 +126,7 @@ Sons de clique e de dados são gerados pelo próprio app (sem arquivos de áudio
 - **Exportação**: PDF (idêntico ao que aparece na tela, com sumário clicável) e DOCX (títulos, tabelas, imagens e
   sumário; ao abrir no Word, aceite "atualizar campos" para preencher os números de página).
 
-Atalhos: `Ctrl+S` grava na hora · `Ctrl+F` busca (na barra lateral) · `Ctrl` + rolagem dá zoom · `Ctrl+PageUp/PageDown` troca de página · `Ctrl+B/I/U` formatação · `Ctrl+Z/Y` desfazer/refazer.
+Atalhos: `Ctrl+S` grava na hora · `Ctrl+M` liga a ferramenta Mover · `Ctrl+Home/End` vai ao começo/fim do texto · `Ctrl+F` busca (na barra lateral) · `Ctrl` + rolagem dá zoom · `Ctrl+PageUp/PageDown` troca de página · `Ctrl+B/I/U` formatação · `Ctrl+Z/Y` desfazer/refazer.
 
 ## Planejador de campanhas
 
@@ -138,8 +146,18 @@ pasta, Excluir (vai para a lixeira) e **Abrir quadro** (ou dois cliques na campa
   `-` e `1.`, `>` citação, `---` linha, e `[[links]]`), com etiquetas;
   **Imagem**; e **Moldura** para agrupar (pegue a moldura pelo rótulo; ela leva junto o que está dentro).
   Dois cliques no fundo criam uma nota rápida. Fichas novas procuram um espaço livre perto do centro.
-- **Ligações**: selecione uma ficha e arraste a bolinha da borda até outra. Clique na ligação para dar uma legenda
-  ("traiu", "mora em"), mudar a cor, inverter ou apagar.
+- **Ligações (setas e linhas estilo Miro)**: passe o mouse sobre uma ficha e arraste uma das **4 bolinhas** (em cima,
+  à direita, embaixo, à esquerda) até outra ficha. Clique na ligação para editar: legenda ("traiu", "mora em"),
+  **formato** (reta, curva ou cotovelo), **traço** (sólido, tracejado ou pontilhado), **ponta** no início e no fim
+  (nenhuma, seta, triângulo, círculo, losango ou barra), **espessura**, cor, os **lados** de saída e chegada (ou
+  automático), inverter e apagar. Os **estilos prontos** (Linha, Seta, Curva, Fluxo, Mão dupla, Pista, Segredo,
+  Rompido) aplicam tudo de uma vez; o último estilo usado vale para as próximas ligações.
+- **Ferramentas** (barra da esquerda): **Mover** (`V`), **Texto** (`T`, clique e escreva um texto solto) e **Caixa de
+  texto** (`B`, texto dentro de uma caixa). Dois cliques num texto editam; o painel da direita muda tamanho,
+  alinhamento, negrito, itálico e cor. `Esc` volta ao Mover.
+- **Guias de alinhamento**: arraste fichas segurando **Shift** para encaixar nas bordas e no centro das outras.
+  Shift + clique (sem arrastar) soma à seleção; as setas do teclado empurram a seleção (Shift: 10 de cada vez).
+- **Barras ajustáveis**: arraste a borda da barra da esquerda ou da direita para mudar a largura (duplo clique restaura).
 - **Links no texto (Obsidian)**: escreva `[[Nome]]` no texto de uma ficha. Ao digitar `[[`, aparecem sugestões
   (Enter completa). No quadro o link vira uma etiqueta clicável que leva até a ficha; um link para algo que ainda não
   existe fica marcado e pode criar a ficha. O painel mostra as ligações, quem a ficha cita e **quem cita a ficha**.
@@ -153,14 +171,17 @@ pasta, Excluir (vai para a lixeira) e **Abrir quadro** (ou dois cliques na campa
   Bestiário com essa ficha escolhida.
 - **Salvamento automático** a cada alteração, com cópia da versão anterior e cópias periódicas na pasta `backups`.
 
-**Cartas de personagem** (bordas grossas, sombra dura e blocos de cor chapada, em pares de cor: um tom escuro no corpo e
+**Cartas no quadro**: tons cinza sóbrios, com um filete de cor discreto por tipo e ícones em todos os números, atributos
+e capacidades. O **chefe** vira uma carta larga, do tamanho de duas cartas lado a lado, com a arte maior à esquerda.
+
+**Cartas de personagem no Bestiário** (bordas grossas, sombra dura e blocos de cor chapada, em pares de cor: um tom escuro no corpo e
 um vivo no destaque): jogadores azul-marinho e amarelo-ouro, NPCs verde-floresta e sálvia, criaturas meia-noite e pink,
 chefes bordô e bege. As cartas de equipamento, habilidade e poder oculto usam a mesma paleta de 10 pares (escolha o par
 no editor da carta). A arte é o retrato (sem retrato, o ícone).
 **Dois cliques na carta** (ou "Abrir ficha" no painel) abrem a **ficha completa**: retrato, Vida, Resiliência, Defesa e
 Alma (nas criaturas, o Dano), a história, os atributos, as ações e a lista de cartas, nos cinzas do sistema, com os botões para levar ao
 Bestiário ou editar.
-- Canto superior esquerdo: **Vida** (gota) e **Resiliência** (armadura); direito: **Defesa** (alvo) e **Alma** (espírito).
+- Canto superior esquerdo: **Vida** (gota) e **Resiliência** (escudo); direito: **Defesa** (alvo) e **Alma** (espírito).
 - Nome no centro, **atributos** abaixo (3 letras e o valor, até 6) e o **instrumento** no rodapé: a arma equipada com
   rolagem, com o dano e as ações para recarregar.
 - **Criaturas** mostram Vida, Resiliência, Dano e as **habilidades**: 2 para criaturas comuns, 4 para chefes.

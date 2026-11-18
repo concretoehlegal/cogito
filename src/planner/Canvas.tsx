@@ -4,15 +4,17 @@
  * botão do meio, direito ou Espaço + arrastar move a visão. Fichas se movem, mudam de tamanho e se ligam
  * arrastando a bolinha da borda até outra ficha. Molduras levam junto o que está dentro delas.
  */
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as RPE } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as RPE } from 'react';
 import { Markdown } from './Markdown';
-import { CharCard, dataFromActor } from '../game/CharCard';
+import { BoardCard } from './BoardCard';
 import { GameIcon } from '../game/icons';
 import type { Plan, PlanNode } from '../game/types';
 import { api, errorText } from '../api';
 import { toast } from '../store';
-import { CARD_RATIO, HUNT_BARS, TYPES, center, edgePoint, findByTitle, fitView, inside, isChar, linksIn, matches, newNode, nodeActor, segments, uid, type Box } from './model';
+import { TYPES, ratioOf, center, edgePoint, findByTitle, fitView, inside, isChar, isText, linksIn, matches, newNode, segments, uid, type Box } from './model';
 import { edit, planFileUrl, select, usePlan } from './state';
+import { snapGuides, type Guide } from '../lib/guides';
+import { SIDES, capPath, dashArray, linkGeom, nearestSide, newLinkStyle, styleOf, type Side } from './links';
 
 /* Controle do quadro usado pela barra de ferramentas e pelo painel (centralizar, enquadrar, criar no centro). */
 export const canvas = {
@@ -26,7 +28,9 @@ export const canvas = {
 const BRAND = '#b8ff2c';
 type Drag = { ids: string[]; dx: number; dy: number } | null;
 type Resize = { id: string; w: number; h: number } | null;
-type Wire = { from: string; x: number; y: number } | null;
+type Wire = { from: string; side: Side; x: number; y: number } | null;
+export type Tool = 'mover' | 'texto' | 'caixa';
+
 
 /** Texto com [[links]] como etiquetas clicáveis. */
 export function RichText({ body, nodes, onLink, max }: { body: string; nodes: PlanNode[]; onLink: (title: string) => void; max?: number }) {
@@ -43,10 +47,19 @@ export function RichText({ body, nodes, onLink, max }: { body: string; nodes: Pl
 function NodeView({ n, nodes, planId, selected, dim, onLink }: { n: PlanNode; nodes: PlanNode[]; planId: string; selected: boolean; dim: boolean; onLink: (t: string) => void }) {
   const t = TYPES[n.type];
   if (isChar(n.type)) {
-    return <CharCard d={dataFromActor(nodeActor(n), HUNT_BARS)} width={n.w} imgUrl={(f) => planFileUrl(planId, f)} />;
+    return <BoardCard n={n} width={n.w} imgUrl={(f) => planFileUrl(planId, f)} />;
   }
   if (n.type === 'moldura') {
     return <div className="pn-frame-label"><GameIcon id={n.icon} size={14} />{n.title || 'Moldura'}</div>;
+  }
+  if (isText(n.type)) {
+    const f = n.font ?? {};
+    const style = { fontSize: f.size ?? (n.type === 'texto' ? 26 : 16), textAlign: f.align ?? 'left', fontWeight: f.bold ? 700 : n.type === 'texto' ? 600 : 400, fontStyle: f.italic ? 'italic' : 'normal' } as CSSProperties;
+    return (
+      <div className={n.type === 'texto' ? 'pn-text' : 'pn-tbox'} style={style}>
+        {n.body || <span className="pn-text-empty">{n.type === 'texto' ? 'Texto' : 'Caixa de texto'}</span>}
+      </div>
+    );
   }
   if (n.type === 'imagem') {
     return (
@@ -81,7 +94,34 @@ function NodeView({ n, nodes, planId, selected, dim, onLink }: { n: PlanNode; no
   );
 }
 
-export function Canvas({ plan, search, textLinks }: { plan: Plan; search: string; textLinks: boolean }) {
+/** Escrever direto no quadro (Texto e Caixa de texto). Texto vazio é apagado ao sair. */
+function InlineText({ n, onDone }: { n: PlanNode; onDone: () => void }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    const go = () => { const t = ref.current; if (t && document.activeElement !== t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } };
+    go(); const r = requestAnimationFrame(go); return () => cancelAnimationFrame(r);
+  }, []);
+  const f = n.font ?? {};
+  const finish = () => {
+    const p = usePlan.getState().plan; const m = p?.nodes.find((x) => x.id === n.id);
+    if (m && m.type === 'texto' && !m.body.trim()) { edit((d) => { d.nodes = d.nodes.filter((x) => x.id !== n.id); d.links = d.links.filter((l) => l.from !== n.id && l.to !== n.id); }); select([]); }
+    onDone();
+  };
+  const fit = (t: HTMLTextAreaElement | null) => { if (t && n.type === 'texto') { t.style.height = 'auto'; t.style.height = `${t.scrollHeight}px`; } };
+  useLayoutEffect(() => fit(ref.current));
+  return (
+    <textarea
+      ref={ref} className={`pn-inline ${n.type === 'texto' ? 'pn-text' : 'pn-tbox'}`} value={n.body} placeholder={n.type === 'texto' ? 'Escreva…' : 'Escreva na caixa…'}
+      style={{ fontSize: f.size ?? (n.type === 'texto' ? 26 : 16), textAlign: f.align ?? 'left', fontWeight: f.bold ? 700 : n.type === 'texto' ? 600 : 400, fontStyle: f.italic ? 'italic' : 'normal' }}
+      onChange={(e) => { const v = e.target.value.slice(0, 5000); edit((d) => { const m = d.nodes.find((x) => x.id === n.id); if (m) m.body = v; }, { key: `${n.id}:body` }); fit(e.target); }}
+      onPointerDown={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => { if (e.key === 'Escape' || (e.key === 'Enter' && (e.ctrlKey || e.metaKey))) { e.preventDefault(); (e.target as HTMLTextAreaElement).blur(); } }}
+      onBlur={finish}
+    />
+  );
+}
+
+export function Canvas({ plan, search, textLinks, tool = 'mover', onToolDone }: { plan: Plan; search: string; textLinks: boolean; tool?: Tool; onToolDone?: () => void }) {
   const host = useRef<HTMLDivElement>(null);
   const sel = usePlan((s) => s.sel);
   const selLink = usePlan((s) => s.selLink);
@@ -91,6 +131,9 @@ export function Canvas({ plan, search, textLinks }: { plan: Plan; search: string
   const [resize, setResize] = useState<Resize>(null);
   const [wire, setWire] = useState<Wire>(null);
   const [box, setBox] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(null);
+  const [guides, setGuides] = useState<Guide[]>([]);
+  const [editing, setEditing] = useState<string | null>(null);
+  useEffect(() => { const open = (e: Event) => setEditing(String((e as CustomEvent).detail ?? '')); window.addEventListener('plan:edit-text', open); return () => window.removeEventListener('plan:edit-text', open); }, []);
   const space = useRef(false);
   const nodes = plan.nodes;
 
@@ -152,6 +195,32 @@ export function Canvas({ plan, search, textLinks }: { plan: Plan; search: string
   };
 
   /* fundo: laço ou mover a visão */
+  /** Texto e Caixa de texto: o clique cria (também em cima de uma ficha). */
+  const startTool = (e: RPE): boolean => {
+    if (tool === 'mover' || e.button !== 0) return false;
+    e.stopPropagation();
+    if (tool === 'texto') {
+      e.preventDefault(); // o clique não devolve o foco ao fundo (senão o texto novo perde o foco e some)
+      const p = toWorld(e.clientX, e.clientY);
+      const n = newNode('texto', p.x, p.y); n.x = Math.round(p.x); n.y = Math.round(p.y - 18);
+      edit((d) => { d.nodes.push(n); }); select([n.id]); setEditing(n.id); onToolDone?.();
+      return true;
+    }
+    if (tool === 'caixa') {
+      const a0 = toWorld(e.clientX, e.clientY); let cur = { x0: a0.x, y0: a0.y, x1: a0.x, y1: a0.y };
+      follow((ev) => { const b = toWorld(ev.clientX, ev.clientY); cur = { ...cur, x1: b.x, y1: b.y }; setBox(cur); }, () => {
+        setBox(null);
+        let w = Math.abs(cur.x1 - cur.x0); let h = Math.abs(cur.y1 - cur.y0);
+        const small = w < 40 || h < 30; if (small) { w = TYPES.caixa.w; h = TYPES.caixa.h; }
+        const n = newNode('caixa', 0, 0, { w: Math.round(w), h: Math.round(h) });
+        n.x = Math.round(small ? cur.x0 - w / 2 : Math.min(cur.x0, cur.x1)); n.y = Math.round(small ? cur.y0 - h / 2 : Math.min(cur.y0, cur.y1));
+        edit((d) => { d.nodes.push(n); }); select([n.id]); setEditing(n.id); onToolDone?.();
+      });
+      return true;
+    }
+    return false;
+  };
+
   const onBackground = (e: RPE) => {
     if ((e.target as Element).closest('.pn-node, .pc-link-label')) return;
     const pan = e.button === 1 || e.button === 2 || space.current;
@@ -163,6 +232,7 @@ export function Canvas({ plan, search, textLinks }: { plan: Plan; search: string
       return;
     }
     if (e.button !== 0) return;
+    if (startTool(e)) return;
     const a = toWorld(e.clientX, e.clientY); const add = e.shiftKey; let moved = false;
     let cur = { x0: a.x, y0: a.y, x1: a.x, y1: a.y };
     follow((ev) => {
@@ -181,20 +251,40 @@ export function Canvas({ plan, search, textLinks }: { plan: Plan; search: string
   /* fichas: selecionar e arrastar (molduras levam o que está dentro) */
   const onNode = (e: RPE, n: PlanNode) => {
     if (e.button !== 0 || space.current) return;
+    if ((e.target as Element).closest('textarea.pn-inline')) return;
+    if (startTool(e)) return;
     e.stopPropagation();
     if ((e.target as Element).closest('button, input, textarea, .pn-handle')) return;
     const cur = usePlan.getState().sel;
-    let ids = cur;
-    if (e.shiftKey) { ids = cur.includes(n.id) ? cur.filter((x) => x !== n.id) : [...cur, n.id]; select(ids); return; }
-    if (!cur.includes(n.id)) { ids = [n.id]; select(ids); }
+    const shiftAtStart = e.shiftKey;
+    // Shift + clique (sem arrastar) soma ou tira da seleção; Shift + arrastar move com as guias de alinhamento.
+    let ids = cur.includes(n.id) ? cur : shiftAtStart ? [...cur, n.id] : [n.id];
+    if (!cur.includes(n.id) && !shiftAtStart) select(ids);
     const moving = new Set(ids);
     for (const f of nodes) if (f.type === 'moldura' && moving.has(f.id)) for (const m of nodes) if (m.id !== f.id && inside(m, f)) moving.add(m.id);
     const list = [...moving];
-    const x0 = e.clientX; const y0 = e.clientY;
-    follow((ev) => setDrag({ ids: list, dx: (ev.clientX - x0) / viewRef.current.zoom, dy: (ev.clientY - y0) / viewRef.current.zoom }), (ev) => {
-      setDrag(null);
-      const dx = Math.round((ev.clientX - x0) / viewRef.current.zoom); const dy = Math.round((ev.clientY - y0) / viewRef.current.zoom);
-      if (Math.abs(dx) + Math.abs(dy) < 2) return;
+    const movingNodes = nodes.filter((m) => moving.has(m.id));
+    const bounds = movingNodes.reduce((b, m) => ({ x: Math.min(b.x, m.x), y: Math.min(b.y, m.y), x2: Math.max(b.x2, m.x + m.w), y2: Math.max(b.y2, m.y + m.h) }), { x: Infinity, y: Infinity, x2: -Infinity, y2: -Infinity });
+    const rest = nodes.filter((m) => !moving.has(m.id) && m.type !== 'moldura');
+    const x0 = e.clientX; const y0 = e.clientY; let moved = false; let last = { dx: 0, dy: 0 };
+    const offset = (ev: PointerEvent) => {
+      const z = viewRef.current.zoom; let dx = (ev.clientX - x0) / z; let dy = (ev.clientY - y0) / z;
+      if (ev.shiftKey) {
+        const box0 = { x: bounds.x + dx, y: bounds.y + dy, w: bounds.x2 - bounds.x, h: bounds.y2 - bounds.y };
+        const snap = snapGuides(box0, rest.map((m) => ({ x: m.x, y: m.y, w: m.w, h: m.h })), 8 / z);
+        dx += snap.dx; dy += snap.dy; setGuides(snap.guides);
+      } else setGuides([]);
+      return { dx: Math.round(dx), dy: Math.round(dy) };
+    };
+    follow((ev) => {
+      if (Math.abs(ev.clientX - x0) + Math.abs(ev.clientY - y0) > 3) { if (!moved && shiftAtStart && !cur.includes(n.id)) select(ids); moved = true; }
+      if (!moved) return;
+      last = offset(ev); setDrag({ ids: list, ...last });
+    }, () => {
+      setDrag(null); setGuides([]);
+      if (!moved) { if (shiftAtStart) select(cur.includes(n.id) ? cur.filter((x) => x !== n.id) : [...cur, n.id]); return; }
+      const { dx, dy } = last;
+      if (Math.abs(dx) + Math.abs(dy) < 1) return;
       edit((d) => { for (const m of d.nodes) if (moving.has(m.id)) { m.x += dx; m.y += dy; } });
     });
   };
@@ -206,7 +296,7 @@ export function Canvas({ plan, search, textLinks }: { plan: Plan; search: string
     follow((ev) => {
       const z = viewRef.current.zoom;
       w = Math.max(keep ? 110 : 120, Math.round(n.w + (ev.clientX - x0) / z));
-      h = keep ? Math.round(w * CARD_RATIO) : Math.max(70, Math.round(n.h + (ev.clientY - y0) / z));
+      h = keep ? Math.round(w * ratioOf(n)) : Math.max(70, Math.round(n.h + (ev.clientY - y0) / z));
       setResize({ id: n.id, w, h });
     }, () => {
       setResize(null);
@@ -214,9 +304,9 @@ export function Canvas({ plan, search, textLinks }: { plan: Plan; search: string
     });
   };
 
-  const onWire = (e: RPE, n: PlanNode) => {
+  const onWire = (e: RPE, n: PlanNode, side: Side) => {
     e.stopPropagation(); e.preventDefault();
-    follow((ev) => { const p = toWorld(ev.clientX, ev.clientY); setWire({ from: n.id, x: p.x, y: p.y }); }, (ev) => {
+    follow((ev) => { const p = toWorld(ev.clientX, ev.clientY); setWire({ from: n.id, side, x: p.x, y: p.y }); }, (ev) => {
       setWire(null);
       const p = toWorld(ev.clientX, ev.clientY);
       const target = [...nodes].reverse().find((m) => m.id !== n.id && m.type !== 'moldura' && p.x >= m.x && p.x <= m.x + m.w && p.y >= m.y && p.y <= m.y + m.h)
@@ -224,7 +314,11 @@ export function Canvas({ plan, search, textLinks }: { plan: Plan; search: string
       if (!target) return;
       if (plan.links.some((l) => (l.from === n.id && l.to === target.id))) return;
       const id = uid('l');
-      edit((d) => { d.links.push({ id, from: n.id, to: target.id, label: '', color: '#9fb8ad' }); });
+      // Chega pelo lado da ficha mais perto de onde a ligação foi solta (no meio da ficha: o lado virado para a origem).
+      const near = nearestSide(target, p);
+      const inner = { x: target.x + target.w * 0.25, y: target.y + target.h * 0.25, w: target.w * 0.5, h: target.h * 0.5 };
+      const toSide = inside({ ...p, w: 0, h: 0 }, inner) ? 'auto' : near;
+      edit((d) => { d.links.push({ id, from: n.id, to: target.id, label: '', color: '#a3a3a3', fromSide: side, toSide, ...newLinkStyle() }); });
       select([], id);
     });
   };
@@ -285,23 +379,35 @@ export function Canvas({ plan, search, textLinks }: { plan: Plan; search: string
     return (
       <div
         key={n.id} className={`pn-node t-${n.type}${s ? ' selected' : ''}${searching && !matches(n, search) ? ' dim' : ''}${drag?.ids.includes(n.id) ? ' dragging' : ''}`}
-        style={{ left: b.x, top: b.y, width: b.w, height: n.type === 'moldura' || !isChar(n.type) ? b.h : undefined, '--nc': n.color } as CSSProperties}
-        onPointerDown={(e) => onNode(e, n)} onDoubleClick={(e) => { e.stopPropagation(); select([n.id]); window.dispatchEvent(isChar(n.type) ? new CustomEvent('plan:open-sheet', { detail: n.id }) : new CustomEvent('plan:edit-title')); }}
+        data-id={n.id}
+        style={{ left: b.x, top: b.y, width: b.w, height: isChar(n.type) || n.type === 'texto' ? undefined : b.h, '--nc': n.color } as CSSProperties}
+        onPointerDown={(e) => onNode(e, n)} onDoubleClick={(e) => { e.stopPropagation(); select([n.id]); if (isText(n.type)) { setEditing(n.id); return; } window.dispatchEvent(isChar(n.type) ? new CustomEvent('plan:open-sheet', { detail: n.id }) : new CustomEvent('plan:edit-title')); }}
       >
-        <NodeView n={{ ...n, w: b.w }} nodes={nodes} planId={plan.id} selected={s} dim={searching} onLink={onLink} />
-        {s && sel.length === 1 && <>
-          <span className="pn-handle wire" title="Arraste até outra ficha para ligar" onPointerDown={(e) => onWire(e, n)} />
-          <span className="pn-handle size" title="Arraste para mudar o tamanho" onPointerDown={(e) => onResize(e, n)} />
-        </>}
+        {editing === n.id && isText(n.type)
+          ? <InlineText n={n} onDone={() => setEditing(null)} />
+          : <NodeView n={{ ...n, w: b.w }} nodes={nodes} planId={plan.id} selected={s} dim={searching} onLink={onLink} />}
+        {n.type !== 'moldura' && !drag && SIDES.map((sd) => <span key={sd} className={`pn-handle wire ${sd}`} title="Arraste até outra ficha para ligar" onPointerDown={(e) => onWire(e, n, sd)} />)}
+        {s && sel.length === 1 && <span className="pn-handle size" title="Arraste para mudar o tamanho" onPointerDown={(e) => onResize(e, n)} />}
       </div>
     );
   };
 
+  // Textos crescem com o conteúdo: a altura medida vai para o arquivo (as ligações usam a altura).
+  useLayoutEffect(() => {
+    const el = host.current; if (!el) return;
+    const fix: { id: string; h: number }[] = [];
+    for (const n of nodes) {
+      if (n.type !== 'texto') continue;
+      const node = el.querySelector<HTMLElement>(`.pn-node[data-id="${CSS.escape(n.id)}"]`);
+      if (node && Math.abs(node.offsetHeight - n.h) > 1) fix.push({ id: n.id, h: node.offsetHeight });
+    }
+    if (fix.length) edit((d) => { for (const f of fix) { const m = d.nodes.find((x) => x.id === f.id); if (m) m.h = f.h; } }, { history: false });
+  });
+
   const gridSize = 32 * view.zoom;
-  const arrowColors = [...new Set([BRAND, ...plan.links.map((l) => l.color)])];
   return (
     <div
-      ref={host} className="plan-canvas" onPointerDown={onBackground} onContextMenu={(e) => e.preventDefault()}
+      ref={host} className={`plan-canvas tool-${tool}`} onPointerDown={onBackground} onContextMenu={(e) => e.preventDefault()}
       onDoubleClick={(e) => { if ((e.target as Element).closest('.pn-node')) return; const p = toWorld(e.clientX, e.clientY); const n = newNode('nota', p.x, p.y); edit((d) => { d.nodes.push(n); }); select([n.id]); }}
       onDragOver={(e) => { if (e.dataTransfer.types.includes('Files')) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; } }}
       onDrop={(e) => { const files = [...e.dataTransfer.files]; if (!files.length) return; e.preventDefault(); void dropImages(files, toWorld(e.clientX, e.clientY)); }}
@@ -310,9 +416,6 @@ export function Canvas({ plan, search, textLinks }: { plan: Plan; search: string
       <div className="pc-world" style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.zoom})` }}>
         {frames.map(renderNode)}
         <svg className="pc-links" width="1" height="1">
-          <defs>
-            {arrowColors.map((c, i) => <marker key={c} id={`pc-arrow-${i}`} viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill={c} /></marker>)}
-          </defs>
           {textEdges.map((t, i) => {
             const A = byId.get(t.a); const B = byId.get(t.b); if (!A || !B) return null;
             const a = pos(A); const b = pos(B); const p1 = edgePoint(a, center(b)); const p2 = edgePoint(b, center(a));
@@ -320,24 +423,31 @@ export function Canvas({ plan, search, textLinks }: { plan: Plan; search: string
           })}
           {plan.links.map((l) => {
             const A = byId.get(l.from); const B = byId.get(l.to); if (!A || !B) return null;
-            const a = pos(A); const b = pos(B); const p1 = edgePoint(a, center(b)); const p2 = edgePoint(b, center(a));
-            const on = selLink === l.id;
+            const st = styleOf(l); const g = linkGeom(pos(A), l.fromSide, pos(B), l.toSide, st.kind);
+            const on = selLink === l.id; const color = on ? BRAND : l.color;
+            const cap = (c: typeof st.endCap, p: typeof g.end) => { const cp = capPath(c, st.width); return cp ? <path d={cp.d} transform={`translate(${p.x} ${p.y}) rotate(${p.angle})`} fill={cp.fill ? color : 'none'} stroke={color} strokeWidth={st.width} strokeLinejoin="round" strokeLinecap="round" /> : null; };
             return (
               <g key={l.id} className={`pc-link${on ? ' selected' : ''}`} onPointerDown={(e) => { e.stopPropagation(); select([], l.id); }}>
-                <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} className="hit" />
-                <line x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} className="vis" style={{ stroke: on ? BRAND : l.color }} markerEnd={`url(#pc-arrow-${arrowColors.indexOf(on ? BRAND : l.color)})`} />
+                <path d={g.d} className="hit" />
+                <path d={g.d} className="vis" style={{ stroke: color, strokeWidth: st.width }} strokeDasharray={dashArray(st.dash, st.width)} strokeLinecap={st.dash === 'pontilhado' ? 'round' : 'butt'} strokeLinejoin="round" />
+                {cap(st.startCap, g.start)}{cap(st.endCap, g.end)}
               </g>
             );
           })}
-          {wire && (() => { const A = byId.get(wire.from); if (!A) return null; const a = pos(A); const p1 = edgePoint(a, wire); return <line x1={p1.x} y1={p1.y} x2={wire.x} y2={wire.y} className="pc-wire" />; })()}
+          {wire && (() => {
+            const A = byId.get(wire.from); if (!A) return null;
+            const st = newLinkStyle(); const g = linkGeom(pos(A), wire.side, wire, undefined, st.kind);
+            return <path d={g.d} className="pc-wire" />;
+          })()}
         </svg>
         {plan.links.filter((l) => l.label).map((l) => {
           const A = byId.get(l.from); const B = byId.get(l.to); if (!A || !B) return null;
-          const a = center(pos(A)); const b = center(pos(B));
-          return <span key={l.id} className={`pc-link-label${selLink === l.id ? ' selected' : ''}`} style={{ left: (a.x + b.x) / 2, top: (a.y + b.y) / 2 }} onPointerDown={(e) => { e.stopPropagation(); select([], l.id); }}>{l.label}</span>;
+          const g = linkGeom(pos(A), l.fromSide, pos(B), l.toSide, styleOf(l).kind);
+          return <span key={l.id} className={`pc-link-label${selLink === l.id ? ' selected' : ''}`} style={{ left: g.mid.x, top: g.mid.y }} onPointerDown={(e) => { e.stopPropagation(); select([], l.id); }}>{l.label}</span>;
         })}
         {others.map(renderNode)}
-        {box && <div className="pc-box" style={{ left: Math.min(box.x0, box.x1), top: Math.min(box.y0, box.y1), width: Math.abs(box.x1 - box.x0), height: Math.abs(box.y1 - box.y0) }} />}
+        {guides.map((g, i) => <div key={i} className={`pc-guide ${g.axis}`} style={g.axis === 'x' ? { left: g.at, top: g.from - 12, height: g.to - g.from + 24 } : { top: g.at, left: g.from - 12, width: g.to - g.from + 24 }} />)}
+        {box && <div className={`pc-box${tool === 'caixa' ? ' draw' : ''}`} style={{ left: Math.min(box.x0, box.x1), top: Math.min(box.y0, box.y1), width: Math.abs(box.x1 - box.x0), height: Math.abs(box.y1 - box.y0) }} />}
       </div>
       {!nodes.length && (
         <div className="pc-empty">

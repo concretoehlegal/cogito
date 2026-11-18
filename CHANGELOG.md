@@ -3,6 +3,42 @@
 Todas as mudanças de cada versão. A mais nova fica no topo.
 Para baixar, use a página de [Releases](../../releases).
 
+## [0.16.0] — 2026-11-18 · Edição “Pesadelos Antes do Natal” 🎄
+
+### Natal
+- **Luzinhas de Natal** piscando no alto da janela e no cartão lateral da tela inicial.
+- **Gorro de Papai Noel** no logo do COGITO, inclusive no ícone do aplicativo.
+- Os enfeites podem ser desligados em ⚙ Configurações → **Enfeites de Natal**.
+
+### Escritor
+- **Ferramenta Mover** (botão "Mover" na barra ou `Ctrl+M`): arraste imagens e formas para **qualquer lugar da página**,
+  por cima do texto, como no Photoshop. Segure **Shift** para encaixar nas **guias** (bordas e centro da página, margens
+  e os outros elementos soltos); `Esc` sai da ferramenta. O botão **Livre** devolve o elemento ao texto.
+- A posição livre vai igual para o **PDF** e para o **DOCX** (no Word, como imagem flutuante).
+- **Contador de páginas** no centro, embaixo da página: "3 / 12". Em ⚙ escolha o formato: só o número, contador
+  (padrão) ou por extenso ("Página 3 de 12"). Vale também no PDF e no DOCX.
+- `Ctrl+Home` e `Ctrl+End` levam ao começo e ao fim do texto mesmo com uma forma ou imagem selecionada.
+
+### Planejador de Campanhas
+- **Setas e linhas estilo Miro**: puxe uma ligação de **qualquer um dos 4 lados** da ficha. Escolha o formato (**reta**,
+  **curva** ou **cotovelo**), o traço (**sólido**, **tracejado** ou **pontilhado**), a **ponta** de cada lado (nenhuma,
+  seta, triângulo, círculo, losango ou barra), a espessura e os lados de saída e chegada. Há **8 estilos prontos**
+  (Linha, Seta, Curva, Fluxo, Mão dupla, Pista, Segredo, Rompido) e o último estilo usado vale para as próximas.
+- **Ferramenta Texto** (`T`): clique no quadro e escreva um texto solto, sem caixa.
+- **Ferramenta Caixa de texto** (`B`): clique e escreva dentro de uma caixa. Tamanho, alinhamento, negrito, itálico e cor
+  no painel da direita.
+- **Ferramenta Mover** (`V`): arrastar com **Shift** encaixa nas **guias** de alinhamento das outras fichas;
+  Shift + clique sem arrastar soma à seleção. As setas do teclado empurram a seleção (com Shift, de 10 em 10).
+- **Barras laterais ajustáveis**: arraste a borda das barras da esquerda e da direita (duplo clique restaura).
+- **Cartas mais sóbrias** no quadro: tons cinza, um filete discreto de cor por tipo e **ícones em tudo** (Vida,
+  Resiliência, Defesa, Alma, Dano, cada atributo e cada capacidade).
+- **Carta de chefe larga**: o chefe ocupa o espaço de duas cartas lado a lado, com a arte maior à esquerda e os números e
+  habilidades à direita.
+
+### Outros
+- Novos ícones para texto, caixa de texto e conversa.
+- As luzinhas são leves: só a opacidade anima, sem pesar no editor.
+
 ## [0.15.0] — 2026-11-18
 
 ### Bestiário: HUD nova

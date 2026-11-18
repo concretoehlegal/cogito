@@ -493,3 +493,33 @@ button.rail-logo:hover { transform: scale(1.05); }
 .die-btn .fx-die { filter: none; }
 .die-btn .fx-die b { font-size: 11px !important; }
 :root[data-theme='light'] .sn-brand:hover strong, :root[data-theme='light'] .sn-brand:hover .sn-logo { color: #5c9e00; }
+.page-num-seg { margin: 6px 0 4px 24px; }
+
+/* Escritor: ferramenta Mover */
+.page.move-tool .page-content img, .page.move-tool .page-content .shape-node { cursor: move; outline: 1.5px dashed rgba(184, 255, 44, .9); outline-offset: 2px; }
+.page.move-tool .page-content img.moving, .page.move-tool .page-content .shape-node.moving { outline-style: solid; box-shadow: 0 10px 24px rgba(0, 0, 0, .35); z-index: 6; }
+.page-guide { position: absolute; z-index: 8; pointer-events: none; background: #ff2e88; }
+.page-guide.x { width: 1px; margin-left: -.5px; }
+.page-guide.y { height: 1px; margin-top: -.5px; }
+.tool-text { margin-left: 5px; font-size: 12.5px; }
+.tool-btn:has(.tool-text) { display: inline-flex; align-items: center; gap: 0; }
+
+/* ═════════ Pesadelos Antes do Natal ═════════ */
+.titlestrip { position: relative; }
+.xmas-lights { position: absolute; z-index: 50; left: 0; right: 0; top: calc(100% - 4px); height: 28px; display: flex; overflow: hidden; pointer-events: none; }
+.xmas-lights svg { flex: none; overflow: visible; }
+.xmas-lights .xl-glow { position: absolute; left: 0; top: 0; will-change: opacity; animation: twinkle 2.4s ease-in-out infinite; }
+.xmas-lights .xl-glow .lit { filter: drop-shadow(0 0 3px currentColor) drop-shadow(0 0 6px currentColor); }
+.xmas-lights .xl-glow.g1 { animation-delay: .6s; }
+.xmas-lights .xl-glow.g2 { animation-delay: 1.2s; animation-duration: 3s; }
+.xmas-lights .xl-glow.g3 { animation-delay: 1.8s; animation-duration: 1.9s; }
+@keyframes twinkle { 0%, 100% { opacity: 1; } 45% { opacity: .1; } 55% { opacity: .15; } }
+@media (prefers-reduced-motion: reduce) { .xmas-lights .xl-glow { animation: none; } }
+.xmas-lights.card { position: absolute; top: -6px; left: 8px; right: 8px; height: 24px; }
+.sn-card { position: relative; }
+.sn-edition { font: 600 11px/1.3 var(--f-ui); color: #ff6b6b; letter-spacing: .02em; }
+.brand-logo { position: relative; display: inline-grid; place-items: center; flex: none; }
+.brand-logo > svg:first-child { width: 100%; height: 100%; }
+.santa-hat { position: absolute; left: 22.6%; top: -24.2%; width: 66.4%; height: auto; transform: rotate(14deg); transform-origin: 30% 80%; pointer-events: none; transition: transform .25s; }
+.sn-brand:hover .santa-hat, .rail-logo:hover .santa-hat { transform: rotate(4deg) translateY(-6%); }
+.sn-brand { padding-top: 8px; }

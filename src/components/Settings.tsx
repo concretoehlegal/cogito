@@ -26,6 +26,7 @@ function Preferences() {
         <input type="checkbox" checked={prefs.spell} onChange={(e) => setPrefs({ spell: e.target.checked })} /> Corretor ortográfico (português)
       </label>
       <label className="check"><input type="checkbox" checked={prefs.diceAnim} onChange={(e) => setPrefs({ diceAnim: e.target.checked })} /> Animar a rolagem dos dados</label>
+      <label className="check" title="Luzinhas piscando e o gorro de Papai Noel no logo (edição Pesadelos Antes do Natal)"><input type="checkbox" checked={prefs.xmas} onChange={(e) => setPrefs({ xmas: e.target.checked })} /> Enfeites de Natal</label>
       <label className="field">
         <span>Tamanho da interface — {Math.round(scale * 100)}%</span>
         <input
@@ -108,6 +109,13 @@ export function Settings({ onClose }: { onClose: () => void }) {
               <small>O PDF exportado sai com a mesma cor de papel.</small>
             </label>
             <label className="check"><input type="checkbox" checked={book.showPageNumbers} onChange={(e) => setBookProps({ showPageNumbers: e.target.checked })} /> Numerar as páginas</label>
+            {book.showPageNumbers && (
+              <div className="seg page-num-seg" role="radiogroup" aria-label="Formato do contador de páginas">
+                {([['numero', '3'], ['contador', '3 / 12'], ['extenso', 'Página 3 de 12']] as const).map(([k, l]) => (
+                  <button key={k} type="button" className={(book.pageNumberStyle ?? 'contador') === k ? 'on' : ''} onClick={() => setBookProps({ pageNumberStyle: k })}>{l}</button>
+                ))}
+              </div>
+            )}
 
             <h3 style={{ marginTop: 22 }}>Backups automáticos</h3>
             <p className="muted small">Cópias de segurança são criadas ao abrir o livro e a cada 5 minutos de trabalho. Ficam as 40 mais recentes.</p>

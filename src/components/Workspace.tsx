@@ -6,9 +6,10 @@ import { Plugin, PluginKey, TextSelection } from '@tiptap/pm/state';
 import { AlertTriangle, Columns2, Copy, FilePlus2, Plus, Scissors, Trash2 } from 'lucide-react';
 import { api, errorText } from '../api';
 import { editorExtensions } from '../editor/extensions';
+import { snapGuides, type Guide } from '../lib/guides';
 import { imageNode } from '../editor/templates';
 import { overflowIndex } from '../lib/layout';
-import { FORMATS, MM_TO_PX, flatPages, formatOf, type Book, type DocNode, type FlatPage, type PageFormat } from '../model';
+import { FORMATS, MM_TO_PX, PAGE_MARGIN_MM, flatPages, formatOf, pageLabel, type Book, type DocNode, type FlatPage, type PageFormat } from '../model';
 import {
   addChapter, addPage, deletePage, duplicatePage, goToPage, registerFlusher, setActiveEditor, setPageContent, setPageProps,
   setZoom, splitPage, toast, useApp,
@@ -54,6 +55,7 @@ export async function storeImageFiles(bookId: string, files: File[]): Promise<Do
 }
 
 function PageView({ book, item, scale }: { book: Book; item: FlatPage; scale: number }) {
+  const totalPages = useMemo(() => flatPages(book).length, [book.chapters]); // eslint-disable-line react-hooks/exhaustive-deps
   const { page } = item;
   const selected = useApp((s) => s.sel.kind === 'page' && s.sel.pageId === page.id);
   const spell = useApp((s) => s.prefs.spell);
@@ -64,6 +66,62 @@ function PageView({ book, item, scale }: { book: Book; item: FlatPage; scale: nu
   const limitRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Editor | null>(null);
   const [overflowAt, setOverflowAt] = useState(-1);
+  const moveTool = useApp((s) => s.moveTool);
+  const [guides, setGuides] = useState<Guide[]>([]);
+  const [guideOrigin, setGuideOrigin] = useState({ x: 0, y: 0 });
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Ferramenta Mover: arrastar uma imagem ou forma a deixa em posição livre na página.
+   * Com Shift, encaixa nas guias (bordas e centro da página, margens e os outros elementos livres).
+   */
+  const startMove = (e: React.PointerEvent) => {
+    if (!moveTool || e.button !== 0) return;
+    const target = (e.target as HTMLElement).closest<HTMLElement>('.page-content img, .page-content .shape-node');
+    const pg = pageRef.current; const ed = editorRef.current;
+    if (!target || !pg || !ed) return;
+    e.preventDefault(); e.stopPropagation();
+    // posição do nó no documento (imagem: o próprio <img>; forma: o invólucro da vista)
+    let pos = -1;
+    try {
+      const p0 = ed.view.posAtDOM(target, 0);
+      for (const p of [p0, p0 - 1]) { const nd = p >= 0 ? ed.state.doc.nodeAt(p) : null; if (nd && (nd.type.name === 'image' || nd.type.name === 'shape')) { pos = p; break; } }
+    } catch { /* fora do documento */ }
+    if (pos < 0) return;
+    const node = ed.state.doc.nodeAt(pos)!;
+    // Coordenadas a partir do canto da área de texto (dentro das margens), igual no editor, no PDF e no Word.
+    const content = pg.querySelector<HTMLElement>('.page-content') ?? pg;
+    const pr = pg.getBoundingClientRect(); const cr = content.getBoundingClientRect(); const tr0 = target.getBoundingClientRect();
+    const W = pr.width / scale; const H = pr.height / scale;
+    const ox = (pr.left - cr.left) / scale; const oy = (pr.top - cr.top) / scale; // canto da página, visto da área de texto
+    const rel = (r: DOMRect) => ({ x: (r.left - cr.left) / scale, y: (r.top - cr.top) / scale, w: r.width / scale, h: r.height / scale });
+    const box0 = rel(tr0);
+    const m = PAGE_MARGIN_MM * MM_TO_PX;
+    const others = [...pg.querySelectorAll<HTMLElement>(".page-content [data-wrap='free']")].filter((el) => el !== target).map((el) => rel(el.getBoundingClientRect()));
+    const refs = [{ x: ox, y: oy, w: W, h: H }, { x: ox + m, y: oy + m, w: W - 2 * m, h: H - 2 * m }, ...others];
+    setGuideOrigin({ x: -ox, y: -oy });
+    const x0 = e.clientX; const y0 = e.clientY; let moved = false; let at = { x: box0.x, y: box0.y };
+    target.classList.add('moving');
+    const move = (ev: PointerEvent) => {
+      let dx = (ev.clientX - x0) / scale; let dy = (ev.clientY - y0) / scale;
+      if (!moved && Math.abs(dx) + Math.abs(dy) < 3) return;
+      moved = true;
+      if (ev.shiftKey) { const snap = snapGuides({ ...box0, x: box0.x + dx, y: box0.y + dy }, refs, 7); dx += snap.dx; dy += snap.dy; setGuides(snap.guides); } else setGuides([]);
+      at = { x: Math.round(Math.min(ox + W - 16, Math.max(ox + 16 - box0.w, box0.x + dx))), y: Math.round(Math.min(oy + H - 16, Math.max(oy + 16 - box0.h, box0.y + dy))) };
+      target.style.transform = `translate(${at.x - box0.x}px, ${at.y - box0.y}px)`;
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up);
+      target.classList.remove('moving'); target.style.transform = ''; setGuides([]);
+      if (!moved) { ed.commands.setNodeSelection(pos); return; }
+      const attrs: Record<string, unknown> = { ...node.attrs, wrap: 'free', x: at.x, y: at.y };
+      // Imagens em % da coluna ficam com a largura que tinham na tela (a posição livre mede pela página).
+      if (node.type.name === 'image' && String(node.attrs.width).endsWith('%')) attrs.width = `${Math.round(box0.w)}px`;
+      ed.view.dispatch(ed.state.tr.setNodeMarkup(pos, undefined, attrs));
+      ed.commands.setNodeSelection(pos);
+    };
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up);
+  };
   const colsRef = useRef(columns);
   colsRef.current = columns;
 
@@ -216,12 +274,14 @@ function PageView({ book, item, scale }: { book: Book; item: FlatPage; scale: nu
       </div>
       <div className="page-zoom" style={{ zoom: scale }}>
         <div
-          className={`page fmt-${format} style-${book.pageStyle}${columns === 2 ? ' cols-2' : ''}${overflow ? ' overflow' : ''}`}
-          onMouseDown={startMarginSelect}
+          ref={pageRef}
+          className={`page fmt-${format} style-${book.pageStyle}${columns === 2 ? ' cols-2' : ''}${overflow ? ' overflow' : ''}${moveTool ? ' move-tool' : ''}`}
+          onMouseDown={startMarginSelect} onPointerDownCapture={startMove}
         >
+          {guides.map((g, i) => <div key={i} className={`page-guide ${g.axis}`} style={g.axis === 'x' ? { left: g.at + guideOrigin.x, top: Math.max(0, g.from + guideOrigin.y - 10), height: g.to - g.from + 20 } : { top: g.at + guideOrigin.y, left: Math.max(0, g.from + guideOrigin.x - 10), width: g.to - g.from + 20 }} />)}
           <EditorContent editor={editor} className="page-body" />
           <div ref={limitRef} className="page-limit" aria-hidden><span>fim da página</span></div>
-          {book.showPageNumbers && <div className="page-number" aria-hidden>{item.index + 1}</div>}
+          {book.showPageNumbers && <div className="page-number" aria-hidden>{pageLabel(book.pageNumberStyle, item.index + 1, totalPages)}</div>}
         </div>
       </div>
       {overflow && (

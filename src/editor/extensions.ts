@@ -10,7 +10,7 @@ import TableCell from '@tiptap/extension-table-cell';
 import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Extension } from '@tiptap/core';
-import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Plugin, PluginKey, Selection } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import { formulaResult, isFormula, tableGrid } from '../lib/formula';
@@ -63,9 +63,20 @@ export const BookImage = Image.extend({
         default: 'none',
         parseHTML: (el) => el.getAttribute('data-wrap') || 'none',
         // Caminho relativo (sem ":"), porque o editor separa o estilo por ":" e cortaria "cogito://…".
-        renderHTML: (attrs) => (attrs.wrap && attrs.wrap !== 'none'
+        renderHTML: (attrs) => (attrs.wrap === 'free' ? { 'data-wrap': 'free' } : attrs.wrap && attrs.wrap !== 'none'
           ? { 'data-wrap': attrs.wrap, style: `shape-outside:url("${String(attrs.src).replace(/^cogito:\/\/app/, '').replace(/"/g, '%22')}")` }
           : {}),
+      },
+      /** Posição livre (wrap = "free"): canto de cima à esquerda, em px, a partir do canto da área de texto. */
+      x: {
+        default: 0,
+        parseHTML: (el) => Number(el.getAttribute('data-x')) || 0,
+        renderHTML: (attrs) => (attrs.wrap === 'free' ? { 'data-x': String(attrs.x), style: `left:${attrs.x}px;top:${attrs.y}px` } : {}),
+      },
+      y: {
+        default: 0,
+        parseHTML: (el) => Number(el.getAttribute('data-y')) || 0,
+        renderHTML: (attrs) => (attrs.wrap === 'free' ? { 'data-y': String(attrs.y) } : {}),
       },
     };
   },
@@ -90,6 +101,7 @@ export const Shape = Node.create({
       kind: a('kind', 'rect'), width: a('width', 220, true), height: a('height', 120, true),
       fill: a('fill', '#d9d0bf'), stroke: a('stroke', '#161616'), strokeWidth: a('stroke-width', 2, true),
       label: a('label', ''), labelColor: a('label-color', '#161616'), align: a('align', 'center'), wrap: a('wrap', 'none'),
+      x: a('x', 0, true), y: a('y', 0, true),
     };
   },
   parseHTML() { return [{ tag: 'div[data-shape]' }]; },
@@ -100,7 +112,7 @@ export const Shape = Node.create({
       return p.shade && p.fill ? [base, [`${SVG} path`, { d: p.d, fill: 'rgba(0,0,0,.25)' }] as [string, Record<string, string>]] : [base];
     });
     const label = s.label ? [[`${SVG} text`, { x: String(s.width / 2), y: String(labelY(s)), 'text-anchor': 'middle', 'dominant-baseline': 'central', fill: s.labelColor, style: `font: 700 ${labelSize(s)}px "Cogito Chapter Bold", "Cogito Chapter", Georgia, serif` }, s.label]] : [];
-    return ['div', mergeAttributes(HTMLAttributes, { 'data-shape': '', class: 'shape-node', style: `width:${s.width}px;height:${s.height}px;${wrapStyle(s)}` }),
+    return ['div', mergeAttributes(HTMLAttributes, { 'data-shape': '', class: 'shape-node', style: `width:${s.width}px;height:${s.height}px;${wrapStyle(s)}${s.wrap === 'free' ? `left:${s.x}px;top:${s.y}px;` : ''}` }),
       [`${SVG} svg`, { width: String(s.width), height: String(s.height), viewBox: `0 0 ${s.width} ${s.height}`, style: 'display:block;overflow:visible' }, ...parts, ...label]];
   },
   addNodeView() { return ReactNodeViewRenderer(ShapeView); },
@@ -152,9 +164,26 @@ export const contentExtensions: Extensions = [
   Shape,
 ];
 
+/**
+ * Ctrl+Home / Ctrl+End levam o cursor ao começo / fim do texto mesmo com uma forma ou imagem selecionada
+ * (o navegador, sozinho, às vezes deixa a seleção presa no objeto e a próxima tecla apagaria o objeto).
+ */
+const DocEdges = Extension.create({
+  name: 'docEdges',
+  addKeyboardShortcuts() {
+    const go = (end: boolean) => () => {
+      const { state, view } = this.editor;
+      view.dispatch(state.tr.setSelection(end ? Selection.atEnd(state.doc) : Selection.atStart(state.doc)).scrollIntoView());
+      return true;
+    };
+    return { 'Mod-End': go(true), 'Mod-Home': go(false) };
+  },
+});
+
 export const editorExtensions: Extensions = [
   ...contentExtensions,
   TableFormulas,
+  DocEdges,
   Placeholder.configure({
     placeholder: ({ node }) => (node.type.name === 'heading' ? 'Título' : 'Escreva aqui…'),
     showOnlyCurrent: true,

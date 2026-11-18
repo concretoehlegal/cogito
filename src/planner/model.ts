@@ -13,9 +13,44 @@ export const TYPES: Record<NodeType, TypeDef> = {
   nota: { label: 'Nota', plural: 'Notas', icon: 'pergaminho', color: '#d4d4d4', w: 300, h: 220 },
   imagem: { label: 'Imagem', plural: 'Imagens', icon: 'camera', color: '#9a9a9a', w: 320, h: 230 },
   moldura: { label: 'Moldura', plural: 'Molduras', icon: 'mapa', color: '#8a8a8a', w: 680, h: 440 },
+  texto: { label: 'Texto', plural: 'Textos', icon: 'texto', color: '#f2f2f2', w: 280, h: 40 },
+  caixa: { label: 'Caixa de texto', plural: 'Caixas de texto', icon: 'caixa-texto', color: '#737373', w: 280, h: 140 },
 };
-export const ORDER: NodeType[] = ['personagem', 'npc', 'inimigo', 'local', 'item', 'faccao', 'sessao', 'nota', 'imagem', 'moldura'];
+export const ORDER: NodeType[] = ['personagem', 'npc', 'inimigo', 'local', 'item', 'faccao', 'sessao', 'nota', 'imagem', 'moldura', 'texto', 'caixa'];
+/** Tipos que se escreve direto no quadro (sem painel). */
+export const isText = (t: NodeType) => t === 'texto' || t === 'caixa';
 export const CARD_RATIO = 300 / 220;
+/** Chefes viram cartas largas (o espaço de duas cartas lado a lado). */
+export const WIDE_RATIO = 300 / 460;
+export const isWide = (n: Pick<PlanNode, 'type' | 'sheet'>) => n.type === 'inimigo' && !!n.sheet?.boss;
+export const ratioOf = (n: Pick<PlanNode, 'type' | 'sheet'>) => (isWide(n) ? WIDE_RATIO : CARD_RATIO);
+/** Ajusta o tamanho de uma carta ao formato (normal ou larga), mantendo a altura. */
+export function fitCard(n: PlanNode) {
+  if (!isChar(n.type)) return;
+  const r = ratioOf(n);
+  if (Math.abs(n.h / n.w - r) < 0.02) return;
+  n.w = Math.round(n.h / r); n.h = Math.round(n.w * r);
+}
+
+/**
+ * Como fitCard, mas abrindo espaço: se a carta ficou mais larga (chefe), o que está à direita dela na mesma faixa
+ * anda para a direita e a moldura que a contém cresce junto, para nada ficar por baixo da carta.
+ */
+export function fitCardRoom(nodes: PlanNode[], n: PlanNode) {
+  const w0 = n.w; const x1 = n.x + w0;
+  fitCard(n);
+  const d = n.w - w0;
+  if (d <= 0) return;
+  const top = n.y; const bot = n.y + n.h;
+  for (const m of nodes) {
+    if (m === n) continue;
+    const sameRow = m.y < bot && m.y + m.h > top;
+    if (!sameRow) continue;
+    const holds = m.type === 'moldura' && m.x <= n.x && m.x + m.w >= x1 - 1 && m.y <= top && m.y + m.h >= bot;
+    if (holds) m.w += d;
+    else if (m.x >= x1 - 8) m.x += d;
+  }
+}
 export const isChar = (t: NodeType) => !!TYPES[t].char;
 
 export const uid = (p: string) => `${p}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
@@ -29,7 +64,7 @@ export function newNode(type: NodeType, x: number, y: number, extra: Partial<Pla
   const d = TYPES[type];
   const titles: Record<NodeType, string> = {
     personagem: 'Novo personagem', npc: 'Novo NPC', inimigo: 'Nova criatura', local: 'Novo local', item: 'Novo item',
-    faccao: 'Nova facção', sessao: 'Nova sessão', nota: '', imagem: '', moldura: 'Nova moldura',
+    faccao: 'Nova facção', sessao: 'Nova sessão', nota: '', imagem: '', moldura: 'Nova moldura', texto: '', caixa: '',
   };
   return {
     id: uid('n'), type, x: Math.round(x - d.w / 2), y: Math.round(y - d.h / 2), w: d.w, h: d.h,

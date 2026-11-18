@@ -58,7 +58,7 @@ export function ShapeView({ node, updateAttributes, selected, editor, getPos }: 
   return (
     <NodeViewWrapper
       ref={box} className={`shape-node${selected ? ' is-selected' : ''}`} data-kind={a.kind} data-align={a.align} data-wrap={a.wrap}
-      style={{ width: cur.width, height: cur.height, ...(wrapStyle(a) ? { shapeOutside: wrapStyle(a).replace(/^shape-outside:|;$/g, '') } : {}) }}
+      style={{ width: cur.width, height: cur.height, ...(a.wrap === 'free' ? { left: a.x ?? 0, top: a.y ?? 0 } : {}), ...(wrapStyle(a) ? { shapeOutside: wrapStyle(a).replace(/^shape-outside:|;$/g, '') } : {}) }}
       onMouseDown={(e: React.MouseEvent) => { if (!selected && typeof getPos === 'function') { e.preventDefault(); editor.commands.setNodeSelection(getPos()); } }}
       data-drag-handle
     >

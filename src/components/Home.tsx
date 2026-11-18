@@ -6,9 +6,9 @@ import { FORMATS, type PageFormat } from '../model';
 import { createBook, deleteBook, openBook, refreshBooks, renameBookOnDisk, setHomeTab, useApp, type HomeTab } from '../store';
 import { PlanList } from '../planner/PlanList';
 import { HuntHome } from '../hunt/HuntHome';
-import { TitleStrip } from './Logo';
+import { BrandLogo, TitleStrip, XmasLights } from './Logo';
 import { Settings } from './Settings';
-import { IconEye, IconLibrary } from './icons';
+import { IconLibrary } from './icons';
 import { Menu, Modal, confirmDialog, fmtDate, promptDialog } from './ui';
 
 function NewBookDialog({ onClose }: { onClose: () => void }) {
@@ -50,6 +50,7 @@ export function Home() {
   const [creating, setCreating] = useState(false);
   const [settings, setSettings] = useState(false);
   const [dataDir, setDataDir] = useState('');
+  const xmas = useApp((st) => st.prefs.xmas);
   useEffect(() => { void refreshBooks(); api.info().then((i) => setDataDir(i.dataDir), () => {}); }, []);
   // Planejador e Bestiário usam o tema noir de Cair da Noite; o Escritor mantém o visual de editor.
   useEffect(() => {
@@ -64,7 +65,7 @@ export function Home() {
       <div className="home-body">
         <aside className="side-nav" aria-label="Áreas do COGITO">
           <div className="sn-brand" title="COGITO">
-            <span className="sn-logo"><IconEye size={26} /></span>
+            <span className="sn-logo"><BrandLogo size={26} /></span>
             <strong>COGITO</strong>
           </div>
           <div className="sn-group" role="tablist">
@@ -80,7 +81,9 @@ export function Home() {
           </div>
           <span className="grow" />
           <div className="sn-card">
-            <span className="sn-card-icon"><IconEye size={22} /></span>
+            {xmas && <XmasLights segments={3} className="card" />}
+            <span className="sn-card-icon"><BrandLogo size={22} /></span>
+            {xmas && <span className="sn-edition">Edição “Pesadelos Antes do Natal”</span>}
             <strong>Tudo fica neste computador</strong>
             <p>Livros, campanhas e imagens são salvos localmente, sem internet.</p>
             {dataDir && <span className="sn-path" title={dataDir}>{dataDir}</span>}

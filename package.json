@@ -1,7 +1,7 @@
 {
   "name": "cogito",
   "productName": "COGITO",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "COGITO: escreva livros de RPG, planeje campanhas num quadro livre e enfrente criaturas no Bestiário. Tudo offline, no Windows.",
   "author": "COGITO",
   "private": true,

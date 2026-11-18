@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="../../releases/latest"><img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-0.15.0-b8ff2c?style=for-the-badge&labelColor=171717"></a>
+  <a href="../../releases/latest"><img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-0.16.0-b8ff2c?style=for-the-badge&labelColor=171717"></a>
   <img alt="Windows 10 e 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-e5e5e5?style=for-the-badge&labelColor=171717">
   <img alt="100% offline" src="https://img.shields.io/badge/100%25-offline-e5e5e5?style=for-the-badge&labelColor=171717">
   <img alt="Em português" src="https://img.shields.io/badge/idioma-portugu%C3%AAs-e5e5e5?style=for-the-badge&labelColor=171717">
@@ -86,7 +86,9 @@ pasta. O app também faz cópias automáticas enquanto você trabalha.
 - Capítulos e seções com **sumário automático**; títulos, subtítulos e estilos prontos.
 - **Tabelas com fórmulas** (como numa planilha), tabelas de rolagem e **formas** (faixas, estrelas, setas…) com contorno de texto.
 - **Blocos de RPG**: ficha de personagem, bloco de criatura, item ou magia, nota do mestre e texto para leitura.
+- **Ferramenta Mover**: solte imagens e formas em qualquer ponto da página, com guias de alinhamento ao segurar Shift.
 - Imagens arrastadas ou coladas, corretor ortográfico em português, busca no livro, rolador de dados.
+- **Contador de páginas** ("3 / 12") no rodapé, também no PDF e no DOCX.
 - **Biblioteca de PDFs** para consulta ao lado do texto e anexos por livro.
 - Exportação em **PDF** e **DOCX**, com as fontes embutidas.
 </details>
@@ -96,7 +98,9 @@ pasta. O app também faz cópias automáticas enquanto você trabalha.
 
 - Campanhas personalizáveis com **nome, descrição, ícone, cor e foto de capa**, num painel com números e busca.
 - **Quadro infinito**: mover, aproximar, selecionar vários, molduras, imagens arrastadas do computador.
-- **Cartas de personagem** (jogadores, NPCs, criaturas e chefes) com Vida, Resiliência, Defesa, Alma, atributos,
+- **Setas e linhas estilo Miro** saindo dos 4 lados de cada ficha: reta, curva ou cotovelo, traço sólido, tracejado ou pontilhado, pontas variadas e estilos prontos.
+- Ferramentas **Mover** (com guias), **Texto** e **Caixa de texto**; barras laterais com largura ajustável.
+- **Cartas sóbrias com ícones** (jogadores, NPCs, criaturas e chefes em carta dupla) com Vida, Resiliência, Defesa, Alma, atributos,
   capacidades, ataques e cartas de equipamento, habilidade e poderes ocultos.
 - **Notas no estilo Obsidian**: Markdown, imagem com legenda, etiquetas e links `[[Nome]]` com sugestões e "quem cita esta ficha".
 - **Ficha completa** com dois cliques na carta; desfazer e refazer; salvamento automático com cópias.

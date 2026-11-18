@@ -3,7 +3,7 @@ import { useEffect, useReducer, type ReactNode } from 'react';
 import type { Editor } from '@tiptap/core';
 import {
   AlignCenter, AlignJustify, AlignLeft, AlignRight, Bold, Italic, List, ListOrdered, Minus, Redo2, Strikethrough,
-  TextQuote, Trash2, Underline as UnderlineIcon, Undo2,
+  MousePointer2, TextQuote, Trash2, Underline as UnderlineIcon, Undo2,
 } from 'lucide-react';
 import { RPG_KIND_LABEL, type RpgKind } from '../editor/extensions';
 import { SHAPES } from '../editor/shapes';
@@ -57,6 +57,7 @@ export function Toolbar() {
     else c().setHeading({ level: Number(v[1]) as 1 | 2 | 3 }).run();
   };
   const inTable = is('table');
+  const moveTool = useApp((st) => st.moveTool);
   const inImage = is('image');
   const inRpg = is('rpgBlock');
   const rpgKind = inRpg ? (ed!.getAttributes('rpgBlock').kind as RpgKind) : null;
@@ -64,12 +65,16 @@ export function Toolbar() {
   const inShape = is('shape');
   const shape = inShape ? ed!.getAttributes('shape') : null;
   const setShape = (attrs: Record<string, unknown>) => ed!.chain().focus().updateAttributes('shape', attrs).run();
+  const freeBtn = (wrap: string | undefined, name: 'image' | 'shape') => wrap === 'free'
+    ? <Btn title="Em posição livre (arrastada com a ferramenta Mover). Clique para voltar ao texto." on onClick={() => c().updateAttributes(name, { wrap: 'none' }).run()}>Livre ✥</Btn>
+    : <Btn title="Posição livre: ligue a ferramenta Mover (Ctrl+M) e arraste" onClick={() => useApp.setState({ moveTool: true })}>Livre</Btn>;
 
   return (
     <div className="toolbar" role="toolbar" aria-label="Formatação">
       <div className="tool-group">
         <Btn title="Desfazer (Ctrl+Z)" disabled={off || !ed!.can().undo()} onClick={() => c().undo().run()}><Undo2 size={16} /></Btn>
         <Btn title="Refazer (Ctrl+Y)" disabled={off || !ed!.can().redo()} onClick={() => c().redo().run()}><Redo2 size={16} /></Btn>
+        <Btn title="Mover (Ctrl+M): arraste imagens e formas para qualquer lugar da página; segure Shift para alinhar com as guias. Esc sai." on={moveTool} onClick={() => useApp.setState({ moveTool: !moveTool })}><MousePointer2 size={16} /><span className="tool-text">Mover</span></Btn>
       </div>
       <div className="tool-group">
         <select className="tool-select" title="Estilo do parágrafo" value={blockType} disabled={off || inImage} onChange={(e) => setBlock(e.target.value)}>
@@ -124,6 +129,7 @@ export function Toolbar() {
           <Btn title="Sem contorno: a imagem fica sozinha na linha" on={!img.wrap || img.wrap === 'none'} onClick={() => c().updateAttributes('image', { wrap: 'none' }).run()}>Sem contorno</Btn>
           <Btn title="Texto contorna pela direita (em PNG transparente, segue o desenho)" on={img.wrap === 'left'} onClick={() => c().updateAttributes('image', { wrap: 'left', width: img.width === '100%' ? '50%' : img.width }).run()}>Contorno ◧</Btn>
           <Btn title="Texto contorna pela esquerda (em PNG transparente, segue o desenho)" on={img.wrap === 'right'} onClick={() => c().updateAttributes('image', { wrap: 'right', width: img.width === '100%' ? '50%' : img.width }).run()}>Contorno ◨</Btn>
+          {freeBtn(img.wrap, 'image')}
           <Btn title="Excluir imagem" onClick={() => c().deleteSelection().run()}><Trash2 size={15} /></Btn>
         </div>
       )}
@@ -146,6 +152,7 @@ export function Toolbar() {
           <Btn title="Forma à direita" on={shape.align === 'right' && shape.wrap === 'none'} onClick={() => setShape({ align: 'right', wrap: 'none' })}><AlignRight size={16} /></Btn>
           <Btn title="Texto contorna a forma pela direita" on={shape.wrap === 'left'} onClick={() => setShape({ wrap: 'left' })}>Contorno ◧</Btn>
           <Btn title="Texto contorna a forma pela esquerda" on={shape.wrap === 'right'} onClick={() => setShape({ wrap: 'right' })}>Contorno ◨</Btn>
+          {freeBtn(shape.wrap, 'shape')}
           <Btn title="Excluir forma" onClick={() => c().deleteSelection().run()}><Trash2 size={15} /></Btn>
         </div>
       )}

@@ -17,7 +17,8 @@ import { addPageAtEnd, openViewer, remember, setPrefs, setRightTab, toast, useAp
 import { ResizeHandle } from './ResizeHandle';
 import { SHAPES, shapeParts } from '../editor/shapes';
 import { insertBlock } from './Workspace';
-import { IconAttach, IconDice, IconExport, IconEye, IconGear, IconImage, IconLibrary, IconText } from './icons';
+import { BrandLogo } from './Logo';
+import { IconAttach, IconDice, IconExport, IconGear, IconImage, IconLibrary, IconText } from './icons';
 import { Menu, confirmDialog, fmtTime, promptDialog } from './ui';
 
 const TABS: { id: RightTab; label: string; icon: ReactNode }[] = [
@@ -59,7 +60,7 @@ export function RightPanel({ onHome, onSettings }: { onHome: () => void; onSetti
         </div>
       )}
       <nav className="rail" aria-label="Ferramentas">
-        <button className="rail-logo" title="Meus livros" aria-label="Meus livros" onClick={onHome}><IconEye size={44} /></button>
+        <button className="rail-logo" title="Meus livros" aria-label="Meus livros" onClick={onHome}><BrandLogo size={44} /></button>
         {TABS.map((t) => (
           <button key={t.id} className={`rail-btn${tab === t.id ? ' on' : ''}`} title={t.label} aria-label={t.label} aria-pressed={tab === t.id} onClick={() => setRightTab(tab === t.id ? null : t.id)}>
             {t.icon}

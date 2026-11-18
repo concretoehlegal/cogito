@@ -1,10 +1,13 @@
 import { setPrefs, useApp } from '../store';
 
-const PANEL = { left: { key: 'leftWidth', min: 200, max: 520, initial: 286 }, right: { key: 'rightWidth', min: 240, max: 560, initial: 300 } } as const;
+const PANEL = {
+  left: { key: 'leftWidth', min: 200, max: 520, initial: 286 }, right: { key: 'rightWidth', min: 240, max: 560, initial: 300 },
+  planLeft: { key: 'planLeftWidth', min: 76, max: 230, initial: 84 }, planRight: { key: 'planRightWidth', min: 260, max: 640, initial: 340 },
+} as const;
 
 /** Alça entre um painel e as páginas: clique, segure e arraste para mudar a largura (duplo clique restaura). */
-export function ResizeHandle({ side }: { side: 'left' | 'right' }) {
-  const cfg = PANEL[side];
+export function ResizeHandle({ side, panel }: { side: 'left' | 'right'; panel?: 'planLeft' | 'planRight' }) {
+  const cfg = PANEL[panel ?? side];
   const start = (e: React.PointerEvent) => {
     e.preventDefault();
     const x0 = e.clientX;

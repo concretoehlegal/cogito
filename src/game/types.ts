@@ -38,7 +38,9 @@ export const initials = (name: string) => name.trim().split(/\s+/).slice(0, 2).m
 
 /* ───────────── Planejador de campanhas ───────────── */
 
-export type NodeType = 'personagem' | 'npc' | 'inimigo' | 'local' | 'item' | 'faccao' | 'sessao' | 'nota' | 'imagem' | 'moldura';
+export type NodeType = 'personagem' | 'npc' | 'inimigo' | 'local' | 'item' | 'faccao' | 'sessao' | 'nota' | 'imagem' | 'moldura' | 'texto' | 'caixa';
+/** Aparência do texto (fichas Texto e Caixa de texto). */
+export interface NodeFont { size?: number; align?: 'left' | 'center' | 'right'; bold?: boolean; italic?: boolean }
 export const CHAR_TYPES: NodeType[] = ['personagem', 'npc', 'inimigo'];
 
 /** Ficha de jogo de um personagem, NPC ou inimigo do quadro. */
@@ -55,9 +57,19 @@ export interface Sheet {
 export interface PlanNode {
   id: string; type: NodeType; x: number; y: number; w: number; h: number;
   title: string; subtitle: string; color: string; icon: string; image: string | null;
-  body: string; tags: string[]; sheet?: Sheet;
+  body: string; tags: string[]; sheet?: Sheet; font?: NodeFont;
 }
-export interface PlanLink { id: string; from: string; to: string; label: string; color: string }
+export type LinkSide = 'auto' | 'top' | 'right' | 'bottom' | 'left';
+export type LinkKind = 'reta' | 'curva' | 'cotovelo';
+export type LinkDash = 'solido' | 'tracejado' | 'pontilhado';
+export type LinkCap = 'nenhuma' | 'seta' | 'triangulo' | 'circulo' | 'losango' | 'barra';
+export interface PlanLink {
+  id: string; from: string; to: string; label: string; color: string;
+  /** Lado de saída e de chegada (auto: o lado virado para a outra ficha). */
+  fromSide?: LinkSide; toSide?: LinkSide;
+  /** Formato da linha, traço, pontas e espessura. Ausentes: reta contínua com seta no fim (ligações antigas). */
+  kind?: LinkKind; dash?: LinkDash; startCap?: LinkCap; endCap?: LinkCap; width?: number;
+}
 
 export interface Plan {
   version: 1; id: string; name: string; description: string; icon: string; color: string; cover: string | null;

@@ -22,6 +22,10 @@ export interface Prefs {
   sound: boolean; volume: number; diceAnim: boolean; spell: boolean; uiScale: number; leftWidth: number; rightWidth: number; diceColor: string;
   /** Fundo do Bestiário, a imagem própria (nome do arquivo), se o círculo de runas aparece e quanto escurecer a imagem. */
   huntBg: HuntBackdrop; huntBgImage: string | null; huntCircle: boolean; huntBgDim: number;
+  /** Larguras das barras do Planejador. */
+  planLeftWidth: number; planRightWidth: number;
+  /** Enfeites de Natal (luzinhas e gorro no logo). */
+  xmas: boolean;
 }
 export interface Toast { id: number; kind: 'info' | 'error' | 'ok'; text: string; action?: { label: string; run: () => void } }
 
@@ -46,6 +50,8 @@ interface AppState {
   rightTab: RightTab | null;
   renaming: string | null;
   busy: string | null;
+  /** Ferramenta Mover do Escritor (arrastar imagens e formas livremente pela página). */
+  moveTool: boolean;
   prefs: Prefs;
 }
 
@@ -55,12 +61,12 @@ const stored = <T,>(key: string, fallback: T): T => {
 export const remember = (key: string, value: unknown) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* sem espaço */ } };
 
 export const useApp = create<AppState>(() => ({
-  screen: 'home', homeTab: homeTabOf(stored('cogito.homeTab', 'livros')), books: [], booksLoaded: false, book: null, sel: { kind: 'toc' },
+  moveTool: false, screen: 'home', homeTab: homeTabOf(stored('cogito.homeTab', 'livros')), books: [], booksLoaded: false, book: null, sel: { kind: 'toc' },
   viewMode: stored('cogito.viewMode', 'single'), zoom: stored('cogito.zoom', 'fit'),
   save: { state: 'saved' }, contentRev: {}, epoch: 0, activeEditor: null, toasts: [], viewer: null,
   theme: stored('cogito.theme', 'dark'), leftOpen: true, rightTab: stored('cogito.rightTab', 'inserir'),
   renaming: null, busy: null,
-  prefs: { sound: true, volume: 0.6, diceAnim: true, spell: true, uiScale: 1, leftWidth: 286, rightWidth: 300, diceColor: '#f2f2f2', huntBg: 'mesa', huntBgImage: null, huntCircle: true, huntBgDim: 0.25, ...stored<Partial<Prefs>>('cogito.prefs', {}) },
+  prefs: { sound: true, volume: 0.6, diceAnim: true, spell: true, uiScale: 1, leftWidth: 286, rightWidth: 300, diceColor: '#f2f2f2', huntBg: 'mesa', huntBgImage: null, huntCircle: true, huntBgDim: 0.25, planLeftWidth: 84, planRightWidth: 340, xmas: true, ...stored<Partial<Prefs>>('cogito.prefs', {}) },
 }));
 
 const get = useApp.getState;
@@ -230,7 +236,7 @@ export async function restoreBackup(file: string) {
   } catch (e) { toast(`Não foi possível restaurar: ${errorText(e)}`, 'error'); }
 }
 
-export const setBookProps = (patch: Partial<Pick<Book, 'title' | 'author' | 'format' | 'pageStyle' | 'showPageNumbers'>>) =>
+export const setBookProps = (patch: Partial<Pick<Book, 'title' | 'author' | 'format' | 'pageStyle' | 'showPageNumbers' | 'pageNumberStyle'>>) =>
   mutate((b) => { Object.assign(b, patch); });
 
 /* ───────────── navegação ───────────── */

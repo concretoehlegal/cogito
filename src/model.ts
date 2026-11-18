@@ -41,6 +41,8 @@ export interface Book {
   format: PageFormat;
   pageStyle: PageStyle;
   showPageNumbers: boolean;
+  /** Formato do contador de páginas no centro inferior: "3", "3 / 12" ou "Página 3 de 12". */
+  pageNumberStyle?: PageNumberStyle;
   createdAt: number;
   updatedAt: number;
   chapters: Chapter[];
@@ -53,6 +55,11 @@ export interface BookMeta {
 }
 
 /* Dimensões em milímetros. */
+export type PageNumberStyle = 'numero' | 'contador' | 'extenso';
+/** Texto do contador de páginas. */
+export const pageLabel = (style: PageNumberStyle | undefined, n: number, total: number) =>
+  style === 'numero' ? String(n) : style === 'extenso' ? `Página ${n} de ${total}` : `${n} / ${total}`;
+
 export const FORMATS: Record<PageFormat, { w: number; h: number; label: string }> = {
   A4: { w: 210, h: 297, label: 'A4 (210 × 297 mm)' },
   A3: { w: 297, h: 420, label: 'A3 (297 × 420 mm)' },
@@ -101,6 +108,7 @@ export function normalizeBook(b: any): Book {
     format: b.format === 'A3' ? 'A3' : 'A4',
     pageStyle: b.pageStyle === 'branco' || b.pageStyle === 'cinza' ? b.pageStyle : b.pageStyle === 'pergaminho' ? 'pergaminho' : 'cinza',
     showPageNumbers: b.showPageNumbers !== false,
+    pageNumberStyle: b.pageNumberStyle === 'numero' || b.pageNumberStyle === 'extenso' ? b.pageNumberStyle : 'contador',
     createdAt: b.createdAt || Date.now(),
     updatedAt: b.updatedAt || Date.now(),
     chapters: (Array.isArray(b.chapters) ? b.chapters : []).map((c: any) => ({

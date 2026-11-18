@@ -5,10 +5,11 @@ import { api, errorText } from '../api';
 import { toast } from '../store';
 import { CardEditor, CardTile, blankCard } from '../game/Cards';
 import { GameIcon, IconButton } from '../game/icons';
-import type { Card, CombatAction, NodeType, PlanLink, PlanNode, Sheet } from '../game/types';
+import type { Card, CombatAction, LinkCap, LinkDash, LinkKind, LinkSide, NodeType, PlanLink, PlanNode, Sheet } from '../game/types';
+import { PRESETS, capPath, dashArray, rememberLinkStyle, styleOf, type LinkStyle } from './links';
 import { startHunt } from './Ficha';
 import { canvas } from './Canvas';
-import { CARD_RATIO, ORDER, TYPES, backlinks, defaultSheet, findByTitle, isChar, linksIn, newNode, norm, uid } from './model';
+import { ORDER, fitCard, fitCardRoom, TYPES, backlinks, defaultSheet, findByTitle, isChar, isText, linksIn, newNode, norm, uid } from './model';
 import { PLAN_COLORS } from './PlanList';
 import { edit, planFileUrl, select, usePlan } from './state';
 
@@ -58,7 +59,7 @@ function SheetEditor({ n }: { n: PlanNode }) {
           <label className="field"><span>Ações de mov.</span><input inputMode="numeric" value={s.moveActions ?? 0} onChange={(e) => up((sh) => { sh.moveActions = Math.max(0, Math.min(9, num(e.target.value, 0))); }, 'mact')} /></label>
         </div>
       )}
-      {enemy && <label className="check"><input type="checkbox" checked={s.boss} onChange={(e) => up((sh) => { sh.boss = e.target.checked; if (!sh.boss) sh.actions = sh.actions.slice(0, 2); })} /> Chefe (moldura ciano e até 4 habilidades)</label>}
+      {enemy && <label className="check"><input type="checkbox" checked={s.boss} onChange={(e) => { const on = e.target.checked; edit((d) => { const m = d.nodes.find((x) => x.id === n.id); if (!m) return; if (!m.sheet) m.sheet = defaultSheet(m.type); m.sheet.boss = on; if (!on) m.sheet.actions = m.sheet.actions.slice(0, 2); fitCardRoom(d.nodes, m); }); }} /> Chefe (carta larga, com arte maior, e até 4 habilidades)</label>}
 
       {!enemy && (
         <>
@@ -121,6 +122,42 @@ function SheetEditor({ n }: { n: PlanNode }) {
   );
 }
 
+/** Texto e Caixa de texto: o conteúdo se escreve no quadro; aqui ficam tamanho, alinhamento, estilo e cor. */
+function TextEditor({ n }: { n: PlanNode }) {
+  const up = (fn: (m: PlanNode) => void, key?: string) => edit((d) => { const m = d.nodes.find((x) => x.id === n.id); if (m) fn(m); }, key ? { key: `${n.id}:${key}` } : {});
+  const f = n.font ?? {};
+  const setFont = (p: Partial<NonNullable<PlanNode['font']>>, key?: string) => up((m) => { m.font = { ...(m.font ?? {}), ...p }; }, key);
+  const size = f.size ?? (n.type === 'texto' ? 26 : 16);
+  const remove = () => { edit((d) => { d.nodes = d.nodes.filter((x) => x.id !== n.id); d.links = d.links.filter((l) => l.from !== n.id && l.to !== n.id); }); select([]); };
+  const colors = n.type === 'texto' ? ['#f2f2f2', '#a3a3a3', '#b8ff2c', '#FF2E88', '#00C2CB', '#F4B400', '#d77a6e'] : ['#737373', '#d4d4d4', '#b8ff2c', '#FF2E88', '#00C2CB', '#F4B400', '#7aa7d6'];
+  return (
+    <div className="pp-body">
+      <div className="pp-head"><span className="pp-type" style={{ '--nc': n.color } as CSSProperties}><GameIcon id={TYPES[n.type].icon} size={14} /> {TYPES[n.type].label}</span></div>
+      <label className="field"><span>Texto <small className="muted">— ou dois cliques no quadro para escrever lá</small></span>
+        <textarea rows={5} value={n.body} onChange={(e) => up((m) => { m.body = e.target.value.slice(0, 5000); }, 'body')} />
+      </label>
+      <label className="field"><span>Tamanho — {size}</span><input type="range" min={10} max={n.type === 'texto' ? 96 : 40} value={size} onChange={(e) => setFont({ size: Number(e.target.value) }, 'size')} /></label>
+      <div className="field"><span>Alinhamento e estilo</span>
+        <div className="seg tx-seg">
+          {(['left', 'center', 'right'] as const).map((al) => <button key={al} type="button" className={(f.align ?? 'left') === al ? 'on' : ''} onClick={() => setFont({ align: al })}>{al === 'left' ? 'Esquerda' : al === 'center' ? 'Centro' : 'Direita'}</button>)}
+          <button type="button" className={f.bold ? 'on' : ''} onClick={() => setFont({ bold: !f.bold })}><b>N</b></button>
+          <button type="button" className={f.italic ? 'on' : ''} onClick={() => setFont({ italic: !f.italic })}><i>I</i></button>
+        </div>
+      </div>
+      <div className="field"><span>{n.type === 'texto' ? 'Cor do texto' : 'Cor da borda'}</span>
+        <div className="color-line">
+          {colors.map((c) => <button key={c} type="button" className={`color-dot${n.color === c ? ' on' : ''}`} style={{ background: c }} onClick={() => up((m) => { m.color = c; })} aria-label={`Cor ${c}`} />)}
+          <input type="color" value={n.color} onChange={(e) => up((m) => { m.color = e.target.value; }, 'color')} aria-label="Outra cor" />
+        </div>
+      </div>
+      <div className="pp-actions">
+        <button className="btn small" onClick={() => window.dispatchEvent(new CustomEvent('plan:edit-text', { detail: n.id }))}>Escrever no quadro</button>
+        <button className="btn small danger-ghost" onClick={remove}><Trash2 size={13} /> Excluir</button>
+      </div>
+    </div>
+  );
+}
+
 function NodeEditor({ n }: { n: PlanNode }) {
   const plan = usePlan((s) => s.plan)!;
   const titleRef = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
@@ -151,7 +188,7 @@ function NodeEditor({ n }: { n: PlanNode }) {
     m.type = t;
     if (m.color === TYPES[n.type].color) m.color = TYPES[t].color;
     if (m.icon === TYPES[n.type].icon) m.icon = TYPES[t].icon;
-    if (isChar(t)) { if (!m.sheet) m.sheet = defaultSheet(t); m.h = Math.round(m.w * CARD_RATIO); }
+    if (isChar(t)) { if (!m.sheet) m.sheet = defaultSheet(t); fitCard(m); }
   });
   const pickImage = async () => {
     try { const [img] = await api.planPickImages(plan.id); if (img) up((m) => { m.image = img.file; if (!m.title && m.type === 'imagem') m.title = ''; }); } catch (e) { toast(errorText(e), 'error'); }
@@ -247,24 +284,87 @@ function NodeEditor({ n }: { n: PlanNode }) {
   );
 }
 
+/** Miniatura de uma ligação (para os botões de estilo). */
+function LinkSample({ style, w = 56 }: { style: LinkStyle; w?: number }) {
+  const d = style.kind === 'cotovelo' ? `M2 18L${w / 2} 18L${w / 2} 6L${w - 2} 6` : style.kind === 'curva' ? `M2 18C${w / 2} 18 ${w / 2} 6 ${w - 2} 6` : `M2 12L${w - 2} 12`;
+  const end = style.kind === 'reta' ? { x: w - 2, y: 12, angle: 0 } : { x: w - 2, y: 6, angle: 0 };
+  const start = style.kind === 'reta' ? { x: 2, y: 12, angle: 180 } : { x: 2, y: 18, angle: 180 };
+  const sw = Math.min(2.6, style.width);
+  const cap = (c: LinkCap, p: { x: number; y: number; angle: number }) => { const cp = capPath(c, sw * 0.8); return cp ? <path d={cp.d} transform={`translate(${p.x} ${p.y}) rotate(${p.angle})`} fill={cp.fill ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={sw * 0.8} strokeLinejoin="round" strokeLinecap="round" /> : null; };
+  return (
+    <svg width={w} height={24} viewBox={`-4 0 ${w + 8} 24`} aria-hidden>
+      <path d={d} fill="none" stroke="currentColor" strokeWidth={sw} strokeDasharray={dashArray(style.dash, sw)} strokeLinecap={style.dash === 'pontilhado' ? 'round' : 'butt'} />
+      {cap(style.startCap, start)}{cap(style.endCap, end)}
+    </svg>
+  );
+}
+
+const CAPS: { id: LinkCap; label: string }[] = [
+  { id: 'nenhuma', label: 'Nenhuma' }, { id: 'seta', label: 'Seta' }, { id: 'triangulo', label: 'Triângulo' },
+  { id: 'circulo', label: 'Círculo' }, { id: 'losango', label: 'Losango' }, { id: 'barra', label: 'Barra' },
+];
+const SIDE_LABEL: Record<LinkSide, string> = { auto: 'Automático', top: 'Cima', right: 'Direita', bottom: 'Baixo', left: 'Esquerda' };
+
 function LinkEditor({ id }: { id: string }) {
   const plan = usePlan((s) => s.plan)!;
   const l = plan.links.find((x) => x.id === id);
   if (!l) return null;
   const a = plan.nodes.find((n) => n.id === l.from); const b = plan.nodes.find((n) => n.id === l.to);
   const up = (fn: (x: PlanLink) => void, key?: string) => edit((d) => { const m = d.links.find((x) => x.id === id); if (m) fn(m); }, key ? { key: `${id}:${key}` } : {});
+  const st = styleOf(l);
+  const setStyle = (p: Partial<LinkStyle>, key?: string) => { const next = { ...st, ...p }; rememberLinkStyle(next); up((m) => { Object.assign(m, next); }, key); };
   return (
     <div className="pp-body">
       <div className="pp-head"><span className="pp-type"><ArrowLeftRight size={14} /> Ligação</span></div>
       <p className="pp-linkpath"><b>{a?.title || 'Ficha'}</b> → <b>{b?.title || 'Ficha'}</b></p>
       <label className="field"><span>Legenda</span><input autoFocus value={l.label} placeholder="Ex.: traiu, mora em, procura" onChange={(e) => up((m) => { m.label = e.target.value.slice(0, 60); }, 'label')} /></label>
+
+      <div className="field"><span>Estilos prontos</span>
+        <div className="lk-presets">
+          {PRESETS.map((p) => (
+            <button key={p.id} type="button" className={`lk-preset${JSON.stringify(p.style) === JSON.stringify(st) ? ' on' : ''}`} title={p.label} onClick={() => setStyle(p.style)}>
+              <LinkSample style={p.style} /><small>{p.label}</small>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="field"><span>Formato</span>
+        <div className="seg lk-seg">
+          {(['reta', 'curva', 'cotovelo'] as LinkKind[]).map((k) => <button key={k} type="button" className={st.kind === k ? 'on' : ''} onClick={() => setStyle({ kind: k })}><LinkSample style={{ ...st, kind: k, startCap: 'nenhuma', endCap: 'nenhuma', dash: 'solido', width: 2 }} w={44} />{k === 'reta' ? 'Reta' : k === 'curva' ? 'Curva' : 'Cotovelo'}</button>)}
+        </div>
+      </div>
+      <div className="field"><span>Traço</span>
+        <div className="seg lk-seg">
+          {(['solido', 'tracejado', 'pontilhado'] as LinkDash[]).map((k) => <button key={k} type="button" className={st.dash === k ? 'on' : ''} onClick={() => setStyle({ dash: k })}><LinkSample style={{ ...st, kind: 'reta', dash: k, startCap: 'nenhuma', endCap: 'nenhuma', width: 2 }} w={44} />{k === 'solido' ? 'Contínuo' : k === 'tracejado' ? 'Tracejado' : 'Pontilhado'}</button>)}
+        </div>
+      </div>
+      <div className="insp-grid two-even">
+        <label className="field"><span>Ponta no início</span>
+          <select value={st.startCap} onChange={(e) => setStyle({ startCap: e.target.value as LinkCap })}>{CAPS.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select>
+        </label>
+        <label className="field"><span>Ponta no fim</span>
+          <select value={st.endCap} onChange={(e) => setStyle({ endCap: e.target.value as LinkCap })}>{CAPS.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}</select>
+        </label>
+      </div>
+      <label className="field"><span>Espessura — {st.width}</span>
+        <input type="range" min={1} max={8} step={0.5} value={st.width} onChange={(e) => setStyle({ width: Number(e.target.value) }, 'width')} />
+      </label>
+      <div className="insp-grid two-even">
+        <label className="field"><span>Sai de {a?.title ? `“${a.title}”` : ''} por</span>
+          <select value={l.fromSide ?? 'auto'} onChange={(e) => up((m) => { m.fromSide = e.target.value as LinkSide; })}>{(Object.keys(SIDE_LABEL) as LinkSide[]).map((k) => <option key={k} value={k}>{SIDE_LABEL[k]}</option>)}</select>
+        </label>
+        <label className="field"><span>Chega em {b?.title ? `“${b.title}”` : ''} por</span>
+          <select value={l.toSide ?? 'auto'} onChange={(e) => up((m) => { m.toSide = e.target.value as LinkSide; })}>{(Object.keys(SIDE_LABEL) as LinkSide[]).map((k) => <option key={k} value={k}>{SIDE_LABEL[k]}</option>)}</select>
+        </label>
+      </div>
       <div className="field"><span>Cor</span>
         <div className="color-line">
-          {['#9fb8ad', ...PLAN_COLORS.slice(1, 6)].map((c) => <button key={c} type="button" className={`color-dot${l.color === c ? ' on' : ''}`} style={{ background: c }} onClick={() => up((m) => { m.color = c; })} aria-label={`Cor ${c}`} />)}
+          {['#a3a3a3', '#e5e5e5', ...PLAN_COLORS.slice(0, 6)].map((c) => <button key={c} type="button" className={`color-dot${l.color === c ? ' on' : ''}`} style={{ background: c }} onClick={() => up((m) => { m.color = c; })} aria-label={`Cor ${c}`} />)}
+          <input type="color" value={l.color} onChange={(e) => up((m) => { m.color = e.target.value; }, 'color')} aria-label="Outra cor" />
         </div>
       </div>
       <div className="pp-actions">
-        <button className="btn small" onClick={() => up((m) => { const f = m.from; m.from = m.to; m.to = f; })}><ArrowLeftRight size={13} /> Inverter</button>
+        <button className="btn small" onClick={() => up((m) => { const f = m.from; m.from = m.to; m.to = f; const fs = m.fromSide; m.fromSide = m.toSide; m.toSide = fs; const sc = m.startCap; m.startCap = m.endCap ?? 'seta'; m.endCap = sc ?? 'nenhuma'; })}><ArrowLeftRight size={13} /> Inverter</button>
         <button className="btn small danger-ghost" onClick={() => { edit((d) => { d.links = d.links.filter((x) => x.id !== id); }); select([]); }}><Trash2 size={13} /> Apagar ligação</button>
       </div>
     </div>
@@ -324,6 +424,6 @@ export function NodePanel() {
   if (selLink) return <LinkEditor key={selLink} id={selLink} />;
   if (sel.length > 1) return <MultiEditor ids={sel} />;
   const n = sel.length === 1 ? plan.nodes.find((x) => x.id === sel[0]) : null;
-  if (n) return <NodeEditor key={n.id} n={n} />;
+  if (n) return isText(n.type) ? <TextEditor key={n.id} n={n} /> : <NodeEditor key={n.id} n={n} />;
   return <PlanInfo />;
 }

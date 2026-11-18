@@ -19,7 +19,9 @@ export const SHAPES: { kind: ShapeKind; label: string; w: number; h: number }[] 
 
 export interface ShapeAttrs {
   kind: ShapeKind; width: number; height: number; fill: string; stroke: string; strokeWidth: number;
-  label: string; labelColor: string; align: 'left' | 'center' | 'right'; wrap: 'none' | 'left' | 'right';
+  label: string; labelColor: string; align: 'left' | 'center' | 'right'; wrap: 'none' | 'left' | 'right' | 'free';
+  /** Posição livre (wrap = "free"), em px a partir do canto da página. */
+  x?: number; y?: number;
 }
 
 export interface ShapePart { d: string; fill: boolean; stroke: boolean; shade?: boolean }
@@ -107,7 +109,7 @@ export const labelY = (a: Pick<ShapeAttrs, 'height' | 'kind'>) => (a.kind === 'b
 
 /** Estilo que faz o texto contornar a forma quando ela flutua. */
 export function wrapStyle(a: Pick<ShapeAttrs, 'kind' | 'wrap'>): string {
-  if (a.wrap === 'none') return '';
+  if (a.wrap === 'none' || a.wrap === 'free') return '';
   const poly = outline(a.kind);
   const shape = a.kind === 'ellipse' ? 'ellipse(50% 50%)' : poly ? `polygon(${poly.map(([x, y]) => `${(x * 100).toFixed(1)}% ${(y * 100).toFixed(1)}%`).join(', ')})` : 'margin-box';
   return `shape-outside:${shape};`;

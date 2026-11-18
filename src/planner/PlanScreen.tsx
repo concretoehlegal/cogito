@@ -1,12 +1,13 @@
 /* Tela de uma campanha do Planejador: barra de cima, ferramentas à esquerda, quadro no meio e painel à direita. */
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, ImagePlus, Link2, Maximize, Minus, Plus, Redo2, Search, Undo2 } from 'lucide-react';
+import { ArrowLeft, ImagePlus, Link2, Maximize, Minus, MousePointer2, Plus, Redo2, Search, SquarePen, Type, Undo2 } from 'lucide-react';
 import { api, errorText } from '../api';
 import { TitleStrip } from '../components/Logo';
-import { toast } from '../store';
+import { toast, useApp } from '../store';
+import { ResizeHandle } from '../components/ResizeHandle';
 import { GameIcon } from '../game/icons';
 import type { NodeType } from '../game/types';
-import { Canvas, canvas } from './Canvas';
+import { Canvas, canvas, type Tool } from './Canvas';
 import { NodePanel } from './NodePanel';
 import { Ficha } from './Ficha';
 import { ORDER, TYPES, freeSpot, matches, newNode, uid } from './model';
@@ -30,6 +31,9 @@ export function PlanScreen() {
   const searchRef = useRef<HTMLInputElement>(null);
   const [zoomPct, setZoomPct] = useState(100);
   const [sheetId, setSheetId] = useState<string | null>(null);
+  const [tool, setTool] = useState<Tool>('mover');
+  const leftW = useApp((st) => st.prefs.planLeftWidth);
+  const rightW = useApp((st) => st.prefs.planRightWidth);
   useEffect(() => {
     const open = (e: Event) => setSheetId(String((e as CustomEvent).detail ?? ''));
     window.addEventListener('plan:open-sheet', open);
@@ -83,7 +87,17 @@ export function PlanScreen() {
         if (s.sel.length) { const ids = s.sel; edit((d) => { d.nodes = d.nodes.filter((n) => !ids.includes(n.id)); d.links = d.links.filter((l) => !ids.includes(l.from) && !ids.includes(l.to)); }); select([]); }
         return;
       }
-      if (e.key === 'Escape') select([]);
+      if (!mod && !e.altKey) {
+        const k = e.key.toLowerCase();
+        if (k === 'v') { setTool('mover'); return; }
+        if (k === 't') { setTool('texto'); return; }
+        if (k === 'b') { setTool('caixa'); return; }
+        // Setas empurram a seleção (1 ponto; com Shift, 10).
+        const step = e.shiftKey ? 10 : 1;
+        const nud = e.key === 'ArrowLeft' ? [-step, 0] : e.key === 'ArrowRight' ? [step, 0] : e.key === 'ArrowUp' ? [0, -step] : e.key === 'ArrowDown' ? [0, step] : null;
+        if (nud && s.sel.length) { e.preventDefault(); const ids = s.sel; edit((d) => { for (const m of d.nodes) if (ids.includes(m.id)) { m.x += nud[0]; m.y += nud[1]; } }, { key: `nudge:${ids.join()}` }); return; }
+      }
+      if (e.key === 'Escape') { setTool('mover'); select([]); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -107,9 +121,15 @@ export function PlanScreen() {
         <button className="icon-btn" title="Desfazer (Ctrl+Z)" disabled={!canUndo} onClick={undo}><Undo2 size={16} /></button>
         <button className="icon-btn" title="Refazer (Ctrl+Y)" disabled={!canRedo} onClick={redo}><Redo2 size={16} /></button>
       </header>
-      <div className="plan-body">
-        <nav className="plan-tools" aria-label="Criar no quadro">
-          {ORDER.filter((t) => t !== 'imagem').map((t) => (
+      <div className="plan-body" style={{ gridTemplateColumns: `${leftW}px 6px minmax(0, 1fr) 6px ${rightW}px` }}>
+        <nav className={`plan-tools${leftW > 150 ? ' wide' : ''}`} aria-label="Criar no quadro">
+          <div className="plan-toolset" role="radiogroup" aria-label="Ferramentas">
+            <button className={`plan-tool${tool === 'mover' ? ' on' : ''}`} title="Mover (V) — arraste para mover; segure Shift para alinhar com as guias; setas empurram" onClick={() => setTool('mover')}><MousePointer2 size={19} /><span>Mover</span></button>
+            <button className={`plan-tool${tool === 'texto' ? ' on' : ''}`} title="Texto (T) — clique no quadro e escreva" onClick={() => setTool('texto')}><Type size={19} /><span>Texto</span></button>
+            <button className={`plan-tool${tool === 'caixa' ? ' on' : ''}`} title="Caixa de texto (B) — arraste no quadro para desenhar" onClick={() => setTool('caixa')}><SquarePen size={19} /><span>Caixa</span></button>
+          </div>
+          <span className="plan-tools-sep" />
+          {ORDER.filter((t) => t !== 'imagem' && t !== 'texto' && t !== 'caixa').map((t) => (
             <button key={t} className="plan-tool" title={`Novo(a) ${TYPES[t].label.toLowerCase()}`} onClick={() => add(t)} style={{ '--tc': TYPES[t].color } as React.CSSProperties}>
               <GameIcon id={TYPES[t].icon} size={20} /><span>{TYPES[t].label}</span>
             </button>
@@ -122,7 +142,9 @@ export function PlanScreen() {
           <button className="plan-tool small" title="Aproximar" onClick={() => canvas.zoomBy(1.25)}><Plus size={16} /></button>
           <button className="plan-tool small" title="Enquadrar tudo" onClick={() => canvas.fit()}><Maximize size={16} /></button>
         </nav>
-        <main className="plan-main"><Canvas plan={plan} search={search} textLinks={textLinks} /></main>
+        <ResizeHandle side="left" panel="planLeft" />
+        <main className="plan-main"><Canvas plan={plan} search={search} textLinks={textLinks} tool={tool} onToolDone={() => setTool('mover')} /></main>
+        <ResizeHandle side="right" panel="planRight" />
         <aside className="plan-panel"><NodePanel /></aside>
       </div>
       {sheetId && (() => { const n = plan.nodes.find((m) => m.id === sheetId); return n ? <Ficha n={n} planId={plan.id} onClose={() => setSheetId(null)} onEdit={() => { setSheetId(null); select([n.id]); }} /> : null; })()}

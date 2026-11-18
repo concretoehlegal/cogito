@@ -84,8 +84,10 @@ export function EditorScreen() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && useApp.getState().moveTool) { useApp.setState({ moveTool: false }); return; }
       if (!(e.ctrlKey || e.metaKey)) return;
       const k = e.key.toLowerCase();
+      if (k === 'm' && !e.shiftKey && !e.altKey) { e.preventDefault(); useApp.setState({ moveTool: !useApp.getState().moveTool }); return; }
       if (k === 's') { e.preventDefault(); void saveNow(); }
       else if (k === 'f') {
         e.preventDefault();

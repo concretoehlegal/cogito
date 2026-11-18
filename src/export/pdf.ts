@@ -10,7 +10,7 @@ import { api, errorText } from '../api';
 import { contentExtensions } from '../editor/extensions';
 import { resolveFormulas } from '../lib/formula';
 import { contentBlocks, overflowIndex } from '../lib/layout';
-import { buildToc, flatPages, formatOf, type Book, type DocNode } from '../model';
+import { buildToc, flatPages, formatOf, pageLabel, type Book, type DocNode } from '../model';
 import { saveNow, setBusy, toast, useApp } from '../store';
 
 /** Remove parágrafos vazios do fim da página (o editor mantém um para facilitar a escrita). */
@@ -83,15 +83,14 @@ export async function buildPrintRoot(book: Book): Promise<{ root: HTMLElement; s
   await settle(root);
 
   const numberOf = new Map<string, number>();
+  const numbered: HTMLElement[] = [];
   let n = 0;
   for (const m of made) {
     const sheets = paginate(book, m.s, m.format, m.columns);
     numberOf.set(m.f.page.id, n + 1);
-    for (const sheet of sheets) {
-      n += 1;
-      if (book.showPageNumbers) sheet.append(el('div', 'page-number', String(n)));
-    }
+    for (const sheet of sheets) { n += 1; numbered.push(sheet); }
   }
+  if (book.showPageNumbers) numbered.forEach((sheet, i) => sheet.append(el('div', 'page-number', pageLabel(book.pageNumberStyle, i + 1, numbered.length))));
 
   // 2) Sumário (com os ajustes manuais), no começo do livro e com links para as páginas.
   const entries = buildToc(book).filter((e) => !e.hidden);

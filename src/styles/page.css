@@ -159,3 +159,7 @@ button.toc-entry:disabled { cursor: default; opacity: .6; }
   .print-sheet.fmt-A3 { page: folhaA3; }
   .print-sheet:last-child { break-after: auto; }
 }
+/* Posição livre (ferramenta Mover): o elemento fica num ponto exato da página, por cima do texto. */
+.page-content img[data-wrap='free'], .page-content .shape-node[data-wrap='free'] { position: absolute; margin: 0; z-index: 3; max-width: none; float: none; }
+/* A posição livre é medida a partir do canto da área de texto (dentro das margens), no editor e no PDF. */
+.page-content { position: relative; }
