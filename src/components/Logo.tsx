@@ -1,4 +1,5 @@
-import type { CSSProperties } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
+import { GROUPS, level, programAt } from '../lib/xmasProgram';
 import { useApp } from '../store';
 import { IconEye } from './icons';
 
@@ -38,31 +39,58 @@ export function BrandLogo({ size = 30 }: { size?: number }) {
 }
 
 const BULBS = ['#ff4d4d', '#39d353', '#ffd23f', '#4dabff', '#ff7ad9', '#b8ff2c'];
-/** Fio de luzinhas de Natal que pisca (só enfeite: não recebe cliques). */
+
 /*
- * Leve de propósito: o fio e as lâmpadas são desenhados uma vez; o brilho fica em 4 camadas (uma por ritmo de pisca)
- * e só a opacidade de cada camada inteira anima, o que a placa de vídeo faz sozinha, sem redesenhar nada.
+ * Relógio único do pisca-pisca clássico: todas as guirlandas na tela seguem o mesmo programa, no mesmo compasso.
+ * A cada passo só muda a opacidade de 4 camadas por guirlanda (nada é redesenhado).
+ */
+type Layers = (SVGSVGElement | null)[];
+const strings = new Set<Layers>();
+let clock = 0;
+function tick() {
+  const { mode, t } = programAt(performance.now());
+  const lv = Array.from({ length: GROUPS }, (_, g) => level(mode, g, t).toFixed(2));
+  for (const layers of strings) layers.forEach((el, g) => { if (el && el.style.opacity !== lv[g]) el.style.opacity = lv[g]; });
+}
+function join(layers: Layers) {
+  strings.add(layers); tick();
+  if (!clock) clock = window.setInterval(tick, 80);
+  return () => { strings.delete(layers); if (!strings.size) { window.clearInterval(clock); clock = 0; } };
+}
+
+/**
+ * Fio de luzinhas de Natal (só enfeite: não recebe cliques). Leve de propósito: o fio e as lâmpadas são desenhados uma
+ * vez; o brilho fica em 4 camadas, uma por grupo de lâmpadas, e só a opacidade de cada camada muda.
+ * Animação "clássica": programa do pisca-pisca (sequência, alternado, ondas…); "suave": cintila devagar; "fixa": acesas.
  */
 export function XmasLights({ segments = 36, className }: { segments?: number; className?: string }) {
+  const anim = useApp((s) => s.prefs.xmasAnim);
+  const layers = useRef<Layers>([]);
+  const reduce = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const mode = reduce ? 'fixa' : anim;
+  useEffect(() => {
+    if (mode !== 'classica') { layers.current.forEach((el) => { if (el) el.style.opacity = ''; }); return; }
+    return join(layers.current);
+  }, [mode]);
   const seg = 96; const W = seg * segments;
   const y = (x: number) => 2 + 14 * (1 - ((2 * x) / seg - 1) ** 2);
   const bulbs = Array.from({ length: segments }, (_, i) => [18, 48, 78].map((x, j) => ({
-    k: (i * 3 + j) % 4, c: BULBS[(i * 3 + j) % BULBS.length],
+    k: (i * 3 + j) % GROUPS, c: BULBS[(i * 3 + j) % BULBS.length],
     t: `translate(${i * seg + x} ${y(x)}) rotate(${(x - seg / 2) / 6})`,
   }))).flat();
   return (
-    <span className={`xmas-lights${className ? ` ${className}` : ''}`} aria-hidden>
+    <span className={`xmas-lights anim-${mode}${className ? ` ${className}` : ''}`} aria-hidden>
       <svg width={W} height={28} viewBox={`0 0 ${W} 28`}>
         <path d={Array.from({ length: segments }, (_, i) => `M${i * seg} 2Q${i * seg + seg / 2} 30 ${(i + 1) * seg} 2`).join('')} fill="none" stroke="#3a4a36" strokeWidth="1.6" />
         {bulbs.map((b, i) => (
           <g key={i} transform={b.t}>
             <rect x="-2" y="-1" width="4" height="3.5" rx="1" fill="#2b2b2b" />
-            <ellipse cx="0" cy="7" rx="3.4" ry="5" fill={b.c} opacity=".5" />
+            <ellipse className="unlit" cx="0" cy="7" rx="3.4" ry="5" fill={b.c} />
           </g>
         ))}
       </svg>
-      {[0, 1, 2, 3].map((k) => (
-        <svg key={k} className={`xl-glow g${k}`} width={W} height={28} viewBox={`0 0 ${W} 28`}>
+      {Array.from({ length: GROUPS }, (_, k) => (
+        <svg key={k} ref={(el) => { layers.current[k] = el; }} className={`xl-glow g${k}`} width={W} height={28} viewBox={`0 0 ${W} 28`}>
           {bulbs.filter((b) => b.k === k).map((b, i) => (
             <g key={i} transform={b.t} style={{ color: b.c }}>
               <ellipse className="lit" cx="0" cy="7" rx="3.4" ry="5" fill="currentColor" />

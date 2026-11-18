@@ -6,7 +6,10 @@ Para baixar, use a página de [Releases](../../releases).
 ## [0.16.0] — 2026-11-18 · Edição “Pesadelos Antes do Natal” 🎄
 
 ### Natal
-- **Luzinhas de Natal** piscando no alto da janela e no cartão lateral da tela inicial.
+- **Luzinhas de Natal** no alto da janela e no cartão lateral da tela inicial, com **pisca-pisca clássico**: como os
+  controladores de luz de Natal, o programa passa sozinho por **sequência** (uma luz corre pelo fio), **alternado**,
+  **todas piscam**, **ondas**, **acende e apaga devagar**, **cintilante**, **combinação** e **acesas**, e recomeça.
+  Em ⚙ dá para trocar por **cintilar suave** ou **sempre acesas**.
 - **Gorro de Papai Noel** no logo do COGITO, inclusive no ícone do aplicativo.
 - Os enfeites podem ser desligados em ⚙ Configurações → **Enfeites de Natal**.
 
@@ -37,7 +40,7 @@ Para baixar, use a página de [Releases](../../releases).
 
 ### Outros
 - Novos ícones para texto, caixa de texto e conversa.
-- As luzinhas são leves: só a opacidade anima, sem pesar no editor.
+- As luzinhas são leves: só a opacidade de 4 camadas muda, sem pesar no editor. Com "reduzir movimento" do Windows ligado, ficam acesas.
 
 ## [0.15.0] — 2026-11-18
 

@@ -26,6 +26,8 @@ export interface Prefs {
   planLeftWidth: number; planRightWidth: number;
   /** Enfeites de Natal (luzinhas e gorro no logo). */
   xmas: boolean;
+  /** Como as luzinhas piscam: programa clássico de pisca-pisca, cintilar suave ou sempre acesas. */
+  xmasAnim: 'classica' | 'suave' | 'fixa';
 }
 export interface Toast { id: number; kind: 'info' | 'error' | 'ok'; text: string; action?: { label: string; run: () => void } }
 
@@ -66,7 +68,7 @@ export const useApp = create<AppState>(() => ({
   save: { state: 'saved' }, contentRev: {}, epoch: 0, activeEditor: null, toasts: [], viewer: null,
   theme: stored('cogito.theme', 'dark'), leftOpen: true, rightTab: stored('cogito.rightTab', 'inserir'),
   renaming: null, busy: null,
-  prefs: { sound: true, volume: 0.6, diceAnim: true, spell: true, uiScale: 1, leftWidth: 286, rightWidth: 300, diceColor: '#f2f2f2', huntBg: 'mesa', huntBgImage: null, huntCircle: true, huntBgDim: 0.25, planLeftWidth: 84, planRightWidth: 340, xmas: true, ...stored<Partial<Prefs>>('cogito.prefs', {}) },
+  prefs: { sound: true, volume: 0.6, diceAnim: true, spell: true, uiScale: 1, leftWidth: 286, rightWidth: 300, diceColor: '#f2f2f2', huntBg: 'mesa', huntBgImage: null, huntCircle: true, huntBgDim: 0.25, planLeftWidth: 84, planRightWidth: 340, xmas: true, xmasAnim: 'classica', ...stored<Partial<Prefs>>('cogito.prefs', {}) },
 }));
 
 const get = useApp.getState;

@@ -27,6 +27,13 @@ function Preferences() {
       </label>
       <label className="check"><input type="checkbox" checked={prefs.diceAnim} onChange={(e) => setPrefs({ diceAnim: e.target.checked })} /> Animar a rolagem dos dados</label>
       <label className="check" title="Luzinhas piscando e o gorro de Papai Noel no logo (edição Pesadelos Antes do Natal)"><input type="checkbox" checked={prefs.xmas} onChange={(e) => setPrefs({ xmas: e.target.checked })} /> Enfeites de Natal</label>
+      {prefs.xmas && (
+        <div className="seg xmas-seg" role="radiogroup" aria-label="Como as luzinhas piscam">
+          {([['classica', 'Pisca-pisca clássico', 'Programa de pisca-pisca: sequência, alternado, todas piscam, ondas, acende devagar, cintilante…'], ['suave', 'Cintilar suave', 'Cada lâmpada cintila devagar'], ['fixa', 'Sempre acesas', 'Sem piscar']] as const).map(([k, l, t]) => (
+            <button key={k} type="button" title={t} className={prefs.xmasAnim === k ? 'on' : ''} onClick={() => setPrefs({ xmasAnim: k })}>{l}</button>
+          ))}
+        </div>
+      )}
       <label className="field">
         <span>Tamanho da interface — {Math.round(scale * 100)}%</span>
         <input
