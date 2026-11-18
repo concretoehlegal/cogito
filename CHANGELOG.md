@@ -40,7 +40,7 @@ Para baixar, use a página de [Releases](../../releases).
 
 ### Outros
 - Novos ícones para texto, caixa de texto e conversa.
-- Página do projeto no GitHub refeita para a edição de fim de ano, com botões que baixam direto o instalador ou a
+- Página do projeto no GitHub refeita para a edição de Natal, com botões que baixam direto o instalador ou a
   versão portátil mais recente.
 - As luzinhas são leves: só a opacidade de 4 camadas muda, sem pesar no editor. Com "reduzir movimento" do Windows ligado, ficam acesas.
 

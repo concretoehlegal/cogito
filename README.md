@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="#o-que-chegou-na-016"><img src="docs/natal/banner.svg" alt="COGITO 0.16: Pesadelos Antes do Natal" width="100%"></a>
+  <a href="#o-que-chegou-na-016"><img src="docs/natal/banner.svg" alt="COGITO: Escritor, Planejador de Campanhas e Bestiário. Edição de Natal." width="100%"></a>
 </p>
 
 <p align="center">
@@ -25,8 +25,8 @@ O **COGITO** é um aplicativo para quem escreve e mestra RPG de mesa. Num lugar 
 monta a campanha num quadro infinito e testa os personagens contra as criaturas que criou, em combate por turnos.
 Não tem conta, não tem assinatura e não usa internet: tudo fica numa pasta do seu computador.
 
-A versão 0.16 chegou entre o Halloween e o Natal, e trouxe os dois para dentro do aplicativo: abóboras, neve e um
-pisca-pisca que funciona como os de verdade. O que mudou de fato está nas ferramentas, e vem logo abaixo.
+A versão 0.16 é a edição de Natal: luzinhas no alto da janela, um gorro no logo e um pisca-pisca que funciona como
+os de verdade. O que mudou de fato está nas ferramentas, e vem logo abaixo.
 
 <p align="center"><img src="docs/natal/divisor.svg" alt="" width="100%"></p>
 
@@ -59,7 +59,7 @@ pisca-pisca que funciona como os de verdade. O que mudou de fato está nas ferra
       <sub>“3 / 12” no pé da página, também no PDF e no Word.</sub>
     </td>
     <td valign="top">
-      <b><a href="#enfeites-de-fim-de-ano">Enfeites de fim de ano</a></b><br>
+      <b><a href="#enfeites-de-natal">Enfeites de Natal</a></b><br>
       <sub>Pisca-pisca com oito efeitos e gorro no logo. Dá para desligar.</sub>
     </td>
   </tr>
@@ -106,7 +106,7 @@ maior. Campanhas antigas se ajustam sozinhas, e o que estava ao lado do chefe ab
 O número da página fica no centro, embaixo, no formato “3 / 12”. Nas configurações do livro dá para trocar por só o
 número ou por “Página 3 de 12”. O formato escolhido também vale para o PDF e para o Word.
 
-### Enfeites de fim de ano
+### Enfeites de Natal
 
 Luzinhas no alto da janela e um gorro no logo. As luzes seguem um programa como o dos pisca-piscas de verdade:
 sequência, alternado, todas juntas, ondas, acende devagar, cintilante, combinação e acesas, e então recomeça. Em
