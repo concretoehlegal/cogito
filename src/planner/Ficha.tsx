@@ -37,7 +37,11 @@ export function Ficha({ n, planId, onClose, onEdit }: { n: PlanNode; planId: str
   const mainDmg = actions.find((a) => a.dmg)?.dmg ?? '—';
   const stats: [string, string | number, string][] = enemy
     ? [['vida', sh?.life ?? 0, 'Vida'], ['resiliência', sh?.resilience ?? 0, 'Resiliência'], ['defesa', sh?.defense ?? 0, 'Defesa'], ['dano', mainDmg, 'Dano']]
-    : [['vida', sh?.life ?? 0, 'Vida'], ['resiliência', sh?.resilience ?? 0, 'Resiliência'], ['defesa', sh?.defense ?? 0, 'Defesa'], ['alma', sh?.soul ?? 0, 'Pontos de alma']];
+    : [['vida', `${sh?.life ?? 0}/${sh?.life ?? 0}`, 'Vitalidade (PV)'], ['resiliência', sh?.resilience ?? 0, 'Resiliência'], ['defesa', sh?.defense ?? 0, 'Defesa'],
+       ['alma', `${sh?.soul ?? 0}/${sh?.soul ?? 0}`, 'Alma'], ['combate', sh?.combatActions ?? 1, 'Ações de combate'], ['movimento', sh?.moveActions ?? 0, 'Ações de movimento']];
+  const ident: [string, string][] = enemy ? [] : ([
+    ['Origem', sh?.origin ?? ''], ['Filiação', sh?.affiliation ?? ''], ['Nível', sh?.level != null ? String(sh.level) : ''], ['Clichê', sh?.cliche ?? ''],
+  ] as [string, string][]).filter(([, v]) => v.trim());
   const story = plain(n.body || '');
   return (
     <div className="fi-backdrop" onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -59,11 +63,12 @@ export function Ficha({ n, planId, onClose, onEdit }: { n: PlanNode; planId: str
                 <div className="fi-name-row">
                   <div>
                     <h2>{n.title || TYPES[n.type].label}</h2>
-                    <small>{n.subtitle || kind}</small>
+                    <small>{n.subtitle || sh?.cliche || kind}</small>
                   </div>
                   <div className="fi-tags">{[kind, ...n.tags.slice(0, 2)].map((t) => <span key={t}>{t}</span>)}</div>
                 </div>
-                <div className="fi-stats">
+                {ident.length > 0 && <dl className="fi-ident">{ident.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>}
+                <div className={`fi-stats${stats.length > 4 ? ' six' : ''}`}>
                   {stats.map(([id, v, label]) => <div key={id}><b>{v}</b><small>{label}</small></div>)}
                 </div>
                 <p className="fi-story">{story || 'Sem história ainda. Escreva no painel do quadro.'}</p>

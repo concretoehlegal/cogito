@@ -3,7 +3,7 @@
  * Silhuetas cheias, cortes retos e detalhes "entalhados" (classe d = traço, f = recorte), no espírito
  * de xilogravura do tema noir. A cor vem de currentColor; os entalhes usam --ib (cor de fundo do lugar).
  */
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react';
 
 export interface IconDef { id: string; name: string; cat: string; svg: string }
 
@@ -27,6 +27,8 @@ const LIST: IconDef[] = [
   { id: 'chave', name: 'Chave', cat: 'Objetos', svg: '<circle cx="9" cy="16" r="7.5"/><circle class="f" cx="7.5" cy="16" r="2.4"/><path d="M15 13.5h16v5h-3v4h-3.5v-4H22v3h-3.5v-3H15z"/>' },
   { id: 'chave-antiga', name: 'Chave antiga', cat: 'Objetos', svg: '<circle cx="8" cy="8" r="6.5"/><circle class="f" cx="8" cy="8" r="2.8"/><path d="M11 10l18 18-2.5 2.5-2-2-2.5 2.5-2-2 2.5-2.5-2-2-2.5 2.5-2-2L18 23 9 13z"/>' },
   { id: 'cadeado', name: 'Cadeado', cat: 'Objetos', svg: '<rect x="6" y="14" width="20" height="16" rx="2"/><path d="M9.5 14V10a6.5 6.5 0 0 1 13 0v4h-3.5v-4a3 3 0 0 0-6 0v4z"/><circle class="f" cx="16" cy="21" r="2.2"/><rect class="f" x="15" y="22" width="2" height="4"/>' },
+  { id: 'maleta', name: 'Maleta', cat: 'Objetos', svg: '<path d="M11 7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v2h-2.4V7.4c0-.6-.4-1-1-1h-3.2c-.6 0-1 .4-1 1V9H11z"/><rect x="2" y="9" width="28" height="18" rx="3"/>' + D('M2 16.5h28M13.5 14.5v4h5v-4') },
+  { id: 'resiliencia', name: 'Resiliência', cat: 'Objetos', svg: '<defs><linearGradient id="gi-res-aura" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6dbf0"/><stop offset="1" stop-color="#a6afd5"/></linearGradient><linearGradient id="gi-res-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#484848"/><stop offset="1" stop-color="#2d2d2d"/></linearGradient></defs><path fill="url(#gi-res-aura)" fill-rule="evenodd" d="M5.6 3C5 6 4.6 8.2 4.4 9.6L2.2 7.8C2.4 10.4 2.8 12.6 3.6 14.4C3.4 22.6 9.2 29.6 16 29.6S28.6 22.6 28.4 14.4C29.2 12.6 29.6 10.4 29.8 7.8L27.6 9.6C27.4 8.2 27 6 26.4 3C25.4 5.4 24.6 7 23.6 8H8.4C7.4 7 6.6 5.4 5.6 3ZM6.3 8H25.7C25.95 8.9 26 9.6 26 10.9C26 19.4 21.9 24.9 16 28.6C10.1 24.9 6 19.4 6 10.9C6 9.6 6.05 8.9 6.3 8Z"/><path fill="url(#gi-res-aura)" d="M10.2 26.2L12.3 22.6L13.4 26.9ZM21.8 26.2L19.7 22.6L18.6 26.9Z"/><path fill="url(#gi-res-body)" d="M10.6 3.6H21.4C22.3 3.6 22.9 4.1 23.2 4.9L24.1 7.5C24.5 8.7 24.6 9.6 24.6 11.2C24.6 18.6 20.8 23.6 16 26.9C11.2 23.6 7.4 18.6 7.4 11.2C7.4 9.6 7.5 8.7 7.9 7.5L8.8 4.9C9.1 4.1 9.7 3.6 10.6 3.6Z"/><path fill="none" stroke="#fff" stroke-width="1.5" stroke-linejoin="round" d="M12.2 6.9H19.8C20.4 6.9 20.8 7.3 21 7.8L21.5 9.4C21.7 10.1 21.8 10.7 21.8 11.7C21.8 16.9 19.3 20.6 16 23.1C12.7 20.6 10.2 16.9 10.2 11.7C10.2 10.7 10.3 10.1 10.5 9.4L11 7.8C11.2 7.3 11.6 6.9 12.2 6.9Z"/>' },
   { id: 'pilula', name: 'Pílula', cat: 'Objetos', svg: '<path d="M5 19 17 7a6 6 0 0 1 8.5 8.5L13.5 27.5A6 6 0 0 1 5 19z"/>' + D('M11 13l8 8') },
   { id: 'seringa', name: 'Seringa', cat: 'Objetos', svg: '<path d="M22 2l8 8-2 2-1.5-1.5L14 23l-5-5L21.5 5.5 20 4z"/><path d="M8 19l5 5-2 2-5-5z"/><path d="M6 23l3 3-6 5-2-2z"/>' + D('M17 11l2 2M14 14l2 2') },
   { id: 'curativo', name: 'Curativo', cat: 'Objetos', svg: '<g transform="rotate(-38 16 16)"><rect x="1" y="10.5" width="30" height="11" rx="5.5"/><rect class="f" x="11" y="12" width="10" height="8" rx="1.5"/></g>' },
@@ -73,6 +75,7 @@ const LIST: IconDef[] = [
   { id: 'chifres', name: 'Chifres', cat: 'Criaturas', svg: '<path d="M3 2c0 9 4 13 10 14l-2 3.5C4 17 1 10.5 3 2zM29 2c0 9-4 13-10 14l2 3.5c7-2.5 10-9 8-17.5z"/><path d="M9.5 18c2.5-3.5 10.5-3.5 13 0l-1 8.5c-1.5 3.5-9.5 3.5-11 0z"/><circle class="f" cx="13" cy="21.5" r="1.6"/><circle class="f" cx="19" cy="21.5" r="1.6"/>' },
   { id: 'coroa', name: 'Coroa', cat: 'Criaturas', svg: '<path d="M2 9l7 7L16 4l7 12 7-7-3.5 17h-21z"/><rect x="5.5" y="26.5" width="21" height="3.5"/><circle class="f" cx="16" cy="19.5" r="2.4"/><circle class="f" cx="9" cy="21" r="1.4"/><circle class="f" cx="23" cy="21" r="1.4"/>' },
   { id: 'lobo', name: 'Lobo', cat: 'Criaturas', svg: '<path d="M5 2l7 7.5h8L27 2l1 12c2.5 3.5 3.5 6.5 2 9.5l-6.5 2L16 31l-7.5-5.5-6.5-2c-1.5-3 0-6 2-9.5z"/><path class="f" d="M9.5 16l4.5 2.2-4.5 1.3zM22.5 16 18 18.2l4.5 1.3zM14 24.5h4L16 27z"/>' },
+  { id: 'presas', name: 'Presas', cat: 'Criaturas', svg: '<path d="M2 7c4-3 9-4.5 14-4.5S26 4 30 7l-2.5 4.2-3-1.2-1.8 8L19.8 11h-7.6l-2.9 7-1.8-8-3 1.2z"/><path d="M2 25c4 3 9 4.5 14 4.5S26 28 30 25l-2.5-4.2-3 1.2-1.6-5.5-2.6 4.5h-8.6L9.1 16.5 7.5 22l-3-1.2z"/>' },
   { id: 'morcego', name: 'Morcego', cat: 'Criaturas', svg: '<path d="M16 12c1-2 2-3.5 2-3.5l1 3c3.5-3.5 8.5-4.5 13-2.5-3.5 1-4.5 4.5-4.5 8-3.5-2-6.5-1-7.5 2.5-1-1.2-2.4-2-4-2s-3 .8-4 2C11 16 8 15 4.5 17c0-3.5-1-7-4.5-8 4.5-2 9.5-1 13 2.5l1-3s1 1.5 2 3.5z"/>' },
   { id: 'aranha', name: 'Aranha', cat: 'Criaturas', svg: '<circle cx="16" cy="11.5" r="4.5"/><ellipse cx="16" cy="21.5" rx="6.5" ry="7.5"/><g stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M12 13 4 7 2 2M11.5 16.5 3 15.5 1 20M11.5 20.5l-7 4.5-1 5M13 24.5 9 31M20 13l8-6 2-5M20.5 16.5l8.5-1 2 4.5M20.5 20.5l7 4.5 1 5M19 24.5l4 6.5"/></g>' },
   { id: 'cobra', name: 'Cobra', cat: 'Criaturas', svg: '<path d="M22 3c4.5 0 7 3.5 4.5 7l-2.5 1c-2-2-4.5 0-2.5 2.5l2 2c4.5 4.5 2 12-5.5 13H4v-3.5h13c3.5 0 4.5-3.5 2-5.5l-3-3c-4.5-4.5-1-13.5 6-13.5z"/><circle class="f" cx="23.5" cy="6.5" r="1.1"/>' },
@@ -111,11 +114,14 @@ export function iconId(v: string | null | undefined): string | null {
 
 /** Desenha um ícone do sistema. Valores desconhecidos aparecem como texto (compatibilidade). */
 export function GameIcon({ id, size = 20, className, title, style }: { id: string | null | undefined; size?: number; className?: string; title?: string; style?: CSSProperties }) {
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
   const def = BY_ID.get(iconId(id) ?? '');
   if (!def) return id ? <span className={`gi-text ${className ?? ''}`} style={{ fontSize: size * 0.8, ...style }} title={title}>{id}</span> : null;
+  // Ícones com degradê (ex.: Resiliência) recebem ids próprios em cada cópia, para não depender de outra cópia na tela.
+  const body = def.svg.includes('<defs') ? def.svg.replace(/id="([^"]+)"/g, `id="$1-${uid}"`).replace(/url\(#([^)]+)\)/g, `url(#$1-${uid})`) : def.svg;
   return (
     <svg className={`gi ${className ?? ''}`} width={size} height={size} viewBox="0 0 32 32" fill="currentColor" style={style} role={title ? 'img' : undefined} aria-label={title} aria-hidden={title ? undefined : true}
-      dangerouslySetInnerHTML={{ __html: (title ? `<title>${title}</title>` : '') + def.svg }} />
+      dangerouslySetInnerHTML={{ __html: (title ? `<title>${title}</title>` : '') + body }} />
   );
 }
 

@@ -1,7 +1,7 @@
 /*
  * Cartas de personagem: como personagens, NPCs, chefes e criaturas aparecem no Planejador e no Bestiário.
  * Visual limpo e discreto: cada tipo tem só um tom suave (jogadores bronze, NPCs lilás acinzentado, chefes azul ardósia com filete duplo, criaturas ferrugem).
- * Canto superior esquerdo: Vida (gota) e Resiliência (armadura). Direito: Defesa (alvo) e Pontos de alma (espírito).
+ * Canto superior esquerdo: Vida (gota) e Resiliência (escudo com aura). Direito: Defesa (alvo) e Pontos de alma (espírito).
  * Nome no centro, atributos abaixo e o instrumento (dano e ações para recarregar) no rodapé.
  * Criaturas mostram só Vida, Resiliência, Dano e as habilidades (2; chefes, 4).
  */
@@ -61,7 +61,7 @@ export const CharCard = memo(function CharCard({ d, width = 220, imgUrl, classNa
           </div>
           <div className="cc-tl">
             <span className="cc-stat big" title="Vida"><GameIcon id="sangue" size={20} /><b>{num(d.hp)}</b></span>
-            <span className="cc-stat" title="Resiliência"><GameIcon id="armadura" size={14} /><b>{d.hidden ? '?' : d.resilience}</b></span>
+            <span className="cc-stat" title="Resiliência"><GameIcon id="resiliencia" size={15} /><b>{d.hidden ? '?' : d.resilience}</b></span>
           </div>
           <div className="cc-tr">
             {creature ? (

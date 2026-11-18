@@ -1,13 +1,13 @@
 /*
  * Tela do Bestiário (Caçada): a mesa de um investigador ao fundo, com as criaturas sobre ela, e a HUD do jogador por cima.
- * - Esquerda: painel da ficha (barra preta com Sair, rodada e Recuar; Habilidades de Origem, Habilidades, Itens,
- *   Atributos e Capacidades). Itens que podem ser usados mostram a tecla (1–9) e são clicáveis.
- * - Topo: retrato quadrado; à direita, nome, PV, PA, Defesa, Resiliência e Ações do turno.
- * - Centro de baixo: "O que você faz?" (a peça principal) e o Histórico de Ações logo abaixo.
- * - Canto de baixo à direita: o Instrumento (a arma em mãos), com melhorias, dano, recarga e alcance.
+ * - Esquerda: painel da ficha com Habilidades de Origem, Habilidades, Itens, Atributos e Capacidades (o que pode ser
+ *   usado mostra a tecla 1–9 e é clicável). Acima dele, Sair, rodada, de quem é a vez e Recuar.
+ * - Topo, no meio: o inimigo na mira (retrato, PV e PA). Topo, à direita: nome e subtítulo do caçador, Defesa e Ações.
+ * - Embaixo: atalhos numerados; "O que você faz?" com o Histórico de Ações logo abaixo; à direita, PV e PA do caçador
+ *   e o cartão do Instrumento (a arma em mãos).
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { ArrowLeft, CornerDownLeft, Flag, RotateCcw, Swords } from 'lucide-react';
+import { ArrowLeft, ChartColumn, Footprints, Image as ImageIcon, CornerDownLeft, Flag, Flame, Heart, Layers, MessageSquareMore, RotateCcw, Settings as Gear, Shield, Star, Swords, Zap } from 'lucide-react';
 import { playClick, playCrit, playDice, playFumble } from '../lib/sound';
 import { useApp } from '../store';
 import { GameCard, cardPair, typeOf } from '../game/Cards';
@@ -18,7 +18,8 @@ import { pairById, type CardPair } from '../game/palette';
 import { canUse, enemyTurns, flee, heroAct, newHunt, type Combatant, type HuntAction, type HuntState, type LogLine } from './engine';
 import { interpret } from './interpret';
 import { preyList, useHunt } from './state';
-import { Desk } from './Desk';
+import { Backdrop } from './Desk';
+import { BackdropPicker, huntBgUrl } from './BackdropPicker';
 import './hunt.css';
 
 const STEP_MS = 900;
@@ -29,7 +30,18 @@ function Bar({ cur, max, color, label, big }: { cur: number; max: number; color:
   return (
     <div className={`hb-bar${big ? ' big' : ''}`} style={{ '--bc': color } as CSSProperties} title={label ? `${label}: ${cur}/${max}` : undefined}>
       <i style={{ width: `${pct * 100}%` }} />
-      <b>{cur}/{max}{label ? ` ${label}` : ''}</b>
+      <b>{cur} / {max}{label ? ` ${label}` : ''}</b>
+    </div>
+  );
+}
+
+/** Barra fina com o número ao lado (inimigo no topo). */
+function SlimBar({ cur, max, color, label }: { cur: number; max: number; color: string; label: string }) {
+  const pct = max > 0 ? Math.max(0, Math.min(1, cur / max)) : 0;
+  return (
+    <div className="slim-bar" title={`${label}: ${cur}/${max}`}>
+      <span className="sb-track"><i style={{ width: `${pct * 100}%`, background: color }} /></span>
+      <b>{cur} / {max} {label}</b>
     </div>
   );
 }
@@ -80,11 +92,10 @@ function HudItem({ icon, pair, title, text, keyNum, onUse, off, cd, big, value, 
     : <div className={`hud-item${big ? ' big' : ''}`} style={style} onMouseEnter={() => onHover?.(true)} onMouseLeave={() => onHover?.(false)}>{body}</div>;
 }
 
-function Section({ title, sub, children, cols = 3, empty }: { title: string; sub?: string; children: ReactNode[]; cols?: number; empty: string }) {
+function Section({ title, icon, children, cols = 3, empty }: { title: string; icon: ReactNode; children: ReactNode[]; cols?: number; empty: string }) {
   return (
     <section className="hud-sec">
-      <h3>{title}</h3>
-      {sub && <span className="hud-sub">{sub}</span>}
+      <header className="hud-sec-head"><span className="hsh-icon">{icon}</span><h3>{title}</h3></header>
       {children.length ? <div className={`hud-grid c${cols}`}>{children}</div> : <p className="hud-none">{empty}</p>}
     </section>
   );
@@ -137,15 +148,16 @@ function Command({ game, target, onDo, onFlee, onTarget }: {
     setText('');
   };
   return (
-    <div className={`hud-command action-box${myTurn ? '' : ' waiting'}`}>
-      <label className="hc-pill">
+    <div className={`hud-command action-box${myTurn ? '' : ' waiting'}${text ? ' typing' : ''}`}>
+      <label className="hc-line">
+        <MessageSquareMore className="hc-icon" size={22} strokeWidth={1.8} />
         <input
           id="action-text" value={text} disabled={!myTurn} maxLength={240} autoComplete="off" aria-label="O que você faz?"
           placeholder={myTurn ? 'O que você faz?' : 'Aguarde a sua vez…'}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } if (e.key === 'Escape') setText(''); }}
         />
-        <button type="button" className="hc-go ab-go" disabled={!myTurn || !reading || !reading.ok} onClick={submit} title="Agir (Enter)"><CornerDownLeft size={16} /> Agir</button>
+        <button type="button" className="hc-go ab-go" disabled={!myTurn || !reading || !reading.ok} onClick={submit} title="Agir (Enter)"><CornerDownLeft size={15} /> Agir</button>
       </label>
       <div className="hc-panel">
         {reading ? (
@@ -180,6 +192,8 @@ export function HuntScreen() {
   const [acting, setActing] = useState<string | null>(null);
   const [err, setErr] = useState('');
   const [, setTick] = useState(0);
+  const [bgOpen, setBgOpen] = useState(false);
+  const prefs = useApp((st) => st.prefs);
   const busy = useRef(false);
   const popSeq = useRef(0);
 
@@ -313,15 +327,15 @@ export function HuntScreen() {
 
   // Criaturas: tamanho conforme o espaço livre no meio da mesa.
   const vw = window.innerWidth; const vh = window.innerHeight;
-  const areaW = vw * 0.66; const areaH = vh * 0.32;
+  const areaW = vw * 0.7 - 60; const areaH = vh * 0.54;
   const n = Math.max(1, game.enemies.length);
   const hasBoss = game.enemies.some((e) => e.boss);
-  const cardW = Math.round(Math.max(96, Math.min((areaH - 34) / 1.36 / (hasBoss ? 1.12 : 1), (areaW - 44 * n) / n, 210)));
+  const cardW = Math.round(Math.max(96, Math.min((areaH - 34) / 1.36 / (hasBoss ? 1.12 : 1), (areaW - 52 * n) / n, 240)));
   const heroTitle = actor?.subtitle ? `${hero.name}, ${actor.subtitle.charAt(0).toLowerCase()}${actor.subtitle.slice(1)}` : hero.name;
 
   return (
-    <div className={`hunt hunt-hud ${mood}`}>
-      <Desk />
+    <div className={`hunt hunt-hud ${mood} bg-${prefs.huntBg}`}>
+      <Backdrop kind={prefs.huntBg} imageUrl={huntBgUrl(prefs.huntBgImage)} circle={prefs.huntCircle} dim={prefs.huntBgDim} />
 
       <div className="hunt-enemies">
         {game.enemies.map((e, i) => (
@@ -334,81 +348,115 @@ export function HuntScreen() {
       </div>
       {last && <div key={last.id} className={`ht-narration ${last.side} ${last.kind}`}>{last.text.startsWith(last.actor) ? <><b>{last.actor}</b>{last.text.slice(last.actor.length)}</> : <><b>{last.actor}</b> {last.text}</>}</div>}
 
+      <div className="hud-topbar">
+        <button className="hud-btn" onClick={leave} title="Sair do confronto"><ArrowLeft size={15} /> Sair</button>
+        <span className="hud-round">Rodada {game.round}</span>
+        <span className={`hunt-turn ${game.phase}`}>{game.phase === 'heroi' ? 'Sua vez' : game.phase === 'inimigos' ? 'Vez das criaturas' : game.phase === 'vitoria' ? 'Vitória' : game.phase === 'derrota' ? 'Derrota' : 'Encerrada'}</span>
+        {!over && <button className="hud-btn" onClick={() => useHunt.setState({ game: flee(game) })} title="Recuar e encerrar"><Flag size={14} /> Recuar</button>}
+        <button className={`hud-btn${bgOpen ? ' on' : ''}`} onClick={() => setBgOpen((o) => !o)} title="Trocar o fundo" aria-expanded={bgOpen}><ImageIcon size={14} /> Fundo</button>
+        {bgOpen && (
+          <div className="hud-pop" role="dialog" aria-label="Fundo do Bestiário">
+            <div className="hud-pop-head"><strong>Fundo</strong><button className="icon-btn" onClick={() => setBgOpen(false)} aria-label="Fechar">×</button></div>
+            <BackdropPicker compact />
+          </div>
+        )}
+      </div>
+
       <aside className="hud-left" aria-label="Ficha do caçador">
-        <header className="hud-bar">
-          <button className="hud-btn" onClick={leave} title="Sair do confronto"><ArrowLeft size={15} /> Sair</button>
-          <span className="hud-round">Rodada {game.round}</span>
-          <span className={`hunt-turn ${game.phase}`}>{game.phase === 'heroi' ? 'Sua vez' : game.phase === 'inimigos' ? 'Vez das criaturas' : game.phase === 'vitoria' ? 'Vitória' : game.phase === 'derrota' ? 'Derrota' : 'Encerrada'}</span>
-          <span className="grow" />
-          {!over && <button className="hud-btn" onClick={() => useHunt.setState({ game: flee(game) })} title="Recuar e encerrar"><Flag size={14} /> Recuar</button>}
-        </header>
         <div className="hud-scroll">
-          <Section title="Habilidades de Origem" empty="Nenhuma. Marque “Habilidade de origem” numa carta de habilidade.">{origin.map(cardItem)}</Section>
-          <Section title="Habilidades" empty="Nenhuma habilidade ou poder oculto.">{skills.map(cardItem)}</Section>
-          <Section title="Itens" sub="Itens e equipamentos" empty="Nenhum item.">{items.map(cardItem)}</Section>
-          <Section title="Atributos" cols={2} empty="Sem atributos.">
-            {(actor?.attrs ?? []).filter((a) => a.k).map((a, i) => <HudItem key={i} big value={a.v} title={a.k} text="Atributo" />)}
+          <Section title="Habilidades de Origem" icon={<Star size={22} strokeWidth={1.8} />} empty="Nenhuma. Marque “Habilidade de origem” numa carta de habilidade.">{origin.map(cardItem)}</Section>
+          <Section title="Habilidades" icon={<Zap size={22} strokeWidth={1.8} />} empty="Nenhuma habilidade ou poder oculto.">{skills.map(cardItem)}</Section>
+          <Section title="Itens" icon={<Layers size={22} strokeWidth={1.8} />} empty="Nenhum item.">{items.map(cardItem)}</Section>
+          <Section title="Atributos" icon={<ChartColumn size={22} strokeWidth={1.8} />} cols={2} empty="Sem atributos.">
+            {(actor?.attrs ?? []).filter((x) => x.k).map((x, i) => <HudItem key={i} value={x.v} title={x.k} text="Atributo" />)}
           </Section>
-          <Section title="Capacidades" empty="Sem capacidades. Adicione no painel da ficha, no Planejador.">
+          <Section title="Capacidades" icon={<Gear size={22} strokeWidth={1.8} />} cols={2} empty="Sem capacidades. Adicione no painel da ficha, no Planejador.">
             {[
-              ...attacks.map((a) => <HudItem key={a.id} icon="faca" pair={charcoal} title={a.name} text={`Dano ${a.value}${a.hit ? ` · acerto ${a.hit}` : ''}`} {...itemProps(a)} onHover={(on) => setHover(on ? { card: null, action: a } : null)} />),
+              ...attacks.map((x) => <HudItem key={x.id} icon="faca" title={x.name} text={`Dano ${x.value}${x.hit ? ` · acerto ${x.hit}` : ''}`} {...itemProps(x)} onHover={(on) => setHover(on ? { card: null, action: x } : null)} />),
               ...(actor?.caps ?? []).filter((c) => c.k).map((c, i) => <HudItem key={`c${i}`} value={c.v} title={c.k} text="Capacidade" />),
             ]}
           </Section>
         </div>
       </aside>
 
-      <div className={`hud-portrait${heroHit ? ' hit' : ''}${hero.hp <= 0 ? ' down' : ''}`} style={{ '--tc': hero.color } as CSSProperties}>
-        <span className="hp-frame">
-          {hero.image ? <img src={fileUrl(campaign.id, hero.image)} alt="" /> : <GameIcon id={hero.emblem || 'pessoa'} size={110} />}
-        </span>
-        {hero.guard > 0 && <span className="hh-guard"><GameIcon id="escudo" size={14} /> +{hero.guard}</span>}
-        {pops.filter((p) => p.target === 'heroi').map((p) => <span key={p.id} className={`hunt-pop ${p.kind}`}>{p.text}</span>)}
+      {tgt && (
+        <div className={`hud-foe${tgt.hp <= 0 ? ' down' : ''}${(hits[tgt.id] ?? 0) > Date.now() - 500 ? ' hit' : ''}`}>
+          <span className="hf-portrait">
+            {tgt.image ? <img src={fileUrl(campaign.id, tgt.image)} alt="" /> : <GameIcon id={tgt.emblem || 'garra'} size={40} />}
+          </span>
+          <div className="hf-info">
+            <strong title="Inimigo na mira (clique numa criatura ou Tab para trocar)">{tgt.name}</strong>
+            <SlimBar cur={tgt.hp} max={tgt.max} color="var(--hg)" label="PV" />
+            {tgt.soul > 0
+              ? <SlimBar cur={tgt.soul} max={tgt.soul} color="#9a9a9a" label="PA" />
+              : <span className="hf-stats"><GameIcon id="alvo" size={13} /> Defesa <b>{tgt.defense}</b><GameIcon id="resiliencia" size={15} /> Resiliência <b>{tgt.resilience}</b></span>}
+          </div>
+        </div>
+      )}
+
+      <div className={`hud-id${heroHit ? ' hit' : ''}`}>
+        <div className="hid-name">
+          <h1 title={hero.name}>{hero.name}</h1>
+          {(actor?.subtitle || actor?.cliche) && <small>{actor?.subtitle || actor?.cliche}</small>}
+        </div>
+        <div className="hid-stats">
+          <span><Shield size={18} strokeWidth={1.8} /> Defesa <b>{hero.defense + hero.guard}</b></span>
+          <span title="Ações de combate restantes neste turno"><Swords size={18} strokeWidth={1.8} /> Ações <b>{game.phase === 'heroi' ? (game.left ?? hero.combatActions ?? 1) : 0}/{hero.combatActions ?? 1}</b></span>
+          {(hero.moveActions ?? 0) > 0 && <span title="Ações de movimento por turno"><Footprints size={18} strokeWidth={1.8} /> Movimento <b>{hero.moveActions}</b></span>}
+        </div>
       </div>
 
-      <div className="hud-name">
-        <h1 title={heroTitle}>{heroTitle}</h1>
-        <Bar big cur={hero.hp} max={hero.max} color="#ff2020" label="PV" />
-        {alma && <Bar big cur={alma.cur} max={alma.max} color="#00e65f" label="PA" />}
-        <div className="hn-stats">
-          <span>Defesa: <b>{hero.defense + hero.guard}</b></span>
-          <span>Resiliência: <b>{hero.resilience}</b></span>
-          <span>Ações: <b>{game.phase === 'heroi' ? 1 : 0}/1</b></span>
-        </div>
-        {tgt && <div className="hn-target"><GameIcon id="alvo" size={14} /> Na mira: <b>{tgt.name}</b> · {tgt.hp}/{tgt.max} · Defesa {tgt.defense}</div>}
+      <div className="hud-hotbar" role="toolbar" aria-label="Atalhos" style={{ '--n': Math.max(1, Math.min(9, list.length)) } as CSSProperties}>
+        {list.slice(0, 9).map((x, i) => {
+          const ok = canUse(game, x).ok;
+          const cd = game.cooldowns[x.id] ?? 0;
+          const left = x.consumable ? game.uses[x.id] ?? 0 : null;
+          return (
+            <button key={x.id} type="button" className={`hk-slot${ok ? '' : ' off'}`} data-silent onClick={() => use(x)}
+              onMouseEnter={() => setHover({ card: x.card, action: x })} onMouseLeave={() => setHover(null)} title={x.name}>
+              <span className="hk-box">
+                <GameIcon id={x.icon} size={24} />
+                {cd > 0 && <i className="hk-cd">{cd >= 900 ? '—' : cd}</i>}
+                {left !== null && <i className="hk-qty">×{left}</i>}
+                {x.cost > 0 && <i className="hk-cost">{x.cost}</i>}
+              </span>
+              <span className="hk-key">{i + 1}</span>
+            </button>
+          );
+        })}
       </div>
 
       <div className="hud-center">
         <Command game={game} target={target} onTarget={setTarget}
-          onDo={(a, t, said) => use(a, t, said)}
+          onDo={(x, t, said) => use(x, t, said)}
           onFlee={(said) => { const g = useHunt.getState().game; if (g) useHunt.setState({ game: flee(g) }); void said; }} />
         <div className="hunt-hint">
           {err ? <span className="dice-error">{err}</span>
-            : game.phase === 'heroi' ? <>Alvo: <b>{tgt?.name ?? '—'}</b> · clique numa criatura ou Tab · teclas 1–{Math.min(9, list.length)} usam a ficha</>
+            : game.phase === 'heroi' ? <>Alvo: <b>{tgt?.name ?? '—'}</b> · clique numa criatura ou Tab · teclas 1–{Math.min(9, list.length)}</>
               : game.phase === 'inimigos' ? 'As criaturas estão agindo…' : ''}
         </div>
       </div>
 
-      <section className={`hud-instrument${instAct && !canUse(game, instAct).ok ? ' off' : ''}`} style={{ '--tc': instPair.light, '--td': instPair.dark } as CSSProperties}
-        onMouseEnter={() => setHover(inst || instAct ? { card: inst, action: instAct } : null)} onMouseLeave={() => setHover(null)}>
-        <div className="hin-body">
-          <div className="hin-col">
-            {upgrades.map((u, i) => <HudItem key={i} icon="estrela" pair={instPair} title={u.t} text={u.v} />)}
-            {!upgrades.length && <p className="hud-none">Sem melhorias.</p>}
-          </div>
+      <div className={`hud-hero${heroHit ? ' hit' : ''}${hero.hp <= 0 ? ' down' : ''}`}>
+        <div className="hh-row"><span className="hh-chip pv"><Heart size={16} strokeWidth={2} /></span><Bar big cur={hero.hp} max={hero.max} color="var(--hg)" label="PV" /></div>
+        {alma && <div className="hh-row"><span className="hh-chip"><Flame size={16} strokeWidth={2} /></span><Bar big cur={alma.cur} max={alma.max} color="#9a9a9a" label="PA" /></div>}
+        {hero.guard > 0 && <span className="hh-guard"><GameIcon id="escudo" size={14} /> +{hero.guard}</span>}
+        {pops.filter((p) => p.target === 'heroi').map((p) => <span key={p.id} className={`hunt-pop ${p.kind}`}>{p.text}</span>)}
+        <section className={`hud-instrument${instAct && !canUse(game, instAct).ok ? ' off' : ''}`}
+          onMouseEnter={() => setHover(inst || instAct ? { card: inst, action: instAct } : null)} onMouseLeave={() => setHover(null)}>
           <button type="button" className="hin-art" disabled={!instAct} onClick={() => { if (instAct) use(instAct); }} data-silent title={instAct ? `Usar ${instAct.name}` : 'Sem instrumento'}>
-            {inst?.image ? <img src={fileUrl(campaign.id, inst.image)} alt="" /> : <GameIcon id={inst?.icon || instAct?.icon || 'revolver'} size={120} />}
+            {inst?.image ? <img src={fileUrl(campaign.id, inst.image)} alt="" /> : <GameIcon id={inst?.icon || instAct?.icon || 'revolver'} size={72} />}
             {instKey >= 0 && instKey < 9 && <i className="hi-key">{instKey + 1}</i>}
             {instCd > 0 && <i className="hin-cd">{instCd >= 900 ? '—' : instCd}</i>}
           </button>
-          <div className="hin-col">
-            <HudItem icon="faca" pair={instPair} title="Dano" text={inst?.roll || instAct?.value || '—'} />
-            <HudItem icon="relogio" pair={instPair} title="Ações para recarga" text={inst?.cooldown || 'Sem recarga'} />
-            <HudItem icon="alvo" pair={instPair} title="Alcance" text={range} />
+          <span className="hin-sep" />
+          <div className="hin-text">
+            <strong>Instrumento</strong>
+            <span className="hin-name">{inst?.name ?? instAct?.name ?? 'Nada em mãos'}</span>
+            <small>{[`Dano ${inst?.roll || instAct?.value || '—'}`, inst?.cooldown ? `recarga ${inst.cooldown}` : '', range !== '—' ? `alcance ${range}` : '', ...upgrades.map((u) => u.v)].filter(Boolean).join(' · ')}</small>
           </div>
-        </div>
-        <footer className="hin-foot">Instrumento{inst ? ` · ${inst.name}` : instAct ? ` · ${instAct.name}` : ''}</footer>
-      </section>
+        </section>
+      </div>
 
       {hover && (hover.card || hover.action) && (
         <div className="hunt-tip">

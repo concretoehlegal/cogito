@@ -25,6 +25,8 @@ export interface Actor {
   emblem: string; boss: boolean; ai?: string; resilience?: number; soul?: number;
   /** Capacidades (perícias e saberes), com valor. */
   caps?: { k: string; v: string }[];
+  /** Identidade e ações por turno (personagens e NPCs). */
+  origin?: string; level?: number; affiliation?: string; cliche?: string; combatActions?: number; moveActions?: number;
 }
 
 export interface CardSummary {
@@ -44,6 +46,10 @@ export interface Sheet {
   life: number; defense: number; resilience: number; soul: number; boss: boolean;
   attrs: { k: string; v: string }[]; actions: CombatAction[]; cards: Card[]; ai?: string;
   caps?: { k: string; v: string }[];
+  /** Origem, nível, filiação e clichê do personagem. */
+  origin?: string; level?: number; affiliation?: string; cliche?: string;
+  /** Ações por turno: de combate (o Bestiário respeita) e de movimento. */
+  combatActions?: number; moveActions?: number;
 }
 
 export interface PlanNode {

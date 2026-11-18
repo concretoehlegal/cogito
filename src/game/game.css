@@ -351,3 +351,5 @@
 .ct-name { color: #e5e5e5; }
 .color-dot.pair { border: 0; }
 .color-dot.pair.on { box-shadow: 0 0 0 2px var(--text); }
+/* Resiliência: escudo com aura, um pouco maior para o desenho aparecer */
+.cc-stat[title="Resiliência"] .gi { width: 1.5em; height: 1.5em; margin: -.25em -.05em -.25em -.15em; }

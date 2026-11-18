@@ -18,12 +18,14 @@ export interface HuntAction {
   id: string; source: 'ataque' | 'carta'; name: string; icon: string; effect: Effect; hit: string; value: string;
   cooldown: number; costBar: string | null; cost: number; consumable: boolean; card: Card | null; color: string;
 }
-export interface Hero extends Combatant { bars: HuntBar[]; hpBar: HuntBar | null; actionsList: HuntAction[]; equipped: Card[]; passives: Card[] }
+export interface Hero extends Combatant { bars: HuntBar[]; hpBar: HuntBar | null; actionsList: HuntAction[]; equipped: Card[]; passives: Card[]; combatActions: number; moveActions: number }
 export type LineKind = 'acerto' | 'critico' | 'erro' | 'cura' | 'defesa' | 'intencao' | 'info' | 'fim' | 'fala';
 export interface LogLine { id: number; round: number; side: 'heroi' | 'inimigo' | 'sistema'; actor: string; text: string; detail?: string; kind: LineKind; dmg?: number; target?: string }
 export type Phase = 'heroi' | 'inimigos' | 'vitoria' | 'derrota' | 'fuga';
 export interface HuntState {
   round: number; phase: Phase; hero: Hero; enemies: Combatant[];
+  /** Ações de combate que o caçador ainda tem neste turno. */
+  left?: number;
   cooldowns: Record<string, number>; uses: Record<string, number>; log: LogLine[]; seq: number;
   stats: { dealt: number; taken: number; healed: number; crits: number; turns: number };
 }
@@ -187,6 +189,7 @@ export function newHunt(campaign: { bars: { id: string; name: string; color: str
   const hero: Hero = {
     ...base, bars: bars.filter((b) => b.id !== hpBar?.id && b.max > 0), hpBar: bars.find((b) => b.id === hpBar?.id) ?? null,
     actionsList: heroActions(heroActor, campaign.bars), equipped: heroActor.cards.filter((c) => c.equipped), passives: heroActor.cards.filter((c) => c.mode === 'passivo'),
+    combatActions: Math.max(1, Math.min(9, Math.round(heroActor.combatActions ?? 1))), moveActions: Math.max(0, Math.round(heroActor.moveActions ?? 0)),
   };
   const count = new Map<string, number>();
   const enemies = prey.map((a, i) => {
@@ -196,7 +199,7 @@ export function newHunt(campaign: { bars: { id: string; name: string; color: str
   });
   const uses: Record<string, number> = {};
   for (const a of hero.actionsList) if (a.consumable && a.card) uses[a.id] = a.card.qty;
-  const s: HuntState = { round: 1, phase: 'heroi', hero, enemies, cooldowns: {}, uses, log: [], seq: 0, stats: { dealt: 0, taken: 0, healed: 0, crits: 0, turns: 0 } };
+  const s: HuntState = { round: 1, phase: 'heroi', hero, enemies, cooldowns: {}, uses, log: [], seq: 0, stats: { dealt: 0, taken: 0, healed: 0, crits: 0, turns: 0 }, left: hero.combatActions };
   const ini = (r: number) => roll('1d20', rngFn(rng)).total + r;
   const heroIni = ini(0); const preyIni = Math.max(...enemies.map(() => ini(0)));
   line(s, 'sistema', 'Bestiário', `O confronto começa: ${hero.name} contra ${enemies.map((e) => e.name).join(', ')}.`, 'info');
@@ -257,7 +260,9 @@ export function heroAct(prev: HuntState, actionId: string, targetId: string | nu
   if (a.costBar) { const b = s.hero.bars.find((x) => x.name === a.costBar); if (b) b.cur = Math.max(0, b.cur - a.cost); }
   if (a.consumable) s.uses[a.id] = Math.max(0, (s.uses[a.id] ?? 0) - 1);
   if (a.cooldown > 0) s.cooldowns[a.id] = a.cooldown >= 999 ? 999 : a.cooldown + 1; // +1: desconta já no começo do próximo turno
-  s.hero.guard = 0;
+  const perTurn = s.hero.combatActions ?? 1;
+  const left = s.left ?? perTurn;
+  if (left >= perTurn) s.hero.guard = 0; // a defesa extra some no começo do turno, não entre as ações dele
   if (a.effect === 'dano') {
     const alive = s.enemies.filter((e) => e.hp > 0);
     const target = alive.find((e) => e.id === targetId) ?? alive[0];
@@ -276,6 +281,8 @@ export function heroAct(prev: HuntState, actionId: string, targetId: string | nu
   if (s.hero.hpBar) s.hero.hpBar.cur = s.hero.hp;
   s.stats.turns += 1;
   if (s.enemies.every((e) => e.hp <= 0)) { s.phase = 'vitoria'; line(s, 'sistema', 'Bestiário', `Vitória! ${s.hero.name} abateu todas as criaturas em ${s.round} rodada(s).`, 'fim'); return s; }
+  s.left = left - 1;
+  if (s.left > 0) { line(s, 'sistema', 'Bestiário', `${s.hero.name} ainda tem ${s.left} ${s.left === 1 ? 'ação' : 'ações'} de combate neste turno.`, 'info'); return s; }
   s.phase = 'inimigos';
   return s;
 }
@@ -295,12 +302,12 @@ export function enemyTurns(prev: HuntState, rng?: Rng): HuntState[] {
     frames.push(clone(s));
     s.stats.taken += attack(s, 'inimigo', e, s.hero, act.name, act.hit, act.dmg, rng);
     if (s.hero.hpBar) s.hero.hpBar.cur = s.hero.hp;
-    if (s.hero.hp <= 0) { s.phase = 'derrota'; line(s, 'sistema', 'Bestiário', `${s.hero.name} caiu. O confronto acabou.`, 'fim'); frames.push(clone(s)); return frames; }
+    if (s.hero.hp <= 0) { s.phase = 'derrota'; line(s, 'sistema', 'Bestiário', 'O confronto acabou.', 'fim'); frames.push(clone(s)); return frames; }
     frames.push(clone(s));
     s = clone(s);
   }
   // Fim da rodada: novo turno do caçador, recargas descontadas, defesa extra das presas some.
-  s.round += 1; s.phase = 'heroi';
+  s.round += 1; s.phase = 'heroi'; s.left = s.hero.combatActions ?? 1;
   for (const k of Object.keys(s.cooldowns)) if (s.cooldowns[k] < 999) s.cooldowns[k] = Math.max(0, s.cooldowns[k] - 1);
   frames.push(s);
   return frames;

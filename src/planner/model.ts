@@ -105,6 +105,8 @@ export function nodeActor(n: PlanNode): Actor {
     bars: { vida: { cur: s.life, max: s.life }, alma: { cur: s.soul, max: s.soul } },
     attrs: s.attrs, defense: s.defense, actions: s.actions, cards: s.cards, emblem: n.icon, boss: kind === 'enemy' && s.boss,
     ai: s.ai || 'agressiva', resilience: s.resilience, soul: s.soul, caps: s.caps ?? [],
+    origin: s.origin ?? '', level: s.level, affiliation: s.affiliation ?? '', cliche: s.cliche ?? '',
+    combatActions: Math.max(1, Math.min(9, Math.round(s.combatActions ?? 1))), moveActions: Math.max(0, Math.round(s.moveActions ?? 0)),
   };
 }
 

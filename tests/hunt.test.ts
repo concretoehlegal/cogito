@@ -66,3 +66,19 @@ test('vez das presas: anunciam a intenção, atacam e a rodada vira', () => {
   const end = enemyTurns(dying, faces(20, 6));
   assert.equal(end[end.length - 1].phase, 'derrota');
 });
+
+test('ações de combate: com 2 por turno, o caçador age duas vezes antes das criaturas', () => {
+  const two = actor({ combatActions: 2, actions: [{ name: 'Soco', hit: '1d20+20', dmg: '1d2' }, { name: 'Chute', hit: '1d20+20', dmg: '1d2' }] });
+  let s = newHunt({ bars }, two, [actor({ id: 'm', kind: 'enemy', name: 'Cão', defense: 5, bars: { vida: { cur: 30, max: 30 } }, actions: [{ name: 'Mordida', hit: '1d20', dmg: '1d2' }] })], faces(20, 1));
+  assert.equal(s.phase, 'heroi');
+  assert.equal(s.left, 2);
+  s = heroAct(s, 'atk-0', s.enemies[0].id, faces(10));
+  assert.equal(s.phase, 'heroi', 'ainda resta uma ação');
+  assert.equal(s.left, 1);
+  s = heroAct(s, 'atk-1', s.enemies[0].id, faces(10));
+  assert.equal(s.phase, 'inimigos', 'gastou as duas: vez das criaturas');
+  const frames = enemyTurns(s, faces(2, 1));
+  const back = frames[frames.length - 1];
+  assert.equal(back.phase, 'heroi');
+  assert.equal(back.left, 2, 'o turno seguinte devolve as duas ações');
+});

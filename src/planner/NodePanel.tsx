@@ -36,12 +36,28 @@ function SheetEditor({ n }: { n: PlanNode }) {
   return (
     <>
       <h4>Ficha de jogo</h4>
+      {!enemy && (
+        <div className="pp-ident">
+          <label className="field"><span>Origem</span><input value={s.origin ?? ''} maxLength={120} placeholder="Ex.: Herdeiro - Zau'l, o espelho da ganância" onChange={(e) => up((sh) => { sh.origin = e.target.value; }, 'origin')} /></label>
+          <div className="insp-grid two-one">
+            <label className="field"><span>Filiação</span><input value={s.affiliation ?? ''} maxLength={60} placeholder="Ex.: D.C.P.A" onChange={(e) => up((sh) => { sh.affiliation = e.target.value; }, 'aff')} /></label>
+            <label className="field"><span>Nível</span><input inputMode="numeric" value={s.level ?? ''} placeholder="1" onChange={(e) => up((sh) => { const v = e.target.value.trim(); sh.level = v ? Math.max(0, num(v, 1)) : undefined; }, 'level')} /></label>
+          </div>
+          <label className="field"><span>Clichê</span><input value={s.cliche ?? ''} maxLength={60} placeholder="Ex.: Sabe tudo" onChange={(e) => up((sh) => { sh.cliche = e.target.value; }, 'cliche')} /></label>
+        </div>
+      )}
       <div className={`insp-grid four${enemy ? " three-cols" : ""}`}>
-        <label className="field"><span>Vida</span><input inputMode="numeric" value={s.life} onChange={(e) => up((sh) => { sh.life = Math.max(1, num(e.target.value, sh.life)); }, 'life')} /></label>
+        <label className="field"><span title="Vitalidade (pontos de vida)">{enemy ? 'Vida' : 'Vitalidade'}</span><input inputMode="numeric" value={s.life} onChange={(e) => up((sh) => { sh.life = Math.max(1, num(e.target.value, sh.life)); }, 'life')} /></label>
         <label className="field"><span>Resiliência</span><input inputMode="numeric" value={s.resilience} onChange={(e) => up((sh) => { sh.resilience = Math.max(0, num(e.target.value, 0)); }, 'res')} /></label>
         <label className="field"><span>Defesa</span><input inputMode="numeric" value={s.defense} onChange={(e) => up((sh) => { sh.defense = Math.max(0, num(e.target.value, 10)); }, 'def')} /></label>
         {!enemy && <label className="field"><span>Alma</span><input inputMode="numeric" value={s.soul} onChange={(e) => up((sh) => { sh.soul = Math.max(0, num(e.target.value, 0)); }, 'soul')} /></label>}
       </div>
+      {!enemy && (
+        <div className="insp-grid two-even">
+          <label className="field"><span>Ações de combate</span><input inputMode="numeric" value={s.combatActions ?? 1} onChange={(e) => up((sh) => { sh.combatActions = Math.max(1, Math.min(9, num(e.target.value, 1))); }, 'cact')} /></label>
+          <label className="field"><span>Ações de mov.</span><input inputMode="numeric" value={s.moveActions ?? 0} onChange={(e) => up((sh) => { sh.moveActions = Math.max(0, Math.min(9, num(e.target.value, 0))); }, 'mact')} /></label>
+        </div>
+      )}
       {enemy && <label className="check"><input type="checkbox" checked={s.boss} onChange={(e) => up((sh) => { sh.boss = e.target.checked; if (!sh.boss) sh.actions = sh.actions.slice(0, 2); })} /> Chefe (moldura ciano e até 4 habilidades)</label>}
 
       {!enemy && (

@@ -298,3 +298,11 @@
 .fi-card.empty { background: transparent; border-style: dashed; box-shadow: none; }
 .fi-card.empty small { color: #8a8a8a; }
 @media (max-width: 980px) { .fi-cols { grid-template-columns: 1fr; } .fi-hero { grid-template-columns: 1fr; } .fi-photo { max-width: 260px; } .fi-stats { grid-template-columns: repeat(2, 1fr); } }
+.pp-ident { display: flex; flex-direction: column; }
+.insp-grid.two-one { display: grid; grid-template-columns: 1fr 80px; gap: 8px; }
+.insp-grid.two-even { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fi-ident { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 6px 18px; margin: 0; padding: 10px 12px; border: 2px dashed #373737; border-radius: 6px; }
+.fi-ident div { min-width: 0; }
+.fi-ident dt { font: 600 11px/1.2 var(--f-mono); color: #8a8a8a; text-transform: uppercase; letter-spacing: .06em; }
+.fi-ident dd { margin: 2px 0 0; font: 500 13.5px/1.3 var(--f-ui); color: #f2f2f2; }
+.fi-stats.six { grid-template-columns: repeat(3, 1fr); }

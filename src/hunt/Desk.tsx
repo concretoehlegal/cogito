@@ -246,45 +246,90 @@ function TornPaper({ x, y, rot }: { x: number; y: number; rot: number }) {
   );
 }
 
-export const Desk = memo(function Desk() {
+export type BackdropKind = 'mesa' | 'ritual' | 'preto' | 'cinza' | 'branco' | 'imagem';
+
+/** Opções de fundo do Bestiário (a ordem é a do seletor). */
+export const BACKDROPS: { id: BackdropKind; label: string }[] = [
+  { id: 'mesa', label: 'Mesa do investigador' },
+  { id: 'ritual', label: 'Mesa de ritual' },
+  { id: 'preto', label: 'Preto' },
+  { id: 'cinza', label: 'Cinza escuro' },
+  { id: 'branco', label: 'Branco' },
+  { id: 'imagem', label: 'Imagem sua' },
+];
+
+const PLAIN: Record<string, string> = { preto: '#000000', cinza: '#1c1c1c', branco: '#f5f5f5' };
+
+function Defs() {
   return (
-    <svg className="desk" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" aria-hidden>
-      <defs>
-        <pattern id="dk-planks" width="1920" height="120" patternUnits="userSpaceOnUse">
-          <rect width="1920" height="120" fill="#4a2414" />
-          <rect y="0" width="1920" height="58" fill="#552a17" />
-          <rect y="60" width="1920" height="58" fill="#4b2515" />
-          <path d="M0 58.5 H1920 M0 118.5 H1920" stroke="#1e0d06" strokeWidth="3" />
-          <path d="M0 16 C 300 10, 600 24, 900 14 S 1500 22, 1920 12 M0 38 C 400 46, 800 30, 1200 42 S 1700 34, 1920 40 M0 78 C 350 72, 700 88, 1050 76 S 1600 84, 1920 74 M0 100 C 500 108, 900 94, 1400 104 S 1800 98, 1920 102" stroke="#2c140a" strokeWidth="2" fill="none" opacity=".55" />
-          <path d="M420 0 V58 M1310 60 V118 M980 0 V58 M160 60 V118 M1700 0 V58" stroke="#1e0d06" strokeWidth="3" />
-          <ellipse cx="760" cy="30" rx="26" ry="8" fill="none" stroke="#2c140a" strokeWidth="2" opacity=".6" />
-          <ellipse cx="1540" cy="88" rx="20" ry="6" fill="none" stroke="#2c140a" strokeWidth="2" opacity=".6" />
-        </pattern>
-        <radialGradient id="dk-floor"><stop offset="0" stopColor="currentColor" stopOpacity=".22" /><stop offset=".6" stopColor="currentColor" stopOpacity=".08" /><stop offset="1" stopColor="currentColor" stopOpacity="0" /></radialGradient>
-        <linearGradient id="dk-shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#3f9150" /><stop offset=".55" stopColor="#1f5a2b" /><stop offset="1" stopColor="#123a1b" /></linearGradient>
-        <radialGradient id="dk-lamplight"><stop offset="0" stopColor="#ffcf7a" stopOpacity=".42" /><stop offset=".55" stopColor="#ff9a3c" stopOpacity=".14" /><stop offset="1" stopColor="#ff9a3c" stopOpacity="0" /></radialGradient>
-        <radialGradient id="dk-whisky" cx=".4" cy=".35"><stop offset="0" stopColor="#ffd08a" stopOpacity=".7" /><stop offset="1" stopColor="#6a2a08" stopOpacity=".3" /></radialGradient>
-        <radialGradient id="dk-vignette" cx=".55" cy=".5" r=".75"><stop offset=".55" stopColor="#000" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity=".72" /></radialGradient>
-        <filter id="dk-glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-      </defs>
+    <defs>
+      <pattern id="dk-planks" width="1920" height="120" patternUnits="userSpaceOnUse">
+        <rect width="1920" height="120" fill="#4a2414" />
+        <rect y="0" width="1920" height="58" fill="#552a17" />
+        <rect y="60" width="1920" height="58" fill="#4b2515" />
+        <path d="M0 58.5 H1920 M0 118.5 H1920" stroke="#1e0d06" strokeWidth="3" />
+        <path d="M0 16 C 300 10, 600 24, 900 14 S 1500 22, 1920 12 M0 38 C 400 46, 800 30, 1200 42 S 1700 34, 1920 40 M0 78 C 350 72, 700 88, 1050 76 S 1600 84, 1920 74 M0 100 C 500 108, 900 94, 1400 104 S 1800 98, 1920 102" stroke="#2c140a" strokeWidth="2" fill="none" opacity=".55" />
+        <path d="M420 0 V58 M1310 60 V118 M980 0 V58 M160 60 V118 M1700 0 V58" stroke="#1e0d06" strokeWidth="3" />
+        <ellipse cx="760" cy="30" rx="26" ry="8" fill="none" stroke="#2c140a" strokeWidth="2" opacity=".6" />
+        <ellipse cx="1540" cy="88" rx="20" ry="6" fill="none" stroke="#2c140a" strokeWidth="2" opacity=".6" />
+      </pattern>
+      <radialGradient id="dk-floor"><stop offset="0" stopColor="currentColor" stopOpacity=".22" /><stop offset=".6" stopColor="currentColor" stopOpacity=".08" /><stop offset="1" stopColor="currentColor" stopOpacity="0" /></radialGradient>
+      <linearGradient id="dk-shade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#3f9150" /><stop offset=".55" stopColor="#1f5a2b" /><stop offset="1" stopColor="#123a1b" /></linearGradient>
+      <radialGradient id="dk-lamplight"><stop offset="0" stopColor="#ffcf7a" stopOpacity=".42" /><stop offset=".55" stopColor="#ff9a3c" stopOpacity=".14" /><stop offset="1" stopColor="#ff9a3c" stopOpacity="0" /></radialGradient>
+      <radialGradient id="dk-whisky" cx=".4" cy=".35"><stop offset="0" stopColor="#ffd08a" stopOpacity=".7" /><stop offset="1" stopColor="#6a2a08" stopOpacity=".3" /></radialGradient>
+      <radialGradient id="dk-vignette" cx=".55" cy=".5" r=".75"><stop offset=".55" stopColor="#000" stopOpacity="0" /><stop offset="1" stopColor="#000" stopOpacity=".72" /></radialGradient>
+      <filter id="dk-glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+    </defs>
+  );
+}
+
+function Wood() {
+  return (
+    <>
       <rect width="1920" height="1080" fill="#1a0b05" />
       <rect x="10" y="10" width="1900" height="1060" rx="26" fill="url(#dk-planks)" />
       <rect x="10" y="10" width="1900" height="1060" rx="26" fill="none" stroke="#2a1309" strokeWidth="14" />
       <rect x="30" y="30" width="1860" height="1020" rx="16" fill="none" stroke="#7a3f22" strokeWidth="2.5" opacity=".7" />
-      <Circle cx={1260} cy={515} r={300} />
-      <Lamp x={600} y={40} />
-      <Ashtray x={680} y={360} />
-      <Mug x={812} y={330} />
-      <Glass x={1010} y={330} />
-      <Phone x={1770} y={420} />
-      <FileBox x={1760} y={600} w={150} h={170} />
-      <Photo x={612} y={470} rot={-8} scene="igreja" />
-      <Photo x={640} y={612} rot={6} scene="tunel" />
-      <Folder x={1610} y={640} rot={-6} />
-      <TornPaper x={1350} y={720} rot={5} />
-      <Notebook x={1080} y={760} rot={-6} />
-      <Photo x={1500} y={790} rot={-10} scene="vulto" />
-      <rect width="1920" height="1080" fill="url(#dk-vignette)" />
-    </svg>
+    </>
+  );
+}
+
+/**
+ * Fundo do Bestiário: a mesa do investigador (com os objetos), a mesa de ritual (só madeira e círculo), cores lisas
+ * (preto, cinza escuro, branco) ou uma imagem da pessoa. Nos fundos lisos e na imagem, o círculo de runas é opcional.
+ */
+export const Backdrop = memo(function Backdrop({ kind, imageUrl, circle = true, dim = 0.25 }: { kind: BackdropKind; imageUrl?: string | null; circle?: boolean; dim?: number }) {
+  const wood = kind === 'mesa' || kind === 'ritual';
+  const showCircle = wood || circle;
+  return (
+    <div className={`backdrop bd-${kind}`} style={{ background: PLAIN[kind] ?? (kind === 'imagem' ? '#0a0a0a' : '#1a0b05') }} aria-hidden>
+      {kind === 'imagem' && imageUrl && <img className="bd-img" src={imageUrl} alt="" draggable={false} />}
+      {kind === 'imagem' && <span className="bd-dim" style={{ opacity: Math.max(0, Math.min(0.85, dim)) }} />}
+      {(wood || showCircle) && (
+        <svg className="desk" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+          <Defs />
+          {wood && <Wood />}
+          {showCircle && <Circle cx={1260} cy={515} r={300} />}
+          {kind === 'mesa' && (<>
+            <Lamp x={600} y={40} />
+            <Ashtray x={680} y={360} />
+            <Mug x={812} y={330} />
+            <Glass x={1010} y={330} />
+            <Phone x={1770} y={420} />
+            <FileBox x={1760} y={600} w={150} h={170} />
+            <Photo x={612} y={470} rot={-8} scene="igreja" />
+            <Photo x={640} y={612} rot={6} scene="tunel" />
+            <Folder x={1610} y={640} rot={-6} />
+            <TornPaper x={1350} y={720} rot={5} />
+            <Notebook x={1080} y={760} rot={-6} />
+            <Photo x={1500} y={790} rot={-10} scene="vulto" />
+          </>)}
+          {wood && <rect width="1920" height="1080" fill="url(#dk-vignette)" />}
+        </svg>
+      )}
+    </div>
   );
 });
+
+/** A mesa do investigador (compatibilidade). */
+export const Desk = memo(function Desk() { return <Backdrop kind="mesa" />; });

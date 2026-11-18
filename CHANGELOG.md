@@ -3,6 +3,37 @@
 Todas as mudanças de cada versão. A mais nova fica no topo.
 Para baixar, use a página de [Releases](../../releases).
 
+## [0.15.0] — 2026-11-18
+
+### Bestiário: HUD nova
+- **Painel da ficha** à esquerda com seções de ícone verde: Habilidades de Origem, Habilidades, Itens, Atributos e Capacidades.
+- **Inimigo na mira** no alto, com retrato, PV e PA (ou Defesa e Resiliência, quando a criatura não tem Alma).
+- **Nome do caçador** com o subtítulo, **Defesa** e **Ações** no canto de cima.
+- **Atalhos numerados** embaixo, uma caixa por ação, com recarga, usos e custo.
+- **O que você faz?** em linha, com o **Histórico de Ações** logo abaixo.
+- **PV, PA e o cartão do Instrumento** no canto de baixo, à direita; clique na arma para usá-la.
+- Cartas das criaturas maiores sobre a mesa; tudo se ajusta a telas menores (como 1366 × 768).
+
+### Fundos do Bestiário
+- Escolha o fundo da mesa: **mesa do investigador**, **mesa de ritual**, **preto**, **cinza escuro**, **branco** ou
+  **uma imagem sua** (copiada para `Documentos\COGITO\Bestiario\fundos`).
+- Nos fundos lisos e na imagem, o **círculo de runas** pode ser ligado ou desligado; a imagem pode ser **escurecida**
+  para a HUD ficar legível.
+- O seletor fica no botão **Fundo**, no alto da tela de combate, e na preparação do confronto. A escolha fica salva.
+
+### Fichas de personagem
+- Campos novos: **Origem**, **Nível**, **Filiação** e **Clichê**, mostrados na ficha completa; o Clichê aparece sob o nome
+  na HUD quando não há subtítulo.
+- **Ações de combate** e **Ações de movimento** por turno. O Bestiário respeita as ações de combate: com 2, o caçador age
+  duas vezes antes das criaturas; a HUD mostra quantas restam (ex.: 1/2) e as de movimento.
+- A Vida dos personagens passa a se chamar **Vitalidade (PV)**; a ficha completa mostra seis números (Vitalidade,
+  Resiliência, Defesa, Alma e as duas ações).
+
+### Outros
+- A versão do COGITO aparece no rodapé das Configurações.
+- Novos ícones: **Maleta**, **Presas** e o novo símbolo da **Resiliência** (escudo com aura), que substitui a armadura nas cartas e no Bestiário.
+- O registro não repete mais "caiu" quando o caçador cai.
+
 ## [0.14.0] — 2026-11-18
 
 ### Bestiário: a Caçada ganhou cara nova
@@ -63,4 +94,5 @@ Para baixar, use a página de [Releases](../../releases).
   cartas de personagem.
 - Mesas de jogo online (removidas na 0.11.0).
 
+[0.15.0]: ../../releases/tag/v0.15.0
 [0.14.0]: ../../releases/tag/v0.14.0

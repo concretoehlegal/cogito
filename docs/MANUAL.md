@@ -176,18 +176,20 @@ Na tela inicial, área **Bestiário**. Escolha a campanha do Planejador, o **ca�
   rápido na vez das criaturas). As criaturas ficam sobre a mesa, como cartas, com a barra de vida; a que está na mira
   ganha contorno turquesa. Uma faixa repete o último acontecimento. Números de dano e cura saltam de quem foi atingido.
 - **HUD do jogador**:
-  - **Painel da esquerda**: barra preta com Sair, a rodada, de quem é a vez e Recuar; depois **Habilidades de Origem**
-    (cartas de habilidade marcadas como "Habilidade de origem"), **Habilidades** (habilidades e poderes ocultos),
-    **Itens**, **Atributos** e **Capacidades** (os ataques da ficha e as capacidades com valor). O que pode ser usado
-    mostra a tecla (1 a 9), fica clicável e mostra a recarga; passe o mouse para ver a carta inteira.
-  - **No alto**: o retrato quadrado e, à direita, o nome (com o subtítulo), as barras grandes de **PV** e **PA**, Defesa,
-    Resiliência, Ações do turno e quem está na mira.
-  - **No centro, embaixo**: a caixa **O que você faz?** e, logo abaixo dela, o **Histórico de Ações** (o chat do
-    confronto: suas falas em verde-limão, as criaturas em rosa, o sistema no meio, separados por rodada).
-  - **No canto de baixo à direita**: o **Instrumento** — a arma em mãos, com até 3 melhorias (os números da carta e os
-    bônus em linhas), **Dano**, **Ações para recarga** e **Alcance** (um número chamado "Alcance" na carta, ou um bônus
-    como "20 m"). Clique na arma para usá-la.
-- **O que você faz?** (quadro de cantos arredondados): escreva a ação com suas palavras, por exemplo
+  - **No alto, à esquerda**: Sair, a rodada, de quem é a vez, Recuar e **Fundo** (escolhe o fundo da mesa: mesa do
+    investigador, mesa de ritual, preto, cinza escuro, branco ou uma imagem sua, com o círculo de runas opcional e a
+    opção de escurecer a imagem; a escolha fica salva e também aparece na preparação do confronto).
+  - **Painel da esquerda**: **Habilidades de Origem** (cartas de habilidade marcadas como "Habilidade de origem"),
+    **Habilidades** (habilidades e poderes ocultos), **Itens**, **Atributos** e **Capacidades** (os ataques da ficha e as
+    capacidades com valor), cada seção com seu ícone. O que pode ser usado mostra a tecla (1 a 9), fica clicável e mostra
+    a recarga; passe o mouse para ver a carta inteira.
+  - **No alto, no meio**: o **inimigo na mira**, com retrato, **PV** e **PA** (ou Defesa e Resiliência, se ele não tiver Alma).
+  - **No alto, à direita**: o nome do caçador com o subtítulo, a **Defesa** e as **Ações** do turno.
+  - **Embaixo**: os **atalhos numerados** (uma caixa por ação, com recarga, usos e custo); **O que você faz?** com o
+    **Histórico de Ações** logo abaixo (suas falas em verde, as criaturas em rosa, o sistema no meio, separados por
+    rodada); e, à direita, as barras de **PV** e **PA** e o cartão do **Instrumento** — a arma em mãos, com dano,
+    recarga, alcance (um número chamado "Alcance" na carta, ou um bônus como "20 m") e melhorias. Clique na arma para usá-la.
+- **O que você faz?**: escreva a ação com suas palavras, por exemplo
   “atiro no segundo cultista”, “tomo o remédio”, “me protejo com o colete” ou “sussurro as palavras contra o chefe”.
   O Bestiário escolhe, entre os ataques, armas, itens e habilidades da ficha, o que combina com o texto e o alvo
   (pelo nome, “o segundo…”, “o chefe”, “o mais ferido”), mostra o que entendeu antes de agir e sugere outras opções.

@@ -10,6 +10,7 @@ import { HUNT_BARS, isChar, nodeActor } from '../planner/model';
 import { planFileUrl } from '../planner/state';
 import { AI, heroActions, newHunt } from './engine';
 import { preyList, useHunt } from './state';
+import { BackdropPicker } from './BackdropPicker';
 import './hunt.css';
 
 const MAX_PREY = 4;
@@ -110,6 +111,9 @@ export function HuntHome() {
             })}
             {!beasts.length && <p className="panel-empty">Esta campanha ainda não tem inimigos.</p>}
           </div>
+
+          <h2 className="hh-step"><span>3</span> Fundo da mesa</h2>
+          <BackdropPicker />
 
           <div className="hh-go">
             <button className="btn primary big" disabled={!hero || !total} onClick={start}><Swords size={17} /> Começar o confronto</button>

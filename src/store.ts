@@ -17,7 +17,12 @@ export type HomeTab = 'livros' | 'planejador' | 'bestiario';
 const homeTabOf = (v: string): HomeTab => (v === 'planejador' || v === 'campanhas' ? 'planejador' : v === 'bestiario' || v === 'cacada' ? 'bestiario' : 'livros');
 
 export interface Viewer { key: string; kind: 'pdf' | 'image' | 'other'; title: string; url: string; source: 'biblioteca' | 'anexo'; name?: string }
-export interface Prefs { sound: boolean; volume: number; diceAnim: boolean; spell: boolean; uiScale: number; leftWidth: number; rightWidth: number; diceColor: string }
+export type HuntBackdrop = 'mesa' | 'ritual' | 'preto' | 'cinza' | 'branco' | 'imagem';
+export interface Prefs {
+  sound: boolean; volume: number; diceAnim: boolean; spell: boolean; uiScale: number; leftWidth: number; rightWidth: number; diceColor: string;
+  /** Fundo do Bestiário, a imagem própria (nome do arquivo), se o círculo de runas aparece e quanto escurecer a imagem. */
+  huntBg: HuntBackdrop; huntBgImage: string | null; huntCircle: boolean; huntBgDim: number;
+}
 export interface Toast { id: number; kind: 'info' | 'error' | 'ok'; text: string; action?: { label: string; run: () => void } }
 
 interface AppState {
@@ -55,7 +60,7 @@ export const useApp = create<AppState>(() => ({
   save: { state: 'saved' }, contentRev: {}, epoch: 0, activeEditor: null, toasts: [], viewer: null,
   theme: stored('cogito.theme', 'dark'), leftOpen: true, rightTab: stored('cogito.rightTab', 'inserir'),
   renaming: null, busy: null,
-  prefs: { sound: true, volume: 0.6, diceAnim: true, spell: true, uiScale: 1, leftWidth: 286, rightWidth: 300, diceColor: '#f2f2f2', ...stored<Partial<Prefs>>('cogito.prefs', {}) },
+  prefs: { sound: true, volume: 0.6, diceAnim: true, spell: true, uiScale: 1, leftWidth: 286, rightWidth: 300, diceColor: '#f2f2f2', huntBg: 'mesa', huntBgImage: null, huntCircle: true, huntBgDim: 0.25, ...stored<Partial<Prefs>>('cogito.prefs', {}) },
 }));
 
 const get = useApp.getState;

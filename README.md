@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="../../releases/latest"><img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-0.14.0-b8ff2c?style=for-the-badge&labelColor=171717"></a>
+  <a href="../../releases/latest"><img alt="Versão" src="https://img.shields.io/badge/vers%C3%A3o-0.15.0-b8ff2c?style=for-the-badge&labelColor=171717"></a>
   <img alt="Windows 10 e 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-e5e5e5?style=for-the-badge&labelColor=171717">
   <img alt="100% offline" src="https://img.shields.io/badge/100%25-offline-e5e5e5?style=for-the-badge&labelColor=171717">
   <img alt="Em português" src="https://img.shields.io/badge/idioma-portugu%C3%AAs-e5e5e5?style=for-the-badge&labelColor=171717">
@@ -107,7 +107,7 @@ pasta. O app também faz cópias automáticas enquanto você trabalha.
 
 - Escolha o caçador e até 4 criaturas de uma campanha do Planejador.
 - **"O que você faz?"**: escreva a ação com suas palavras ("atiro no segundo cultista com o revólver") e veja o que o jogo entendeu antes de agir.
-- HUD com **Habilidades de Origem, Habilidades, Itens, Atributos, Capacidades**, barras de **PV e PA** e o **Instrumento** em mãos.
+- HUD com **Habilidades de Origem, Habilidades, Itens, Atributos e Capacidades**, o inimigo na mira, atalhos numerados, barras de **PV e PA** e o **Instrumento** em mãos.
 - **IA agressiva**: cada criatura calcula a chance de acerto e o dano esperado e escolhe o golpe mais letal, anunciando no histórico.
 - Críticos, recargas, custo em Alma, consumíveis, cura e defesa; teclas 1–9 e Tab para trocar o alvo.
 </details>
