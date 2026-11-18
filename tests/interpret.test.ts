@@ -6,7 +6,16 @@ import { interpret } from '../src/hunt/interpret.ts';
 const faces = (...f: number[]) => { let i = 0; return () => (f[i++ % f.length] ?? 1) - 1; };
 const bars = [{ id: 'vida', name: 'Vida', color: '#c00' }, { id: 'san', name: 'Sanidade', color: '#80f' }];
 const card = (p: Record<string, unknown>) => ({ id: 'c' + Math.random().toString(36).slice(2, 7), type: 'item', name: 'Carta', icon: '', image: null, color: '#c27a33', rarity: 'comum', cost: '', roll: '', tags: '', description: '', qty: 1, consumable: false, equipped: false, mode: 'ativo', cooldown: '', stats: [], hunt: '', ...p });
-const actor = (p: Record<string, unknown>) => ({ id: 'a', kind: 'pc', name: 'Vera', color: '#c27a33', image: null, bars: { vida: { cur: 20, max: 20 }, san: { cur: 6, max: 6 } }, attrs: [], notes: '', ownerId: null, defense: 12, actions: [{ name: 'Soco', hit: '1d20+4', dmg: '1d4' }], subtitle: '', level: '', cards: [], conditions: [], emblem: 'detetive', boss: false, size: 1, ...p }) as any;
+const actor = (p: Record<string, unknown>) => {
+  const { bars: b0, ...rest } = p as { bars?: Record<string, { cur: number; max: number }> };
+  const b = b0 ?? { vida: { cur: 20, max: 20 }, san: { cur: 6, max: 6 } };
+  return {
+    id: 'a', kind: 'pc', name: 'Vera', color: '#c27a33', image: null, subtitle: '', emblem: 'detetive', boss: false, defense: 12, armor: 0,
+    actions: [{ name: 'Soco', hit: '1d20+4', dmg: '1d4' }], cards: [], kindLabel: 'Personagem', hp: b.vida?.max ?? 10,
+    resources: Object.entries(b).filter(([k]) => k !== 'vida').map(([k, v]) => ({ id: k, name: k === 'san' ? 'Sanidade' : k, short: '', max: v.max })),
+    combatActions: 1, moveActions: 0, stats: [], lists: [], ...rest,
+  } as any;
+};
 const vera = actor({ cards: [
   card({ name: 'Revólver .38', icon: 'revolver', hunt: 'dano', roll: '2d6+2' }),
   card({ name: 'Remédio', icon: 'pilula', hunt: 'cura', roll: '2d4', consumable: true, qty: 1 }),
@@ -14,7 +23,7 @@ const vera = actor({ cards: [
   card({ name: 'Sussurro do Abismo', type: 'feitico', icon: 'vela', hunt: 'dano', roll: '3d8', cost: '2 Sanidade', cooldown: '3 turnos' }),
 ] });
 const prey = [actor({ id: 'c', kind: 'enemy', name: 'Cultista' }), actor({ id: 'c', kind: 'enemy', name: 'Cultista' }), actor({ id: 'b', kind: 'enemy', name: 'O Verme', boss: true, bars: { vida: { cur: 40, max: 40 } } })];
-const start = () => { const s = newHunt({ bars }, vera, prey, faces(20, 1)); s.phase = 'heroi'; return s; };
+const start = () => { const s = newHunt({}, vera, prey, faces(20, 1)); s.phase = 'heroi'; return s; };
 
 test('lê armas, itens e habilidades a partir do que o jogador escreve', () => {
   const s = start();

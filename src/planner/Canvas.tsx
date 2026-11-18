@@ -7,6 +7,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as RPE } from 'react';
 import { Markdown } from './Markdown';
 import { BoardCard } from './BoardCard';
+import { DEFAULT_SYSTEM, type RuleSystem } from '../game/system';
+const FALLBACK_SYS = DEFAULT_SYSTEM();
 import { GameIcon } from '../game/icons';
 import type { Plan, PlanNode } from '../game/types';
 import { api, errorText } from '../api';
@@ -44,10 +46,10 @@ export function RichText({ body, nodes, onLink, max }: { body: string; nodes: Pl
   );
 }
 
-function NodeView({ n, nodes, planId, selected, dim, onLink }: { n: PlanNode; nodes: PlanNode[]; planId: string; selected: boolean; dim: boolean; onLink: (t: string) => void }) {
+function NodeView({ n, nodes, planId, sys, selected, dim, onLink }: { n: PlanNode; nodes: PlanNode[]; planId: string; sys: RuleSystem; selected: boolean; dim: boolean; onLink: (t: string) => void }) {
   const t = TYPES[n.type];
   if (isChar(n.type)) {
-    return <BoardCard n={n} width={n.w} imgUrl={(f) => planFileUrl(planId, f)} />;
+    return <BoardCard n={n} width={n.w} imgUrl={(f) => planFileUrl(planId, f)} sys={sys} />;
   }
   if (n.type === 'moldura') {
     return <div className="pn-frame-label"><GameIcon id={n.icon} size={14} />{n.title || 'Moldura'}</div>;
@@ -385,7 +387,7 @@ export function Canvas({ plan, search, textLinks, tool = 'mover', onToolDone }: 
       >
         {editing === n.id && isText(n.type)
           ? <InlineText n={n} onDone={() => setEditing(null)} />
-          : <NodeView n={{ ...n, w: b.w }} nodes={nodes} planId={plan.id} selected={s} dim={searching} onLink={onLink} />}
+          : <NodeView n={{ ...n, w: b.w }} nodes={nodes} planId={plan.id} sys={plan.system ?? FALLBACK_SYS} selected={s} dim={searching} onLink={onLink} />}
         {n.type !== 'moldura' && !drag && SIDES.map((sd) => <span key={sd} className={`pn-handle wire ${sd}`} title="Arraste até outra ficha para ligar" onPointerDown={(e) => onWire(e, n, sd)} />)}
         {s && sel.length === 1 && <span className="pn-handle size" title="Arraste para mudar o tamanho" onPointerDown={(e) => onResize(e, n)} />}
       </div>

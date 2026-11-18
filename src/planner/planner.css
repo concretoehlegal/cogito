@@ -405,8 +405,71 @@ textarea.pn-inline.pn-tbox { border-color: var(--lime); }
 .board-card.wide .bc-acts li { font-size: .7em; padding: .35em .5em; }
 .pn-node .board-card { filter: none; }
 .bc-body > .bc-rows, .bc-body > .bc-acts { min-height: 0; overflow: hidden; flex-shrink: 1; }
+.bc-body > .bc-list { display: flex; flex-direction: column; gap: .28em; min-height: 0; overflow: hidden; flex-shrink: 1; }
+.board-card.full .bc-list { gap: .2em; }
+.bc-list > .bc-sec { flex: none; }
+.bc-sec .gi { width: 1.3em; height: 1.3em; color: var(--ac); }
 /* Com atributos e capacidades juntos, a arte cede espaço para as linhas não serem cortadas. */
 .board-card.full .bc-art { height: 37%; }
 .board-card.full .bc-body { gap: .2em; padding-top: .4em; }
 .board-card.full .bc-sec { margin-top: .1em; }
 .bc-body > .bc-head, .bc-body > .bc-sec, .bc-foot { flex: none; }
+
+/* ───────── Sistema de regras (0.17) ───────── */
+.pp-sys { display: flex; align-items: center; gap: 8px; margin: 14px 0 2px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 9px; background: color-mix(in srgb, var(--card-2) 70%, transparent); font-size: 12.5px; color: var(--muted); }
+.pp-sys > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pp-sys > span b { color: var(--text); }
+.pp-sys > span small { color: var(--faint); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp-sys .gi { color: var(--brand); flex: none; }
+.pp-sys.big { margin-top: 0; }
+.pp-nums { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; align-items: end; }
+.pp-nums .field > span { display: flex; align-items: flex-end; gap: 5px; min-height: 2.5em; line-height: 1.25; font-size: 11px; }
+.pp-ident .field > span { display: flex; align-items: center; gap: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; }
+.pp-nums .field > span .gi, .pp-ident .field > span .gi, .pp-listhead .gi { color: var(--brand); flex: none; }
+.pp-nums input { text-align: center; font: 600 14px var(--f-ui); }
+.pp-listhead { display: flex; align-items: center; gap: 6px; }
+.attr-row.with-icon { grid-template-columns: auto minmax(0, 1.4fr) minmax(0, 1fr) auto; align-items: center; }
+.attr-row.with-icon .effect-icon { width: 30px; height: 30px; }
+
+.sys-editor { display: flex; flex-direction: column; gap: 14px; min-height: 420px; }
+.se-top { display: grid; grid-template-columns: auto minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: end; }
+.se-top .field { margin: 0; }
+.se-top .field > span { display: flex; align-items: center; gap: 5px; }
+.se-top > .icon-button .effect-icon { height: 36px; width: 42px; margin-bottom: 1px; }
+.se-tabs { align-self: flex-start; }
+.se-pane { display: flex; flex-direction: column; gap: 8px; max-height: min(58vh, 560px); overflow: auto; padding-right: 4px; }
+.se-pane > p { margin: 0 0 4px; }
+.se-pane h4 { margin: 10px 0 2px; font: 600 12px/1 var(--f-ui); color: var(--muted); }
+.se-row { display: flex; flex-direction: column; gap: 6px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--card-2) 60%, transparent); }
+.se-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.se-line.sub { padding-left: 46px; gap: 12px; }
+.se-line input, .se-line select, .se-item input { height: 32px; border: 1px solid var(--border); border-radius: 7px; background: var(--field); padding: 0 9px; font-size: 13px; color: var(--text); }
+.se-line input:focus, .se-item input:focus, .se-line select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+.se-name { flex: 1 1 160px; min-width: 120px; font-weight: 600; }
+.se-short { width: 70px; text-align: center; text-transform: uppercase; }
+.se-line select { max-width: 210px; }
+.se-move { display: inline-flex; margin-left: auto; }
+.se-who { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; }
+.se-who button { height: 26px; padding: 0 10px; font-size: 11.5px; color: var(--faint); background: transparent; border: 0; border-right: 1px solid var(--border); cursor: pointer; }
+.se-who button:last-child { border-right: 0; }
+.se-who button.on { color: var(--brand-ink); background: var(--brand); font-weight: 600; }
+.se-def { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.se-def input { width: 74px; height: 28px; text-align: center; }
+.se-items { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 46px; }
+.se-item { display: inline-flex; align-items: center; gap: 4px; padding: 3px; border: 1px solid var(--border); border-radius: 9px; background: var(--card); }
+.se-item .effect-icon { width: 28px; height: 28px; }
+.se-item input { width: 150px; height: 28px; }
+.se-row.list > small { padding-left: 46px; }
+.se-add { display: flex; gap: 8px; }
+.se-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.se-grid .field { margin: 0; }
+.se-roles { display: grid; gap: 6px; margin-top: 8px; padding: 12px; border: 1px dashed var(--border-strong); border-radius: 10px; font-size: 12.5px; color: var(--muted); }
+.se-roles b { color: var(--text); }
+.se-roles span { display: flex; gap: 10px; }
+.se-roles em { font-style: normal; min-width: 210px; color: var(--faint); }
+.se-roles i { color: var(--faint); }
+.check.disabled { opacity: .45; cursor: default; }
+.fi-stats b { display: flex; align-items: center; gap: 7px; }
+.fi-stats b .gi { width: 17px; height: 17px; color: var(--brand); flex: none; }
+.fi-stats > div small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fi-attrs-list em { display: inline-flex; align-items: center; gap: 5px; }

@@ -4,19 +4,21 @@ import { Crosshair, Minus, Plus, Swords } from 'lucide-react';
 import { api, errorText } from '../api';
 import { toast, useApp } from '../store';
 import { CharCard, dataFromActor } from '../game/CharCard';
+import { setCardLabels } from '../game/Cards';
+import { normalizePlan } from '../game/system';
 import { GameIcon } from '../game/icons';
 import type { Actor, PlanMeta } from '../game/types';
-import { HUNT_BARS, isChar, nodeActor } from '../planner/model';
+import { isChar, nodeActor } from '../planner/model';
 import { planFileUrl } from '../planner/state';
-import { AI, heroActions, newHunt } from './engine';
+import { AI, heroActions, newHunt, rulesOf } from './engine';
 import { preyList, useHunt } from './state';
 import { BackdropPicker } from './BackdropPicker';
 import './hunt.css';
 
 const MAX_PREY = 4;
 
-function Portrait({ a, campId, bars }: { a: Actor; campId: string; bars: { id: string; name: string; color: string }[] }) {
-  return <CharCard d={dataFromActor(a, bars, null)} width={150} imgUrl={(n) => planFileUrl(campId, n)} className="hh-cardart" />;
+function Portrait({ a, campId }: { a: Actor; campId: string }) {
+  return <CharCard d={dataFromActor(a, null)} width={150} imgUrl={(n) => planFileUrl(campId, n)} className="hh-cardart" />;
 }
 
 export function HuntHome() {
@@ -26,8 +28,10 @@ export function HuntHome() {
   /** Lê as fichas da campanha do Planejador. `keep` mantém caçador e criaturas já escolhidos (vindo do quadro). */
   const pick = async (id: string, keep = false) => {
     try {
-      const plan = await api.planLoad(id);
-      const c = { id: plan.id, name: plan.name, bars: HUNT_BARS, actors: plan.nodes.filter((n) => isChar(n.type)).map(nodeActor) };
+      const plan = normalizePlan(await api.planLoad(id));
+      const sys = plan.system!;
+      setCardLabels(sys);
+      const c = { id: plan.id, name: plan.name, system: sys, actors: plan.nodes.filter((n) => isChar(n.type)).map((n) => nodeActor(n, sys)) };
       useHunt.setState(keep ? { planId: id, campaign: c } : { planId: id, campaign: c, heroId: null, prey: {} });
     } catch (e) { toast(errorText(e), 'error'); }
   };
@@ -37,7 +41,8 @@ export function HuntHome() {
     else if (campaign && planId === campaign.id) void pick(planId, true); // atualiza com o que mudou no quadro
   }, [camps]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const hp = (a: Actor) => { const b = campaign?.bars[0]; const v = b ? a.bars[b.id] : undefined; return v ? v.max : 0; };
+  const rules = campaign ? rulesOf(campaign.system) : null;
+  const showDef = !!campaign && rules?.hit === 'contra-defesa' && campaign.system.stats.some((x) => x.role === 'defesa');
   const hunters = campaign?.actors.filter((a) => a.kind !== 'enemy') ?? [];
   const beasts = campaign?.actors.filter((a) => a.kind === 'enemy') ?? [];
   const total = Object.values(prey).reduce((a, b) => a + b, 0);
@@ -76,13 +81,13 @@ export function HuntHome() {
           <h2 className="hh-step"><span>1</span> Caçador</h2>
           <div className="hh-grid">
             {hunters.map((a) => {
-              const acts = heroActions(a, campaign.bars);
+              const acts = heroActions(a);
               return (
                 <button key={a.id} className={`hh-card${heroId === a.id ? ' on' : ''}`} style={{ '--tc': a.color } as CSSProperties} onClick={() => useHunt.setState({ heroId: a.id })}>
-                  <Portrait a={a} campId={campaign.id} bars={campaign.bars} />
+                  <Portrait a={a} campId={campaign.id} />
                   <strong>{a.name}</strong>
-                  <small>{a.subtitle || (a.kind === 'pc' ? 'Personagem' : 'NPC')}</small>
-                  <span className="hh-stats"><b>{hp(a)}</b> vida · <b>{a.defense}</b> defesa · <b>{acts.length}</b> ações</span>
+                  <small>{a.subtitle || a.kindLabel}</small>
+                  <span className="hh-stats"><b>{a.hp}</b> {rules?.hpShort}{showDef && <> · <b>{a.defense}</b> {rules?.defShort}</>} · <b>{acts.length}</b> ações</span>
                   <span className="hh-acts">{acts.slice(0, 7).map((x) => <GameIcon key={x.id} id={x.icon} size={16} title={x.name} />)}</span>
                 </button>
               );
@@ -96,10 +101,10 @@ export function HuntHome() {
               const n = prey[a.id] ?? 0;
               return (
                 <div key={a.id} className={`hh-card prey${n ? ' on' : ''}`} style={{ '--tc': a.color } as CSSProperties}>
-                  <Portrait a={a} campId={campaign.id} bars={campaign.bars} />
-                  <strong>{a.name}{a.boss && <em className="hh-boss">Chefe</em>}</strong>
+                  <Portrait a={a} campId={campaign.id} />
+                  <strong>{a.name}{a.boss && <em className="hh-boss">{campaign.system.labels.chefe}</em>}</strong>
                   <small>{a.actions.map((x) => x.name).join(' · ') || 'Ataque'}</small>
-                  <span className="hh-stats"><b>{hp(a)}</b> vida · <b>{a.defense}</b> defesa</span>
+                  <span className="hh-stats"><b>{a.hp}</b> {rules?.hpShort}{showDef && <> · <b>{a.defense}</b> {rules?.defShort}</>}</span>
                   <span className="hh-ai" title="Comportamento da IA">IA: {(AI[a.ai ?? 'agressiva'] ?? AI.agressiva).name}</span>
                   <span className="hh-count">
                     <button className="icon-btn" onClick={() => setPrey(a.id, -1)} disabled={!n} aria-label="Menos"><Minus size={15} /></button>

@@ -188,6 +188,48 @@ Bestiário ou editar.
   rolagem, com o dano e as ações para recarregar.
 - **Criaturas** mostram Vida, Resiliência, Dano e as **habilidades**: 2 para criaturas comuns, 4 para chefes.
 
+## Sistema de regras (qualquer RPG)
+
+Cada campanha do Planejador tem o seu **sistema de regras**. Ele define o que existe nas fichas e como o Bestiário
+resolve os ataques, para você testar o seu sistema próprio ou jogar com D&D, Call of Cthulhu, Ordem Paranormal,
+Daggerheart, Pathfinder ou qualquer outro.
+
+**Escolher**: ao criar a campanha, em **Sistema de regras**. Depois, em **Editar sistema** (painel da campanha, sem
+nada selecionado, ou no topo da ficha de jogo de um personagem ou criatura).
+
+| Modelo | O que vem pronto |
+| --- | --- |
+| COGITO | Vitalidade, Resiliência, Defesa, Alma, ações de combate e de movimento; Origem, Nível, Filiação, Clichê; Atributos e Capacidades |
+| D&D 5ª edição | PV, CA, Espaços de Magia, Bônus de Proficiência, Iniciativa, Deslocamento; Espécie, Classe, Nível, Antecedente, Alinhamento; seis atributos, testes de resistência e 18 perícias; ND para monstros |
+| Call of Cthulhu 7ª ed. | PV, Sanidade, Pontos de Magia, Armadura, Sorte, Movimento; Ocupação, Idade, Residência; oito características e perícias; acerto em porcentagem |
+| Ordem Paranormal | PV, PE, Sanidade, Defesa, Resistência a Dano, NEX, Deslocamento; Origem, Classe, Trilha, Patente; cinco atributos e 20 perícias; VD e Elemento para ameaças |
+| Daggerheart | PV, Estresse, Esperança, Evasão (Dificuldade para adversários), Armadura, Limiares; Ancestralidade, Comunidade, Classe, Subclasse, Nível; seis atributos e Experiências; crítico com dados iguais |
+| Pathfinder 2ª edição | PV, CA, Pontos de Foco e de Heroísmo, Percepção, Deslocamento; Ancestralidade, Herança, Antecedente, Classe, Nível; atributos, salvamentos e perícias; crítico por 10 acima da CA |
+| Em branco | Só Vida e Defesa e uma lista de Atributos vazia |
+
+**O editor tem quatro abas**:
+- **Campos**: cada número, barra ou texto da ficha, com ícone, nome, sigla, tipo, **função no Bestiário**, quem tem
+  (personagem, NPC, criatura), se aparece na carta e o valor inicial (e um valor próprio para criaturas). As setas
+  mudam a ordem; o X remove. Os botões embaixo criam um número, uma barra ou um texto.
+- **Listas**: grupos de nome e valor (Atributos, Perícias…), com ícone, quem tem, se aparecem na carta e os itens de
+  partida das fichas novas (cada item com ícone).
+- **Nomes**: como se chamam personagem, NPC, criatura e chefe; ataques, habilidades, acerto, dano e as habilidades de
+  origem; e os três tipos de carta (ex.: Item, Poder e Ritual, ou Equipamento, Característica e Magia).
+- **Combate**: como o ataque acerta (rolagem contra a defesa, porcentagem com 1d100 ou automático), o crítico, se a
+  armadura desconta do dano e a rolagem de acerto das ações novas. Embaixo, o resumo do que o Bestiário está usando.
+
+**Funções dos campos**: *Vida* (quando chega a zero, a ficha cai), *Defesa* (o número que o acerto precisa alcançar),
+*Recurso* (o que as cartas gastam: uma carta com custo “2 PE” gasta 2 do recurso de sigla PE), *Armadura* (desconta
+do dano), *Ações por turno* e *Movimento*. Campos sem função aparecem na ficha e na carta sem efeito no combate.
+
+**Na ficha**: o painel mostra os textos (identidade), os números e as listas do sistema. Cada item de lista tem
+ícone, nome e valor próprios, e dá para somar ou tirar itens só naquela ficha. Valores aceitam texto (“16 (+3)”,
+“9 m”, “5%”); o Bestiário usa o primeiro número.
+
+**Trocar de sistema não apaga nada**: os valores ficam guardados pelo nome interno de cada campo; campos novos
+recebem o valor inicial; listas com o mesmo nome levam os valores dos itens iguais, e itens antigos preenchidos
+continuam no fim da lista. **Copiar de outra campanha** traz o sistema inteiro de outra campanha.
+
 ## Bestiário
 
 Na tela inicial, área **Bestiário**. Escolha a campanha do Planejador, o **caçador** (um personagem ou NPC) e até **4 criaturas**

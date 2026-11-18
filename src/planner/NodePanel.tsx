@@ -1,11 +1,14 @@
 /* Painel à direita do quadro: edita a ficha, a ligação ou a campanha selecionada. */
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { ArrowLeftRight, Copy, Crosshair, IdCard, ImagePlus, Plus, Trash2, X } from 'lucide-react';
+import { ArrowLeftRight, Copy, Crosshair, IdCard, ImagePlus, Plus, Settings2, Trash2, X } from 'lucide-react';
 import { api, errorText } from '../api';
 import { toast } from '../store';
 import { CardEditor, CardTile, blankCard } from '../game/Cards';
 import { GameIcon, IconButton } from '../game/icons';
 import type { Card, CombatAction, LinkCap, LinkDash, LinkKind, LinkSide, NodeType, PlanLink, PlanNode, Sheet } from '../game/types';
+import { DEFAULT_SYSTEM, ROLES, kindLabel, listOf, listsFor, statsFor, valOf, type ListDef, type ListValue } from '../game/system';
+import { statIcon } from './statIcons';
+import { openSystemEditor } from './SystemEditor';
 import { PRESETS, capPath, dashArray, rememberLinkStyle, styleOf, type LinkStyle } from './links';
 import { startHunt } from './Ficha';
 import { canvas } from './Canvas';
@@ -25,81 +28,87 @@ function Text({ value, onChange, k, placeholder, multiline, rows, inputRef, onKe
 }
 const num = (v: string, d = 0) => { const n = Number(String(v).replace(',', '.')); return Number.isFinite(n) ? Math.round(n) : d; };
 
+/** Uma lista do sistema (Atributos, Perícias…) na ficha: cada item com ícone, nome e valor próprios. */
+function ListEditor({ l, items, up }: { l: ListDef; items: ListValue[]; up: (fn: (list: ListValue[]) => void, key?: string) => void }) {
+  return (
+    <>
+      <h4 className="pp-listhead"><GameIcon id={l.icon} size={14} /> {l.name}</h4>
+      <div className="attrs">
+        {items.map((a, i) => (
+          <div key={i} className="attr-row with-icon">
+            <IconButton value={a.icon || statIcon(a.k, 'estrela')} onChange={(icon) => up((xs) => { xs[i].icon = icon; })} title="Ícone do item" />
+            <input value={a.k} placeholder="Nome" aria-label={`Nome (${l.name})`} onChange={(e) => up((xs) => { xs[i].k = e.target.value.slice(0, 40); }, `k${i}`)} />
+            <input value={a.v} placeholder="Valor" aria-label={`Valor de ${a.k || 'item'}`} onChange={(e) => up((xs) => { xs[i].v = e.target.value.slice(0, 24); }, `v${i}`)} />
+            <button className="icon-btn" title="Remover" onClick={() => up((xs) => { xs.splice(i, 1); })}><X size={14} /></button>
+          </div>
+        ))}
+        {items.length < 40 && <button className="btn small" onClick={() => up((xs) => { xs.push({ k: '', v: '' }); })}><Plus size={13} /> {l.name.replace(/s$/i, '') || 'Item'}</button>}
+      </div>
+    </>
+  );
+}
+
 function SheetEditor({ n }: { n: PlanNode }) {
   const plan = usePlan((s) => s.plan)!;
-  const s = n.sheet ?? defaultSheet(n.type);
+  const sys = plan.system ?? DEFAULT_SYSTEM();
+  const s = n.sheet ?? defaultSheet(n.type, sys);
   const [card, setCard] = useState<Card | null>(null);
-  const up = (fn: (sh: Sheet) => void, key?: string) => edit((d) => { const m = d.nodes.find((x) => x.id === n.id); if (!m) return; if (!m.sheet) m.sheet = defaultSheet(m.type); fn(m.sheet); }, key ? { key: `${n.id}:${key}` } : {});
+  const up = (fn: (sh: Sheet) => void, key?: string) => edit((d) => { const m = d.nodes.find((x) => x.id === n.id); if (!m) return; if (!m.sheet) m.sheet = defaultSheet(m.type, d.system ?? sys); fn(m.sheet); }, key ? { key: `${n.id}:${key}` } : {});
   const enemy = n.type === 'inimigo';
   const maxActions = enemy ? (s.boss ? 4 : 2) : 8;
   const images = plan.nodes.flatMap((m) => (m.image ? [{ file: m.image, name: m.title || TYPES[m.type].label }] : []));
   const setAction = (i: number, p: Partial<CombatAction>, key: string) => up((sh) => { Object.assign(sh.actions[i], p); }, `a${i}${key}`);
+  const fields = statsFor(sys, n.type);
+  const texts = fields.filter((f) => f.kind === 'texto');
+  const nums = fields.filter((f) => f.kind !== 'texto');
+  const setVal = (id: string, v: string) => up((sh) => { (sh.vals ??= {})[id] = v; }, `v:${id}`);
+  const percent = sys.combat.hit === 'percentual';
   return (
     <>
-      <h4>Ficha de jogo</h4>
-      {!enemy && (
-        <div className="pp-ident">
-          <label className="field"><span>Origem</span><input value={s.origin ?? ''} maxLength={120} placeholder="Ex.: Herdeiro - Zau'l, o espelho da ganância" onChange={(e) => up((sh) => { sh.origin = e.target.value; }, 'origin')} /></label>
-          <div className="insp-grid two-one">
-            <label className="field"><span>Filiação</span><input value={s.affiliation ?? ''} maxLength={60} placeholder="Ex.: D.C.P.A" onChange={(e) => up((sh) => { sh.affiliation = e.target.value; }, 'aff')} /></label>
-            <label className="field"><span>Nível</span><input inputMode="numeric" value={s.level ?? ''} placeholder="1" onChange={(e) => up((sh) => { const v = e.target.value.trim(); sh.level = v ? Math.max(0, num(v, 1)) : undefined; }, 'level')} /></label>
-          </div>
-          <label className="field"><span>Clichê</span><input value={s.cliche ?? ''} maxLength={60} placeholder="Ex.: Sabe tudo" onChange={(e) => up((sh) => { sh.cliche = e.target.value; }, 'cliche')} /></label>
-        </div>
-      )}
-      <div className={`insp-grid four${enemy ? " three-cols" : ""}`}>
-        <label className="field"><span title="Vitalidade (pontos de vida)">{enemy ? 'Vida' : 'Vitalidade'}</span><input inputMode="numeric" value={s.life} onChange={(e) => up((sh) => { sh.life = Math.max(1, num(e.target.value, sh.life)); }, 'life')} /></label>
-        <label className="field"><span>Resiliência</span><input inputMode="numeric" value={s.resilience} onChange={(e) => up((sh) => { sh.resilience = Math.max(0, num(e.target.value, 0)); }, 'res')} /></label>
-        <label className="field"><span>Defesa</span><input inputMode="numeric" value={s.defense} onChange={(e) => up((sh) => { sh.defense = Math.max(0, num(e.target.value, 10)); }, 'def')} /></label>
-        {!enemy && <label className="field"><span>Alma</span><input inputMode="numeric" value={s.soul} onChange={(e) => up((sh) => { sh.soul = Math.max(0, num(e.target.value, 0)); }, 'soul')} /></label>}
+      <div className="pp-sys">
+        <GameIcon id={sys.icon} size={15} />
+        <span>Sistema: <b>{sys.name}</b></span>
+        <button className="btn small" onClick={openSystemEditor} title="Mudar campos, listas, nomes, ícones e regras de combate da campanha"><Settings2 size={13} /> Editar sistema</button>
       </div>
-      {!enemy && (
-        <div className="insp-grid two-even">
-          <label className="field"><span>Ações de combate</span><input inputMode="numeric" value={s.combatActions ?? 1} onChange={(e) => up((sh) => { sh.combatActions = Math.max(1, Math.min(9, num(e.target.value, 1))); }, 'cact')} /></label>
-          <label className="field"><span>Ações de mov.</span><input inputMode="numeric" value={s.moveActions ?? 0} onChange={(e) => up((sh) => { sh.moveActions = Math.max(0, Math.min(9, num(e.target.value, 0))); }, 'mact')} /></label>
+      <h4>Ficha de jogo</h4>
+      {texts.length > 0 && (
+        <div className="pp-ident">
+          {texts.map((f) => (
+            <label key={f.id} className="field"><span><GameIcon id={f.icon} size={13} /> {f.name}</span>
+              <input value={valOf(s, f, n.type)} maxLength={120} onChange={(e) => setVal(f.id, e.target.value)} />
+            </label>
+          ))}
         </div>
       )}
-      {enemy && <label className="check"><input type="checkbox" checked={s.boss} onChange={(e) => { const on = e.target.checked; edit((d) => { const m = d.nodes.find((x) => x.id === n.id); if (!m) return; if (!m.sheet) m.sheet = defaultSheet(m.type); m.sheet.boss = on; if (!on) m.sheet.actions = m.sheet.actions.slice(0, 2); fitCardRoom(d.nodes, m); }); }} /> Chefe (carta larga, com arte maior, e até 4 habilidades)</label>}
-
-      {!enemy && (
-        <>
-          <h4>Atributos</h4>
-          <div className="attrs">
-            {s.attrs.map((a, i) => (
-              <div key={i} className="attr-row">
-                <input value={a.k} placeholder="Atributo" onChange={(e) => up((sh) => { sh.attrs[i].k = e.target.value; }, `k${i}`)} />
-                <input value={a.v} placeholder="Valor" onChange={(e) => up((sh) => { sh.attrs[i].v = e.target.value; }, `v${i}`)} />
-                <button className="icon-btn" title="Remover" onClick={() => up((sh) => { sh.attrs.splice(i, 1); })}><X size={14} /></button>
-              </div>
-            ))}
-            {s.attrs.length < 6 && <button className="btn small" onClick={() => up((sh) => { sh.attrs.push({ k: '', v: '' }); })}><Plus size={13} /> Atributo</button>}
-          </div>
-          <h4>Capacidades</h4>
-          <div className="attrs">
-            {(s.caps ?? []).map((a, i) => (
-              <div key={i} className="attr-row">
-                <input value={a.k} placeholder="Capacidade (ex.: Investigação)" onChange={(e) => up((sh) => { sh.caps![i].k = e.target.value; }, `ck${i}`)} />
-                <input value={a.v} placeholder="Valor" onChange={(e) => up((sh) => { sh.caps![i].v = e.target.value; }, `cv${i}`)} />
-                <button className="icon-btn" title="Remover" onClick={() => up((sh) => { sh.caps!.splice(i, 1); })}><X size={14} /></button>
-              </div>
-            ))}
-            {(s.caps ?? []).length < 12 && <button className="btn small" onClick={() => up((sh) => { (sh.caps ??= []).push({ k: '', v: '' }); })}><Plus size={13} /> Capacidade</button>}
-          </div>
-        </>
+      {nums.length > 0 && (
+        <div className="pp-nums">
+          {nums.map((f) => (
+            <label key={f.id} className="field" title={ROLES.find((r) => r.id === f.role)?.hint}>
+              <span><GameIcon id={f.icon} size={13} /> {f.name}</span>
+              <input value={valOf(s, f, n.type)} maxLength={24} inputMode={f.kind === 'barra' ? 'numeric' : undefined} onChange={(e) => setVal(f.id, e.target.value)} />
+            </label>
+          ))}
+        </div>
       )}
+      {enemy && <label className="check"><input type="checkbox" checked={s.boss} onChange={(e) => { const on = e.target.checked; edit((d) => { const m = d.nodes.find((x) => x.id === n.id); if (!m) return; if (!m.sheet) m.sheet = defaultSheet(m.type, d.system ?? sys); m.sheet.boss = on; if (!on) m.sheet.actions = m.sheet.actions.slice(0, 2); fitCardRoom(d.nodes, m); }); }} /> {sys.labels.chefe} (carta larga, com arte maior, e até 4 {sys.labels.habilidades.toLowerCase()})</label>}
 
-      <h4>{enemy ? `Habilidades (${s.actions.length}/${maxActions})` : 'Ataques'}</h4>
+      {listsFor(sys, n.type).map((l) => (
+        <ListEditor key={l.id} l={l} items={listOf(s, l)} up={(fn, key) => up((sh) => { const lists = (sh.lists ??= {}); if (!lists[l.id]) lists[l.id] = listOf(sh, l).map((x) => ({ ...x })); fn(lists[l.id]); }, key ? `l:${l.id}:${key}` : undefined)} />
+      ))}
+
+      <h4>{enemy ? `${sys.labels.habilidades} (${s.actions.length}/${maxActions})` : sys.labels.ataques}</h4>
       <div className="combat">
-        <span className="combat-head"><span>{enemy ? 'Habilidade' : 'Ataque'}</span><span>Acerto</span><span>Dano</span><span /></span>
+        <span className="combat-head"><span>{enemy ? sys.labels.habilidades : sys.labels.ataques}</span><span>{sys.labels.acerto}</span><span>{sys.labels.dano}</span><span /></span>
         {s.actions.map((a, i) => (
           <div key={i} className="combat-row">
             <input value={a.name} placeholder="Nome" onChange={(e) => setAction(i, { name: e.target.value }, 'n')} />
-            <input value={a.hit} placeholder="1d20+3" onChange={(e) => setAction(i, { hit: e.target.value.replace(/\s+/g, '') }, 'h')} />
+            <input value={a.hit} placeholder={percent ? '50' : sys.combat.defaultHit || '1d20+3'} onChange={(e) => setAction(i, { hit: e.target.value.replace(/\s+/g, '') }, 'h')} />
             <input value={a.dmg} placeholder="1d8+2" onChange={(e) => setAction(i, { dmg: e.target.value.replace(/\s+/g, '') }, 'd')} />
             <button className="icon-btn" title="Remover" disabled={s.actions.length <= 1} onClick={() => up((sh) => { sh.actions.splice(i, 1); })}><X size={14} /></button>
           </div>
         ))}
-        <button className="btn small" disabled={s.actions.length >= maxActions} onClick={() => up((sh) => { sh.actions.push({ name: enemy ? 'Nova habilidade' : 'Novo ataque', hit: '1d20', dmg: '1d6' }); })}><Plus size={13} /> {enemy ? 'Habilidade' : 'Ataque'}</button>
+        <button className="btn small" disabled={s.actions.length >= maxActions} onClick={() => up((sh) => { sh.actions.push({ name: enemy ? 'Nova habilidade' : 'Novo ataque', hit: sys.combat.defaultHit, dmg: '1d6' }); })}><Plus size={13} /> {enemy ? sys.labels.habilidades.replace(/s$/i, '') : sys.labels.ataques.replace(/s$/i, '')}</button>
+        {percent && <small className="muted">Neste sistema o acerto é uma porcentagem: escreva a chance (ex.: 55 para Lutar 55%).</small>}
       </div>
 
       {!enemy && (
@@ -188,7 +197,7 @@ function NodeEditor({ n }: { n: PlanNode }) {
     m.type = t;
     if (m.color === TYPES[n.type].color) m.color = TYPES[t].color;
     if (m.icon === TYPES[n.type].icon) m.icon = TYPES[t].icon;
-    if (isChar(t)) { if (!m.sheet) m.sheet = defaultSheet(t); fitCard(m); }
+    if (isChar(t)) { if (!m.sheet) m.sheet = defaultSheet(t, plan.system); fitCard(m); }
   });
   const pickImage = async () => {
     try { const [img] = await api.planPickImages(plan.id); if (img) up((m) => { m.image = img.file; if (!m.title && m.type === 'imagem') m.title = ''; }); } catch (e) { toast(errorText(e), 'error'); }
@@ -201,9 +210,9 @@ function NodeEditor({ n }: { n: PlanNode }) {
   return (
     <div className="pp-body">
       <div className="pp-head" style={{ '--nc': n.color } as CSSProperties}>
-        <span className="pp-type"><GameIcon id={def.icon} size={14} /> {def.label}</span>
+        <span className="pp-type"><GameIcon id={def.icon} size={14} /> {isChar(n.type) ? kindLabel(plan.system ?? DEFAULT_SYSTEM(), n.type, n.sheet?.boss) : def.label}</span>
         <select value={n.type} onChange={(e) => changeType(e.target.value as NodeType)} aria-label="Tipo da ficha">
-          {ORDER.map((t) => <option key={t} value={t}>{TYPES[t].label}</option>)}
+          {ORDER.map((t) => <option key={t} value={t}>{isChar(t) ? kindLabel(plan.system ?? DEFAULT_SYSTEM(), t) : TYPES[t].label}</option>)}
         </select>
       </div>
       <label className="field"><span>{n.type === 'nota' || n.type === 'imagem' ? 'Título (opcional)' : 'Nome'}</span>
@@ -396,9 +405,15 @@ function PlanInfo() {
       <div className="pp-head"><span className="pp-type"><GameIcon id={plan.icon} size={14} /> Campanha</span></div>
       <label className="field"><span>Nome</span><input value={plan.name} onChange={(e) => edit((d) => { d.name = e.target.value.slice(0, 80); }, { key: 'plan:name' })} /></label>
       <label className="field"><span>Descrição</span><textarea className="pn-scroll" rows={4} value={plan.description} onChange={(e) => edit((d) => { d.description = e.target.value.slice(0, 600); }, { key: 'plan:desc' })} /></label>
+      <h4>Sistema de regras</h4>
+      <div className="pp-sys big">
+        <GameIcon id={(plan.system ?? DEFAULT_SYSTEM()).icon} size={18} />
+        <span><b>{(plan.system ?? DEFAULT_SYSTEM()).name}</b><small>{(plan.system ?? DEFAULT_SYSTEM()).stats.length} campos · {(plan.system ?? DEFAULT_SYSTEM()).lists.map((l) => l.name).join(', ') || 'sem listas'}</small></span>
+        <button className="btn small" onClick={openSystemEditor}><Settings2 size={13} /> Editar</button>
+      </div>
       <h4>No quadro</h4>
       <div className="pp-counts">
-        {counts.map(([t, c]) => <span key={t}><GameIcon id={TYPES[t].icon} size={13} /> {c} {c === 1 ? TYPES[t].label : TYPES[t].plural}</span>)}
+        {counts.map(([t, c]) => <span key={t}><GameIcon id={TYPES[t].icon} size={13} /> {c} {isChar(t) ? kindLabel(plan.system ?? DEFAULT_SYSTEM(), t) : c === 1 ? TYPES[t].label : TYPES[t].plural}</span>)}
         {!counts.length && <span className="muted">Nada ainda.</span>}
         {plan.links.length > 0 && <span><ArrowLeftRight size={13} /> {plan.links.length} ligação(ões)</span>}
       </div>

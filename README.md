@@ -25,8 +25,32 @@ O **COGITO** é um aplicativo para quem escreve e mestra RPG de mesa. Num lugar 
 monta a campanha num quadro infinito e testa os personagens contra as criaturas que criou, em combate por turnos.
 Não tem conta, não tem assinatura e não usa internet: tudo fica numa pasta do seu computador.
 
-A versão 0.16 é a edição de Natal: luzinhas no alto da janela, um gorro no logo e um pisca-pisca que funciona como
-os de verdade. O que mudou de fato está nas ferramentas, e vem logo abaixo.
+A versão 0.17 abre o COGITO para **qualquer sistema de RPG**, e a 0.16 trouxe a edição de Natal, com luzinhas no alto
+da janela e um gorro no logo. As novidades das duas vêm logo abaixo.
+
+<p align="center"><img src="docs/natal/divisor.svg" alt="" width="100%"></p>
+
+## Novo na 0.17: qualquer sistema
+
+Cada campanha agora tem o seu **sistema de regras**, e tudo nele se edita: o nome, a sigla e o ícone de cada número,
+barra e texto da ficha, as listas (Atributos, Perícias, Características…), os nomes dos tipos de ficha e de carta e
+a forma como o Bestiário resolve um ataque. Para começar, há modelos de **D&D 5ª edição**, **Call of Cthulhu**,
+**Ordem Paranormal**, **Daggerheart**, **Pathfinder 2ª edição**, do sistema **COGITO** e um **em branco**. Trocar de
+sistema não apaga nenhum valor já preenchido.
+
+<img src="docs/screenshots/sistema-editor.png" alt="Editor do sistema de regras com os campos do D&D 5ª edição" width="100%">
+
+Cada campo pode ter uma função no combate: vida, defesa, recurso que as cartas gastam, armadura que desconta do
+dano ou ações por turno. O acerto pode ser uma rolagem contra a defesa, uma porcentagem com 1d100 (como no Call of
+Cthulhu) ou automático, e o crítico segue a regra do sistema: dado máximo, 10 acima da defesa, dados iguais ou acerto
+extremo.
+
+<table>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/screenshots/sistema-quadro.png" alt="Quadro com cartas no sistema D&D: PV, CA, Espaços de Magia e um campo novo" width="100%"><br><sub>Cartas no D&D, com um campo criado na hora (Corrupção).</sub></td>
+    <td width="50%" valign="top"><img src="docs/screenshots/sistema-bestiario.png" alt="Bestiário no Call of Cthulhu, com características, perícias e acerto em porcentagem" width="100%"><br><sub>O mesmo quadro trocado para Call of Cthulhu: ataque em porcentagem no Bestiário.</sub></td>
+  </tr>
+</table>
 
 <p align="center"><img src="docs/natal/divisor.svg" alt="" width="100%"></p>
 
@@ -170,7 +194,7 @@ pasta. O aplicativo também faz cópias automáticas enquanto você trabalha.
 - Bestiário com cara de jogo de cartas, com mão, mesa e mana.
 - Regras de **Resiliência** e **Pontos de Alma** no combate.
 - Comportamentos próprios de caça para criaturas específicas.
-- Um gerador de personagens, criaturas e NPCs a partir das regras do seu jogo.
+- Um gerador de personagens, criaturas e NPCs a partir do sistema de regras da campanha.
 
 Tem uma ideia? [Sugira aqui](../../issues/new?template=ideia.yml) ou comente nas [Discussões](../../discussions).
 

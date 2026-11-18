@@ -23,7 +23,14 @@ export const RARITIES: { id: Rarity; label: string; short: string; color: string
   { id: 'epico', label: 'Nível IV', short: 'IV', color: '#FF6B6B' },
   { id: 'lendario', label: 'Relíquia', short: 'R', color: '#F4B400' },
 ];
-export const typeOf = (t: CardType) => CARD_TYPES.find((x) => x.id === t) ?? CARD_TYPES[0];
+/** Nomes e ícones dos tipos de carta no sistema de regras da campanha aberta (Magia, Ritual, Talento…). */
+let named: Partial<Record<CardType, { label: string; plural: string; icon: string }>> = {};
+let originName = 'Habilidades de Origem';
+export function setCardLabels(sys: { cardTypes: Record<CardType, { label: string; plural: string; icon: string }>; labels?: { origem?: string } } | null) {
+  named = sys ? { ...sys.cardTypes } : {};
+  originName = sys?.labels?.origem || 'Habilidades de Origem';
+}
+export const typeOf = (t: CardType) => { const base = CARD_TYPES.find((x) => x.id === t) ?? CARD_TYPES[0]; return { ...base, ...(named[base.id] ?? {}) }; };
 export const rarityOf = (r: Rarity) => RARITIES.find((x) => x.id === r) ?? RARITIES[0];
 
 export const blankCard = (type: CardType = 'item'): Card => ({
@@ -136,7 +143,7 @@ export function CardEditor({ card, onSave, onClose, onDelete, images, fileUrl, t
         </div>
         <div className="card-editor-form">
           <div className="seg card-type-seg">
-            {CARD_TYPES.map((t) => <button key={t.id} type="button" className={c.type === t.id ? 'on' : ''} onClick={() => setType(t.id)}><GameIcon id={t.icon} size={15} /> {t.label}</button>)}
+            {CARD_TYPES.map((b) => typeOf(b.id)).map((t) => <button key={t.id} type="button" className={c.type === t.id ? 'on' : ''} onClick={() => setType(t.id)}><GameIcon id={t.icon} size={15} /> {t.label}</button>)}
           </div>
           <div className="insp-grid">
             <label className="field"><span>Nome</span><input value={c.name} maxLength={40} onChange={(e) => up({ name: e.target.value })} /></label>
@@ -159,7 +166,7 @@ export function CardEditor({ card, onSave, onClose, onDelete, images, fileUrl, t
             </div>
             <small className="muted">{c.hunt === 'dano' ? 'A rolagem é o dano; o acerto usa o primeiro ataque da ficha.' : c.hunt === 'cura' ? 'A rolagem é a vida recuperada.' : c.hunt === 'defesa' ? 'A rolagem soma à Defesa até o próximo turno.' : 'A carta não vira ação no Bestiário.'} Cartas passivas não viram ação; custo como “2 Alma” gasta da barra.</small>
           </div>
-          {c.type === 'habilidade' && <label className="check"><input type="checkbox" checked={!!c.origin} onChange={(e) => up({ origin: e.target.checked })} /> Habilidade de origem (vem da origem do personagem)</label>}
+          {c.type === 'habilidade' && <label className="check"><input type="checkbox" checked={!!c.origin} onChange={(e) => up({ origin: e.target.checked })} /> Vai em “{originName}” (vem da origem do personagem)</label>}
           <label className="field"><span>Bônus em linhas (separe com ·)</span><input value={c.tags} maxLength={60} placeholder="Ex.: +2 em Furtividade · Silenciosa · 9 m" onChange={(e) => up({ tags: e.target.value })} /></label>
           <label className="field"><span>Descrição</span><textarea value={c.description} maxLength={800} rows={3} onChange={(e) => up({ description: e.target.value })} /></label>
           <div className="field">

@@ -4,7 +4,7 @@
  * e o intérprete escolhe, entre as capacidades da ficha (ataques, armas, itens e habilidades), a ação que melhor
  * corresponde e o alvo. É uma primeira versão por palavras-chave, para ser aprimorada junto com o sistema.
  */
-import { canUse, distribution, hitChances, type Combatant, type HuntAction, type HuntState } from './engine.ts';
+import { DEFAULT_RULES, canUse, defenseOf, distribution, hitChances, type Combatant, type HuntAction, type HuntRules, type HuntState } from './engine.ts';
 
 export interface Reading {
   ok: boolean;
@@ -58,10 +58,12 @@ export function findTarget(text: string, s: HuntState, current: string | null): 
   return alive.find((e) => e.id === current) ?? alive[0];
 }
 
-const expectedDamage = (a: HuntAction, foe: Combatant) => {
-  const { normal, crit } = hitChances(a.hit, foe.defense + foe.guard);
-  let m = 0; for (const [v, p] of distribution(a.value)) m += Math.max(0, v) * p;
-  return normal * m + crit * m * 2;
+const expectedDamage = (a: HuntAction, foe: Combatant, rules: HuntRules = DEFAULT_RULES) => {
+  const { def, red } = defenseOf(foe, rules);
+  const { normal, crit } = hitChances(a.hit, def, rules);
+  let m = 0; let m2 = 0;
+  for (const [v, p] of distribution(a.value)) { m += Math.max(0, Math.max(0, v) - red) * p; m2 += Math.max(0, Math.max(0, v) * 2 - red) * p; }
+  return normal * m + crit * m2;
 };
 
 /** Pontua o quanto cada capacidade da ficha combina com o texto. */
@@ -107,7 +109,7 @@ export function interpret(raw: string, s: HuntState, current: string | null): Re
   // Texto genérico ("ataco o cultista"): a melhor arma disponível contra esse alvo, conforme as capacidades da ficha.
   if (!pick && (has(text, ATTACK) || target && text.includes(norm(target.name).replace(/\s\d+$/, '')))) {
     const options = all.filter((a) => a.effect === 'dano' && canUse(s, a).ok);
-    if (target && options.length) pick = options.reduce((x, y) => (expectedDamage(y, target) > expectedDamage(x, target) ? y : x));
+    if (target && options.length) pick = options.reduce((x, y) => (expectedDamage(y, target, s.rules) > expectedDamage(x, target, s.rules) ? y : x));
     if (pick) note = ' — a melhor opção de dano que você tem agora';
   }
   if (!pick) return { ...empty, target, message: 'Não reconheci uma ação da ficha. Cite uma arma, item ou habilidade, ou diga “ataco”, “me curo”, “me defendo”.', alternatives: all.filter((a) => canUse(s, a).ok).slice(0, 4) };

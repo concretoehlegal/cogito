@@ -6,7 +6,6 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import { backlinks, edgePoint, findByTitle, fitView, linksIn, matches, newNode, nodeActor, segments } from '../src/planner/model.ts';
 import { newHunt } from '../src/hunt/engine.ts';
-import { HUNT_BARS } from '../src/planner/model.ts';
 
 const { createPlanner } = createRequire(import.meta.url)('../electron/planner.cjs');
 
@@ -31,13 +30,13 @@ test('geometria: ligação sai pela borda e o enquadramento cabe na tela', () =>
 
 test('fichas do quadro viram cartas e lutam no Bestiário', () => {
   const hero = newNode('personagem', 0, 0, { title: 'Vera' });
-  hero.sheet!.life = 30; hero.sheet!.soul = 4;
+  hero.sheet!.vals!.vida = '30'; hero.sheet!.vals!.alma = '4';
   hero.sheet!.cards.push({ id: 'c1', type: 'feitico', name: 'Sussurro', icon: 'vela', image: null, color: '#8d5aa3', rarity: 'epico', cost: '2 Alma', roll: '3d8', tags: '', description: '', qty: 1, consumable: false, equipped: false, mode: 'ativo', cooldown: '', stats: [], hunt: 'dano' });
   const boss = newNode('inimigo', 0, 0, { title: 'O Verme' });
   boss.sheet!.boss = true; boss.sheet!.actions = [1, 2, 3, 4, 5].map((n) => ({ name: `H${n}`, hit: '1d20', dmg: '1d6' }));
   const a = nodeActor(boss);
-  assert.deepEqual([a.kind, a.boss, a.bars.vida.max], ['enemy', true, 12]);
-  const s = newHunt({ bars: HUNT_BARS }, nodeActor(hero), [a]);
+  assert.deepEqual([a.kind, a.boss, a.hp, a.kindLabel], ['enemy', true, 12, 'Chefe']);
+  const s = newHunt({}, nodeActor(hero), [a]);
   assert.equal(s.hero.max, 30);
   assert.equal(s.hero.bars[0].name, 'Alma');
   assert.equal(s.hero.actionsList.find((x) => x.name === 'Sussurro')?.costBar, 'Alma');

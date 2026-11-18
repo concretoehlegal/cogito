@@ -7,9 +7,10 @@ import { ArrowLeft, Crosshair, Pencil, X } from 'lucide-react';
 import { GameIcon } from '../game/icons';
 import { RARITIES, cardPair, typeOf } from '../game/Cards';
 import type { PlanNode } from '../game/types';
+import { tagline, type RuleSystem } from '../game/system';
 import { useHunt } from '../hunt/state';
 import { useApp } from '../store';
-import { TYPES } from './model';
+import { nodeActor } from './model';
 import { flushPlan, planFileUrl } from './state';
 
 
@@ -23,25 +24,25 @@ export function startHunt(planId: string, n: PlanNode) {
 
 const plain = (md: string) => md.replace(/\[\[([^\]|]+)(\|[^\]]*)?\]\]/g, '$1').replace(/[*_`>#]/g, '').replace(/^\s*[-•]\s+/gm, '· ').trim();
 
-export function Ficha({ n, planId, onClose, onEdit }: { n: PlanNode; planId: string; onClose: () => void; onEdit: () => void }) {
+export function Ficha({ n, planId, sys, onClose, onEdit }: { n: PlanNode; planId: string; sys: RuleSystem; onClose: () => void; onEdit: () => void }) {
   useEffect(() => {
     const k = (e: KeyboardEvent) => { e.stopPropagation(); if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', k, true);
     return () => window.removeEventListener('keydown', k, true);
   }, [onClose]);
   const sh = n.sheet;
+  const a = nodeActor(n, sys);
   const enemy = n.type === 'inimigo';
-  const boss = enemy && !!sh?.boss;
-  const kind = enemy ? (boss ? 'Chefe' : 'Criatura') : TYPES[n.type].label;
+  const boss = a.boss;
+  const kind = a.kindLabel;
   const actions = (sh?.actions ?? []).slice(0, enemy ? (boss ? 4 : 2) : 12);
-  const mainDmg = actions.find((a) => a.dmg)?.dmg ?? '—';
-  const stats: [string, string | number, string][] = enemy
-    ? [['vida', sh?.life ?? 0, 'Vida'], ['resiliência', sh?.resilience ?? 0, 'Resiliência'], ['defesa', sh?.defense ?? 0, 'Defesa'], ['dano', mainDmg, 'Dano']]
-    : [['vida', `${sh?.life ?? 0}/${sh?.life ?? 0}`, 'Vitalidade (PV)'], ['resiliência', sh?.resilience ?? 0, 'Resiliência'], ['defesa', sh?.defense ?? 0, 'Defesa'],
-       ['alma', `${sh?.soul ?? 0}/${sh?.soul ?? 0}`, 'Alma'], ['combate', sh?.combatActions ?? 1, 'Ações de combate'], ['movimento', sh?.moveActions ?? 0, 'Ações de movimento']];
-  const ident: [string, string][] = enemy ? [] : ([
-    ['Origem', sh?.origin ?? ''], ['Filiação', sh?.affiliation ?? ''], ['Nível', sh?.level != null ? String(sh.level) : ''], ['Clichê', sh?.cliche ?? ''],
-  ] as [string, string][]).filter(([, v]) => v.trim());
+  const mainDmg = actions.find((x) => x.dmg)?.dmg ?? '—';
+  const stats: [string, string, string, string][] = [
+    ...a.stats.filter((x) => x.kind !== 'texto').map((x) => [x.id, x.kind === 'barra' ? `${x.value}/${x.value}` : x.value || '—', x.name, x.icon] as [string, string, string, string]),
+    ...(enemy ? [['dano', mainDmg, sys.labels.dano, 'faca'] as [string, string, string, string]] : []),
+  ];
+  const ident: [string, string][] = a.stats.filter((x) => x.kind === 'texto' && x.value.trim()).map((x) => [x.name, x.value]);
+  const lists = a.lists.filter((l) => l.items.some((x) => x.k));
   const story = plain(n.body || '');
   return (
     <div className="fi-backdrop" onPointerDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -54,7 +55,7 @@ export function Ficha({ n, planId, onClose, onEdit }: { n: PlanNode; planId: str
         </header>
         <div className="fi-cols">
           <section className="fi-main">
-            <h1 className="fi-h">{enemy ? 'Ficha da criatura' : 'Ficha do personagem'}</h1>
+            <h1 className="fi-h">Ficha · {kind}</h1>
             <div className="fi-hero">
               <div className="fi-photo">
                 {n.image ? <img src={planFileUrl(planId, n.image)} alt="" /> : <GameIcon id={n.icon || (enemy ? 'garra' : 'pessoa')} size={120} />}
@@ -62,14 +63,14 @@ export function Ficha({ n, planId, onClose, onEdit }: { n: PlanNode; planId: str
               <div className="fi-info">
                 <div className="fi-name-row">
                   <div>
-                    <h2>{n.title || TYPES[n.type].label}</h2>
-                    <small>{n.subtitle || sh?.cliche || kind}</small>
+                    <h2>{n.title || kind}</h2>
+                    <small>{n.subtitle || tagline(a.stats) || kind}</small>
                   </div>
                   <div className="fi-tags">{[kind, ...n.tags.slice(0, 2)].map((t) => <span key={t}>{t}</span>)}</div>
                 </div>
                 {ident.length > 0 && <dl className="fi-ident">{ident.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>}
                 <div className={`fi-stats${stats.length > 4 ? ' six' : ''}`}>
-                  {stats.map(([id, v, label]) => <div key={id}><b>{v}</b><small>{label}</small></div>)}
+                  {stats.map(([id, v, label, icon]) => <div key={id}><b><GameIcon id={icon} size={16} /> {v}</b><small>{label}</small></div>)}
                 </div>
                 <p className="fi-story">{story || 'Sem história ainda. Escreva no painel do quadro.'}</p>
                 <div className="fi-actions">
@@ -79,30 +80,21 @@ export function Ficha({ n, planId, onClose, onEdit }: { n: PlanNode; planId: str
               </div>
             </div>
 
-            <div className="fi-sub-head"><h1 className="fi-h">{enemy ? 'Habilidades' : 'Ações e atributos'}</h1><span className="fi-count">{actions.length} {actions.length === 1 ? 'ação' : 'ações'}</span></div>
+            <div className="fi-sub-head"><h1 className="fi-h">{enemy ? sys.labels.habilidades : `${sys.labels.ataques}${lists.length ? ` e ${lists.map((l) => l.name.toLowerCase()).join(', ')}` : ''}`}</h1><span className="fi-count">{actions.length} {actions.length === 1 ? 'ação' : 'ações'}</span></div>
             <div className="fi-row">
-              {!enemy && (
-                <div className="fi-attrs">
-                  <div className="fi-attrs-head"><GameIcon id="estrela" size={18} /> <b>Atributos</b></div>
+              {lists.map((l) => (
+                <div key={l.id} className="fi-attrs">
+                  <div className="fi-attrs-head"><GameIcon id={l.icon} size={18} /> <b>{l.name}</b></div>
                   <div className="fi-attrs-list">
-                    {(sh?.attrs ?? []).filter((a) => a.k).map((a, i) => <span key={i}><em>{a.k}</em><b>{a.v || '—'}</b></span>)}
-                    {!(sh?.attrs ?? []).some((a) => a.k) && <span className="none">Nenhum atributo</span>}
+                    {l.items.filter((x) => x.k).map((x, i) => <span key={i}><em>{x.icon && <GameIcon id={x.icon} size={12} />} {x.k}</em><b>{x.v || '—'}</b></span>)}
                   </div>
                 </div>
-              )}
-              {!enemy && (sh?.caps ?? []).some((c) => c.k) && (
-                <div className="fi-attrs caps">
-                  <div className="fi-attrs-head"><GameIcon id="olho" size={18} /> <b>Capacidades</b></div>
-                  <div className="fi-attrs-list">
-                    {(sh?.caps ?? []).filter((c) => c.k).map((c, i) => <span key={i}><em>{c.k}</em><b>{c.v || '—'}</b></span>)}
-                  </div>
-                </div>
-              )}
-              {actions.map((a, i) => (
+              ))}
+              {actions.map((x, i) => (
                 <div key={i} className="fi-act">
-                  <div className="fi-act-head"><b>{a.name || 'Ação'}</b><span><GameIcon id="faca" size={13} /> {a.dmg || '—'}</span></div>
-                  <small>{a.hit ? `Acerto ${a.hit}` : 'Sem rolagem de acerto'}</small>
-                  <p>{a.dmg ? `Causa ${a.dmg} de dano quando acerta.` : 'Ação sem dano direto.'}</p>
+                  <div className="fi-act-head"><b>{x.name || 'Ação'}</b><span><GameIcon id="faca" size={13} /> {x.dmg || '—'}</span></div>
+                  <small>{x.hit ? `${sys.labels.acerto} ${x.hit}` : 'Sem rolagem de acerto'}</small>
+                  <p>{x.dmg ? `Causa ${x.dmg} de ${sys.labels.dano.toLowerCase()} quando acerta.` : 'Ação sem dano direto.'}</p>
                 </div>
               ))}
               {!actions.length && <div className="fi-act empty"><b>Nenhuma ação</b><p>Adicione ações no painel do quadro.</p></div>}

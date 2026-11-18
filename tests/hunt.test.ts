@@ -6,7 +6,17 @@ import { canUse, chooseAction, enemyTurns, heroAct, hitChances, newHunt, parseCo
 const faces = (...f: number[]) => { let i = 0; return () => (f[i++ % f.length] ?? 1) - 1; };
 const bars = [{ id: 'vida', name: 'Vida', color: '#c00' }, { id: 'san', name: 'Sanidade', color: '#80f' }];
 const card = (p: Record<string, unknown>) => ({ id: 'c' + Math.random().toString(36).slice(2, 7), type: 'item', name: 'Carta', icon: '', image: null, color: '#c27a33', rarity: 'comum', cost: '', roll: '', tags: '', description: '', qty: 1, consumable: false, equipped: false, mode: 'ativo', cooldown: '', stats: [], hunt: '', ...p });
-const actor = (p: Record<string, unknown>) => ({ id: 'a', kind: 'pc', name: 'Vera', color: '#c27a33', image: null, bars: { vida: { cur: 20, max: 20 }, san: { cur: 6, max: 6 } }, attrs: [], notes: '', ownerId: null, defense: 12, actions: [{ name: 'Soco', hit: '1d20+4', dmg: '1d4' }], subtitle: '', level: '', cards: [], conditions: [], emblem: 'detetive', boss: false, size: 1, ...p }) as any;
+/** Ficha no formato do Bestiário; `bars` ({ vida, san }) vira a vida e os recursos. */
+const actor = (p: Record<string, unknown>) => {
+  const { bars: b0, ...rest } = p as { bars?: Record<string, { cur: number; max: number }> };
+  const b = b0 ?? { vida: { cur: 20, max: 20 }, san: { cur: 6, max: 6 } };
+  return {
+    id: 'a', kind: 'pc', name: 'Vera', color: '#c27a33', image: null, subtitle: '', emblem: 'detetive', boss: false, defense: 12, armor: 0,
+    actions: [{ name: 'Soco', hit: '1d20+4', dmg: '1d4' }], cards: [], kindLabel: 'Personagem', hp: b.vida?.max ?? 10,
+    resources: Object.entries(b).filter(([k]) => k !== 'vida').map(([k, v]) => ({ id: k, name: k === 'san' ? 'Sanidade' : k, short: k === 'san' ? 'SAN' : '', max: v.max })),
+    combatActions: 1, moveActions: 0, stats: [], lists: [], ...rest,
+  } as any;
+};
 
 test('recarga e custo vêm do texto das cartas', () => {
   assert.equal(parseCooldown('3 turnos'), 3);
@@ -23,7 +33,7 @@ test('chance de acerto separa o crítico do 20 natural', () => {
 });
 
 test('IA agressiva: maior dano esperado e, se der, o golpe que derruba agora', () => {
-  const s = newHunt({ bars }, actor({}), [actor({ id: 'm', kind: 'enemy', name: 'Cão', actions: [{ name: 'Arranhão', hit: '1d20+10', dmg: '1d4' }, { name: 'Mordida', hit: '1d20', dmg: '3d10' }] })], faces(20, 1));
+  const s = newHunt({}, actor({}), [actor({ id: 'm', kind: 'enemy', name: 'Cão', actions: [{ name: 'Arranhão', hit: '1d20+10', dmg: '1d4' }, { name: 'Mordida', hit: '1d20', dmg: '3d10' }] })], faces(20, 1));
   const enemy = s.enemies[0];
   assert.equal(enemy.actions[chooseAction(enemy, s.hero).index].name, 'Mordida', 'com o caçador inteiro, vai no maior dano esperado');
   const weak: Hero = { ...s.hero, hp: 2 };
@@ -37,7 +47,7 @@ test('cartas viram ações: cura, consumível, recarga, custo em Sanidade e vit�
     card({ name: 'Colete', hunt: 'defesa', roll: '1d4+1' }),
     card({ name: 'Anel passivo', hunt: 'cura', roll: '1d4', mode: 'passivo' }),
   ] });
-  let s = newHunt({ bars }, kit, [actor({ id: 'm', kind: 'enemy', name: 'Cão', defense: 10, bars: { vida: { cur: 9, max: 9 } }, actions: [{ name: 'Mordida', hit: '1d20', dmg: '1d6' }] })], faces(20, 1));
+  let s = newHunt({}, kit, [actor({ id: 'm', kind: 'enemy', name: 'Cão', defense: 10, bars: { vida: { cur: 9, max: 9 } }, actions: [{ name: 'Mordida', hit: '1d20', dmg: '1d6' }] })], faces(20, 1));
   assert.equal(s.phase, 'heroi');
   assert.deepEqual(s.hero.actionsList.map((a) => a.name), ['Soco', 'Remédio', 'Sussurro', 'Colete'], 'carta passiva não vira ação');
   s.hero.hp = 10;
@@ -53,7 +63,7 @@ test('cartas viram ações: cura, consumível, recarga, custo em Sanidade e vit�
 });
 
 test('vez das presas: anunciam a intenção, atacam e a rodada vira', () => {
-  let s = newHunt({ bars }, actor({}), [actor({ id: 'm', kind: 'enemy', name: 'Cão', actions: [{ name: 'Mordida', hit: '1d20', dmg: '1d6' }] }), actor({ id: 'm', kind: 'enemy', name: 'Cão', actions: [{ name: 'Mordida', hit: '1d20', dmg: '1d6' }] })], faces(20, 1));
+  let s = newHunt({}, actor({}), [actor({ id: 'm', kind: 'enemy', name: 'Cão', actions: [{ name: 'Mordida', hit: '1d20', dmg: '1d6' }] }), actor({ id: 'm', kind: 'enemy', name: 'Cão', actions: [{ name: 'Mordida', hit: '1d20', dmg: '1d6' }] })], faces(20, 1));
   assert.deepEqual(s.enemies.map((e) => e.name), ['Cão 1', 'Cão 2']);
   s.phase = 'inimigos';
   const frames = enemyTurns(s, faces(20, 6, 1));
@@ -69,7 +79,7 @@ test('vez das presas: anunciam a intenção, atacam e a rodada vira', () => {
 
 test('ações de combate: com 2 por turno, o caçador age duas vezes antes das criaturas', () => {
   const two = actor({ combatActions: 2, actions: [{ name: 'Soco', hit: '1d20+20', dmg: '1d2' }, { name: 'Chute', hit: '1d20+20', dmg: '1d2' }] });
-  let s = newHunt({ bars }, two, [actor({ id: 'm', kind: 'enemy', name: 'Cão', defense: 5, bars: { vida: { cur: 30, max: 30 } }, actions: [{ name: 'Mordida', hit: '1d20', dmg: '1d2' }] })], faces(20, 1));
+  let s = newHunt({}, two, [actor({ id: 'm', kind: 'enemy', name: 'Cão', defense: 5, bars: { vida: { cur: 30, max: 30 } }, actions: [{ name: 'Mordida', hit: '1d20', dmg: '1d2' }] })], faces(20, 1));
   assert.equal(s.phase, 'heroi');
   assert.equal(s.left, 2);
   s = heroAct(s, 'atk-0', s.enemies[0].id, faces(10));

@@ -1,8 +1,5 @@
 /* Tipos das peças de jogo (cartas e fichas) e do Planejador de campanhas. Tudo fica neste computador. */
-
-export interface BarDef { id: string; name: string; color: string }
-export interface BarValue { cur: number; max: number }
-export type Bars = Record<string, BarValue>;
+import type { ListValue, RuleSystem, StatKind, StatRole } from './system.ts';
 
 export interface CombatAction { name: string; hit: string; dmg: string }
 
@@ -18,20 +15,23 @@ export interface Card {
   origin?: boolean;
 }
 
-/** Ficha de jogo usada pelas cartas de personagem e pelo Bestiário. */
+/** Um campo da ficha já com o valor, como as cartas e o Bestiário mostram. */
+export interface ActorStat { id: string; name: string; short: string; icon: string; kind: StatKind; role: StatRole; card: boolean; value: string }
+export interface ActorList { id: string; name: string; icon: string; card: boolean; items: ListValue[] }
+/** Recurso gasto pelas cartas (ex.: "2 Alma", "1 PE"). */
+export interface ActorResource { id: string; name: string; short: string; max: number }
+
+/** Ficha de jogo usada pelas cartas de personagem e pelo Bestiário, já lida pelo sistema de regras da campanha. */
 export interface Actor {
   id: string; kind: 'pc' | 'npc' | 'enemy'; name: string; subtitle: string; color: string; image: string | null;
-  bars: Bars; attrs: { k: string; v: string }[]; defense: number; actions: CombatAction[]; cards: Card[];
-  emblem: string; boss: boolean; ai?: string; resilience?: number; soul?: number;
-  /** Capacidades (perícias e saberes), com valor. */
-  caps?: { k: string; v: string }[];
-  /** Identidade e ações por turno (personagens e NPCs). */
-  origin?: string; level?: number; affiliation?: string; cliche?: string; combatActions?: number; moveActions?: number;
-}
-
-export interface CardSummary {
-  resilience: number; soul: number; defense: number; attrs: { k: string; v: string }[];
-  instrument: { name: string; dmg: string; reload: number } | null; abilities: { name: string; dmg: string }[];
+  emblem: string; boss: boolean; ai?: string; actions: CombatAction[]; cards: Card[];
+  /** Nome do tipo no sistema (Personagem, Agente, Investigador, Monstro, Chefe…). */
+  kindLabel: string;
+  /** Vida máxima, defesa (alvo dos ataques) e armadura (desconta do dano). */
+  hp: number; defense: number; armor: number;
+  resources: ActorResource[];
+  combatActions: number; moveActions: number;
+  stats: ActorStat[]; lists: ActorList[];
 }
 
 export const initials = (name: string) => name.trim().split(/\s+/).slice(0, 2).map((w) => w[0] ?? '').join('').toUpperCase() || '?';
@@ -43,15 +43,13 @@ export type NodeType = 'personagem' | 'npc' | 'inimigo' | 'local' | 'item' | 'fa
 export interface NodeFont { size?: number; align?: 'left' | 'center' | 'right'; bold?: boolean; italic?: boolean }
 export const CHAR_TYPES: NodeType[] = ['personagem', 'npc', 'inimigo'];
 
-/** Ficha de jogo de um personagem, NPC ou inimigo do quadro. */
+/** Ficha de jogo de um personagem, NPC ou inimigo do quadro. Os campos vêm do sistema de regras da campanha. */
 export interface Sheet {
-  life: number; defense: number; resilience: number; soul: number; boss: boolean;
-  attrs: { k: string; v: string }[]; actions: CombatAction[]; cards: Card[]; ai?: string;
-  caps?: { k: string; v: string }[];
-  /** Origem, nível, filiação e clichê do personagem. */
-  origin?: string; level?: number; affiliation?: string; cliche?: string;
-  /** Ações por turno: de combate (o Bestiário respeita) e de movimento. */
-  combatActions?: number; moveActions?: number;
+  boss: boolean; actions: CombatAction[]; cards: Card[]; ai?: string;
+  /** Valor de cada campo do sistema (pelo id do campo). */
+  vals?: Record<string, string>;
+  /** Itens de cada lista do sistema (Atributos, Perícias…), com nome, valor e ícone próprios. */
+  lists?: Record<string, ListValue[]>;
 }
 
 export interface PlanNode {
@@ -76,6 +74,8 @@ export interface Plan {
   createdAt: number; updatedAt: number;
   view: { x: number; y: number; zoom: number };
   nodes: PlanNode[]; links: PlanLink[];
+  /** Sistema de regras da campanha (campanhas antigas: COGITO). */
+  system?: RuleSystem;
 }
 export interface PlanMeta {
   id: string; name: string; description: string; icon: string; color: string; cover: string | null;

@@ -3,6 +3,32 @@
 Todas as mudanças de cada versão. A mais nova fica no topo.
 Para baixar, use a página de [Releases](../../releases).
 
+## [0.17.0] — 2026-11-18 · Qualquer sistema
+
+### Sistema de regras por campanha
+- Cada campanha tem o **seu sistema de regras**, e tudo nele é editável: o nome, a sigla e o ícone de cada número,
+  barra e texto da ficha; quem tem cada campo (personagem, NPC, criatura); se aparece na carta; o valor inicial (com
+  um valor próprio para criaturas); as listas (Atributos, Perícias, Características, Salvamentos…) e os itens de cada
+  uma, com ícone; os nomes dos tipos de ficha e de carta; e como o Bestiário resolve os ataques.
+- **Modelos prontos** para começar: **COGITO**, **D&D 5ª edição**, **Call of Cthulhu 7ª edição**, **Ordem
+  Paranormal**, **Daggerheart**, **Pathfinder 2ª edição** e **Em branco**. Escolha ao criar a campanha ou troque
+  depois em **Editar sistema** (no painel da campanha ou de qualquer ficha). Dá para **copiar o sistema de outra
+  campanha**.
+- Trocar de sistema **não apaga nada**: valores já preenchidos continuam guardados, campos novos recebem o valor
+  inicial e listas de mesmo nome levam os valores dos itens iguais.
+- Em cada ficha, os itens das listas têm **nome, valor e ícone próprios**, e dá para somar ou tirar itens.
+- Campanhas antigas abrem no sistema COGITO, com tudo no lugar.
+
+### Bestiário em qualquer sistema
+- Cada número tem uma **função**: Vida, Defesa (o alvo do ataque), Recurso (o que as cartas gastam: “2 PE”, “1 PM”),
+  Armadura (desconta do dano), Ações por turno ou Movimento.
+- **Três formas de acertar**: rolagem contra a defesa (D&D, Pathfinder, Ordem Paranormal, Daggerheart), **porcentagem**
+  com 1d100 até a chance (Call of Cthulhu) ou acerto automático.
+- **Críticos** à escolha: resultado máximo do dado, superar a defesa por 10 (Pathfinder), dados iguais (Daggerheart) ou
+  extremo, até 1/5 da chance (Call of Cthulhu). A IA das criaturas calcula as chances com a mesma regra.
+- A HUD, a carta, o registro e a tela de escolha usam os nomes e as siglas do sistema; cada lista da ficha vira uma
+  seção do painel.
+
 ## [0.16.0] — 2026-11-18 · Edição “Pesadelos Antes do Natal” 🎄
 
 ### Natal

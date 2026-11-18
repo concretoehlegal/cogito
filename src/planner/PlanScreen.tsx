@@ -10,7 +10,9 @@ import type { NodeType } from '../game/types';
 import { Canvas, canvas, type Tool } from './Canvas';
 import { NodePanel } from './NodePanel';
 import { Ficha } from './Ficha';
-import { ORDER, TYPES, freeSpot, matches, newNode, uid } from './model';
+import { SystemEditorHost } from './SystemEditor';
+import { ORDER, TYPES, freeSpot, isChar, matches, newNode, uid } from './model';
+import { DEFAULT_SYSTEM, kindLabel } from '../game/system';
 import { closePlan, edit, redo, select, undo, usePlan } from './state';
 import './planner.css';
 
@@ -47,7 +49,8 @@ export function PlanScreen() {
 
   const add = (type: NodeType) => {
     const c = canvas.centerWorld();
-    const n = newNode(type, c.x, c.y);
+    const sys = usePlan.getState().plan?.system;
+    const n = newNode(type, c.x, c.y, sys && isChar(type) ? { title: kindLabel(sys, type) } : {}, sys);
     if (type !== 'moldura') { const others = (usePlan.getState().plan?.nodes ?? []).filter((m) => m.type !== 'moldura'); const p = freeSpot(others, c.x, c.y, n.w, n.h); n.x = p.x; n.y = p.y; }
     edit((d) => { if (type === 'moldura') d.nodes.unshift(n); else d.nodes.push(n); });
     select([n.id]);
@@ -130,8 +133,8 @@ export function PlanScreen() {
           </div>
           <span className="plan-tools-sep" />
           {ORDER.filter((t) => t !== 'imagem' && t !== 'texto' && t !== 'caixa').map((t) => (
-            <button key={t} className="plan-tool" title={`Novo(a) ${TYPES[t].label.toLowerCase()}`} onClick={() => add(t)} style={{ '--tc': TYPES[t].color } as React.CSSProperties}>
-              <GameIcon id={TYPES[t].icon} size={20} /><span>{TYPES[t].label}</span>
+            <button key={t} className="plan-tool" title={`Novo(a) ${(isChar(t) ? kindLabel(plan.system ?? DEFAULT_SYSTEM(), t) : TYPES[t].label).toLowerCase()}`} onClick={() => add(t)} style={{ '--tc': TYPES[t].color } as React.CSSProperties}>
+              <GameIcon id={TYPES[t].icon} size={20} /><span>{isChar(t) ? kindLabel(plan.system ?? DEFAULT_SYSTEM(), t) : TYPES[t].label}</span>
             </button>
           ))}
           <button className="plan-tool" title="Imagens do computador" onClick={() => { void addImages(); }}><ImagePlus size={19} /><span>Imagem</span></button>
@@ -147,7 +150,8 @@ export function PlanScreen() {
         <ResizeHandle side="right" panel="planRight" />
         <aside className="plan-panel"><NodePanel /></aside>
       </div>
-      {sheetId && (() => { const n = plan.nodes.find((m) => m.id === sheetId); return n ? <Ficha n={n} planId={plan.id} onClose={() => setSheetId(null)} onEdit={() => { setSheetId(null); select([n.id]); }} /> : null; })()}
+      <SystemEditorHost />
+      {sheetId && (() => { const n = plan.nodes.find((m) => m.id === sheetId); return n ? <Ficha n={n} planId={plan.id} sys={plan.system ?? DEFAULT_SYSTEM()} onClose={() => setSheetId(null)} onEdit={() => { setSheetId(null); select([n.id]); }} /> : null; })()}
     </div>
   );
 }

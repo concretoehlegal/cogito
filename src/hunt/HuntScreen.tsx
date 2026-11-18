@@ -12,7 +12,8 @@ import { playClick, playCrit, playDice, playFumble } from '../lib/sound';
 import { useApp } from '../store';
 import { GameCard, cardPair, typeOf } from '../game/Cards';
 import { CharCard, dataFromActor, type CharData } from '../game/CharCard';
-import type { Actor, BarDef, Card } from '../game/types';
+import type { Actor, Card } from '../game/types';
+import { tagline } from '../game/system';
 import { GameIcon } from '../game/icons';
 import { pairById, type CardPair } from '../game/palette';
 import { canUse, enemyTurns, flee, heroAct, newHunt, type Combatant, type HuntAction, type HuntState, type LogLine } from './engine';
@@ -48,12 +49,12 @@ function SlimBar({ cur, max, color, label }: { cur: number; max: number; color: 
 
 interface Pop { id: number; target: string; text: string; kind: 'hurt' | 'heal' | 'miss' | 'crit' }
 
-function EnemyView({ e, actor, bars, width, imgUrl, target, hit, acting, onPick, pops, tilt = 0 }: {
-  e: Combatant; actor: Actor | undefined; bars: BarDef[]; width: number; imgUrl: (n: string) => string;
+function EnemyView({ e, actor, width, imgUrl, target, hit, acting, onPick, pops, tilt = 0 }: {
+  e: Combatant; actor: Actor | undefined; width: number; imgUrl: (n: string) => string;
   target: boolean; hit: boolean; acting: boolean; onPick: () => void; pops: Pop[]; tilt?: number;
 }) {
   const down = e.hp <= 0;
-  const data: CharData | null = actor ? { ...dataFromActor(actor, bars, { cur: e.hp, max: e.max }, down), name: e.name } : null;
+  const data: CharData | null = actor ? { ...dataFromActor(actor, { cur: e.hp, max: e.max }, down), name: e.name } : null;
   return (
     <button
       className={`hunt-enemy${target ? ' target' : ''}${hit ? ' hit' : ''}${acting ? ' acting' : ''}${down ? ' down' : ''}${e.boss ? ' boss' : ''}`}
@@ -287,9 +288,13 @@ export function HuntScreen() {
   };
   const heroHit = (hits.heroi ?? 0) > Date.now() - 500;
   const tgt = game.enemies.find((e) => e.id === target);
+  const heroTag = actor?.subtitle || (actor ? tagline(actor.stats) : '');
+  const foeActor = tgt ? campaign.actors.find((a) => a.id === tgt.actorId) : undefined;
   const mood = game.phase === 'inimigos' ? 'danger' : game.phase === 'heroi' ? 'ready' : game.phase === 'vitoria' ? 'win' : 'idle';
   const last = [...game.log].reverse().find((l) => l.kind !== 'info' || l.side !== 'sistema') ?? game.log[game.log.length - 1];
-  const alma = hero.bars.find((b) => b.id === 'alma') ?? hero.bars[0];
+  const alma = hero.bars[0];
+  const rules = game.rules;
+  const sys = campaign.system;
 
   // Ações da ficha ligadas às linhas do painel (tecla, recarga, se dá para usar agora).
   const list = hero.actionsList;
@@ -308,7 +313,8 @@ export function HuntScreen() {
     );
   };
   const origin = cards.filter((c) => c.type === 'habilidade' && c.origin);
-  const skills = cards.filter((c) => (c.type === 'habilidade' && !c.origin) || c.type === 'feitico');
+  const skills = cards.filter((c) => c.type === 'habilidade' && !c.origin);
+  const spells = cards.filter((c) => c.type === 'feitico');
   const items = cards.filter((c) => c.type === 'item');
   const attacks = list.filter((a) => a.source === 'ataque');
   const charcoal = pairById('charcoal');
@@ -339,7 +345,7 @@ export function HuntScreen() {
 
       <div className="hunt-enemies">
         {game.enemies.map((e, i) => (
-          <EnemyView key={e.id} e={e} actor={campaign.actors.find((a) => a.id === e.actorId)} bars={campaign.bars}
+          <EnemyView key={e.id} e={e} actor={campaign.actors.find((a) => a.id === e.actorId)}
             width={Math.round(cardW * (e.boss ? 1.12 : 1))} imgUrl={(nm) => fileUrl(campaign.id, nm)}
             target={e.id === target} hit={(hits[e.id] ?? 0) > Date.now() - 500} acting={acting === e.id}
             onPick={() => { setTarget(e.id); playClick('soft'); }} pops={pops.filter((p) => p.target === e.id)}
@@ -364,18 +370,18 @@ export function HuntScreen() {
 
       <aside className="hud-left" aria-label="Ficha do caçador">
         <div className="hud-scroll">
-          <Section title="Habilidades de Origem" icon={<Star size={22} strokeWidth={1.8} />} empty="Nenhuma. Marque “Habilidade de origem” numa carta de habilidade.">{origin.map(cardItem)}</Section>
-          <Section title="Habilidades" icon={<Zap size={22} strokeWidth={1.8} />} empty="Nenhuma habilidade ou poder oculto.">{skills.map(cardItem)}</Section>
-          <Section title="Itens" icon={<Layers size={22} strokeWidth={1.8} />} empty="Nenhum item.">{items.map(cardItem)}</Section>
-          <Section title="Atributos" icon={<ChartColumn size={22} strokeWidth={1.8} />} cols={2} empty="Sem atributos.">
-            {(actor?.attrs ?? []).filter((x) => x.k).map((x, i) => <HudItem key={i} value={x.v} title={x.k} text="Atributo" />)}
+          <Section title={sys.labels.origem} icon={<Star size={22} strokeWidth={1.8} />} empty={`Nenhuma. Marque “${sys.labels.origem}” numa carta de ${typeOf('habilidade').label.toLowerCase()}.`}>{origin.map(cardItem)}</Section>
+          <Section title={typeOf('habilidade').plural} icon={<Zap size={22} strokeWidth={1.8} />} empty={`Nenhuma ${typeOf('habilidade').label.toLowerCase()}.`}>{skills.map(cardItem)}</Section>
+          {spells.length > 0 && <Section title={typeOf('feitico').plural} icon={<GameIcon id={typeOf('feitico').icon} size={22} />} empty="">{spells.map(cardItem)}</Section>}
+          <Section title={typeOf('item').plural} icon={<Layers size={22} strokeWidth={1.8} />} empty={`Nenhum ${typeOf('item').label.toLowerCase()}.`}>{items.map(cardItem)}</Section>
+          <Section title={sys.labels.ataques} icon={<Swords size={22} strokeWidth={1.8} />} cols={2} empty="Sem ataques na ficha.">
+            {attacks.map((x) => <HudItem key={x.id} icon="faca" title={x.name} text={`${sys.labels.dano} ${x.value}${x.hit ? ` · ${sys.labels.acerto.toLowerCase()} ${x.hit}` : ''}`} {...itemProps(x)} onHover={(on) => setHover(on ? { card: null, action: x } : null)} />)}
           </Section>
-          <Section title="Capacidades" icon={<Gear size={22} strokeWidth={1.8} />} cols={2} empty="Sem capacidades. Adicione no painel da ficha, no Planejador.">
-            {[
-              ...attacks.map((x) => <HudItem key={x.id} icon="faca" title={x.name} text={`Dano ${x.value}${x.hit ? ` · acerto ${x.hit}` : ''}`} {...itemProps(x)} onHover={(on) => setHover(on ? { card: null, action: x } : null)} />),
-              ...(actor?.caps ?? []).filter((c) => c.k).map((c, i) => <HudItem key={`c${i}`} value={c.v} title={c.k} text="Capacidade" />),
-            ]}
-          </Section>
+          {(actor?.lists ?? []).map((l) => (
+            <Section key={l.id} title={l.name} icon={<GameIcon id={l.icon} size={22} />} cols={2} empty={`Sem ${l.name.toLowerCase()}. Adicione no painel da ficha, no Planejador.`}>
+              {l.items.filter((x) => x.k).map((x, i) => <HudItem key={i} value={x.v} title={x.k} text={l.name} icon={x.icon} />)}
+            </Section>
+          ))}
         </div>
       </aside>
 
@@ -386,10 +392,11 @@ export function HuntScreen() {
           </span>
           <div className="hf-info">
             <strong title="Inimigo na mira (clique numa criatura ou Tab para trocar)">{tgt.name}</strong>
-            <SlimBar cur={tgt.hp} max={tgt.max} color="var(--hg)" label="PV" />
-            {tgt.soul > 0
-              ? <SlimBar cur={tgt.soul} max={tgt.soul} color="#9a9a9a" label="PA" />
-              : <span className="hf-stats"><GameIcon id="alvo" size={13} /> Defesa <b>{tgt.defense}</b><GameIcon id="resiliencia" size={15} /> Resiliência <b>{tgt.resilience}</b></span>}
+            <SlimBar cur={tgt.hp} max={tgt.max} color="var(--hg)" label={rules.hpShort} />
+            <span className="hf-stats">
+              {rules.hit === 'contra-defesa' && <><GameIcon id="alvo" size={13} /> {rules.defName} <b>{tgt.defense + tgt.guard}</b></>}
+              {(foeActor?.stats ?? []).filter((x) => x.card && x.kind !== 'texto' && x.role !== 'vida' && x.role !== 'defesa').slice(0, 2).map((x) => <span key={x.id} className="hf-stat"><GameIcon id={x.icon} size={14} /> {x.short || x.name} <b>{x.value}</b></span>)}
+            </span>
           </div>
         </div>
       )}
@@ -397,10 +404,10 @@ export function HuntScreen() {
       <div className={`hud-id${heroHit ? ' hit' : ''}`}>
         <div className="hid-name">
           <h1 title={hero.name}>{hero.name}</h1>
-          {(actor?.subtitle || actor?.cliche) && <small>{actor?.subtitle || actor?.cliche}</small>}
+          {heroTag && <small>{heroTag}</small>}
         </div>
         <div className="hid-stats">
-          <span><Shield size={18} strokeWidth={1.8} /> Defesa <b>{hero.defense + hero.guard}</b></span>
+          {rules.hit === 'contra-defesa' ? <span title={rules.defName}><Shield size={18} strokeWidth={1.8} /> {rules.defShort} <b>{hero.defense + hero.guard}</b></span> : hero.guard > 0 && <span title="Proteção até o próximo turno"><Shield size={18} strokeWidth={1.8} /> Proteção <b>{hero.guard}</b></span>}
           <span title="Ações de combate restantes neste turno"><Swords size={18} strokeWidth={1.8} /> Ações <b>{game.phase === 'heroi' ? (game.left ?? hero.combatActions ?? 1) : 0}/{hero.combatActions ?? 1}</b></span>
           {(hero.moveActions ?? 0) > 0 && <span title="Ações de movimento por turno"><Footprints size={18} strokeWidth={1.8} /> Movimento <b>{hero.moveActions}</b></span>}
         </div>
@@ -438,8 +445,8 @@ export function HuntScreen() {
       </div>
 
       <div className={`hud-hero${heroHit ? ' hit' : ''}${hero.hp <= 0 ? ' down' : ''}`}>
-        <div className="hh-row"><span className="hh-chip pv"><Heart size={16} strokeWidth={2} /></span><Bar big cur={hero.hp} max={hero.max} color="var(--hg)" label="PV" /></div>
-        {alma && <div className="hh-row"><span className="hh-chip"><Flame size={16} strokeWidth={2} /></span><Bar big cur={alma.cur} max={alma.max} color="#9a9a9a" label="PA" /></div>}
+        <div className="hh-row"><span className="hh-chip pv"><Heart size={16} strokeWidth={2} /></span><Bar big cur={hero.hp} max={hero.max} color="var(--hg)" label={rules.hpShort} /></div>
+        {alma && <div className="hh-row"><span className="hh-chip"><Flame size={16} strokeWidth={2} /></span><Bar big cur={alma.cur} max={alma.max} color="#9a9a9a" label={alma.short || alma.name} /></div>}
         {hero.guard > 0 && <span className="hh-guard"><GameIcon id="escudo" size={14} /> +{hero.guard}</span>}
         {pops.filter((p) => p.target === 'heroi').map((p) => <span key={p.id} className={`hunt-pop ${p.kind}`}>{p.text}</span>)}
         <section className={`hud-instrument${instAct && !canUse(game, instAct).ok ? ' off' : ''}`}
@@ -461,11 +468,11 @@ export function HuntScreen() {
       {hover && (hover.card || hover.action) && (
         <div className="hunt-tip">
           {hover.card ? <GameCard card={hover.card} width={250} /> : hover.action && (
-            <div className="tip-basic"><strong>{hover.action.name}</strong><span>Ataque da ficha</span><span>Acerto <b>{hover.action.hit || 'automático'}</b> · Dano <b>{hover.action.value}</b></span></div>
+            <div className="tip-basic"><strong>{hover.action.name}</strong><span>{sys.labels.ataques}</span><span>{sys.labels.acerto} <b>{hover.action.hit || 'automático'}</b> · {sys.labels.dano} <b>{hover.action.value}</b></span></div>
           )}
           {hover.action && (
             <div className="tip-meta">
-              {hover.action.effect === 'dano' ? `Dano ${hover.action.value} · acerto ${hover.action.hit || 'automático'}` : hover.action.effect === 'cura' ? `Cura ${hover.action.value}` : `+${hover.action.value} de Defesa até o próximo turno`}
+              {hover.action.effect === 'dano' ? `${sys.labels.dano} ${hover.action.value} · ${sys.labels.acerto.toLowerCase()} ${rules.hit === 'automatico' ? 'automático' : hover.action.hit || 'automático'}` : hover.action.effect === 'cura' ? `Cura ${hover.action.value}` : rules.hit === 'contra-defesa' ? `+${hover.action.value} de ${rules.defName} até o próximo turno` : `Segura ${hover.action.value} de dano até o próximo turno`}
               {hover.action.cooldown > 0 && ` · recarga ${hover.action.cooldown >= 999 ? 'uma vez por confronto' : `${hover.action.cooldown} turno(s)`}`}
               {hover.action.cost > 0 && ` · custa ${hover.action.cost} ${hover.action.costBar}`}
             </div>

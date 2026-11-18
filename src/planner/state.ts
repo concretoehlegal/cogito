@@ -5,6 +5,8 @@ import { api, errorText } from '../api';
 import { toast, useApp } from '../store';
 import type { Plan } from '../game/types';
 import { fitCardRoom } from './model';
+import { normalizePlan } from '../game/system';
+import { setCardLabels } from '../game/Cards';
 
 type Snap = Pick<Plan, 'nodes' | 'links' | 'name' | 'description' | 'icon' | 'color'>;
 export type SaveState = 'saved' | 'pending' | 'saving' | 'error';
@@ -94,7 +96,8 @@ export const select = (ids: string[], link: string | null = null) => usePlan.set
 
 export async function openPlan(id: string) {
   try {
-    const plan = await api.planLoad(id);
+    const plan = normalizePlan(await api.planLoad(id));
+    setCardLabels(plan.system!);
     // Chefes antigos (cartas estreitas) passam ao formato largo, empurrando para a direita o que estava ao lado.
     for (const n of plan.nodes) fitCardRoom(plan.nodes, n);
     usePlan.setState({ plan, sel: [], selLink: null, past: [], future: [], save: 'saved', savedAt: plan.updatedAt, coalesce: null });

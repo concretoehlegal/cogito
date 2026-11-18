@@ -471,3 +471,4 @@ img.hh-portrait { width: 76px; height: 76px; border-radius: 50%; box-shadow: 0 0
 .hunt-hud.bg-branco .hud-foe, .hunt-hud.bg-branco .hud-id { background: rgba(22, 24, 26, .96); }
 .hunt-hud.bg-branco .hud-center .hunt-hint b { color: #2f7d1d; }
 .sw-cinza { border-color: #4a4a4a; }
+.hf-stat { display: inline-flex; align-items: center; gap: 6px; }

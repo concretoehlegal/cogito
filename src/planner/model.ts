@@ -1,5 +1,6 @@
 /* Planejador: tipos de ficha do quadro, valores padrão, links [[…]] e conversão para o Bestiário. */
-import type { Actor, BarDef, NodeType, PlanNode, Sheet } from '../game/types.ts';
+import type { Actor, NodeType, PlanNode, Sheet } from '../game/types.ts';
+import { DEFAULT_SYSTEM, blankSheet, kindLabel, listOf, listsFor, numOf, roleStat, statsFor, valOf, type RuleSystem } from '../game/system.ts';
 
 export interface TypeDef { label: string; plural: string; icon: string; color: string; w: number; h: number; char?: boolean }
 export const TYPES: Record<NodeType, TypeDef> = {
@@ -55,12 +56,10 @@ export const isChar = (t: NodeType) => !!TYPES[t].char;
 
 export const uid = (p: string) => `${p}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 
-export const defaultSheet = (type: NodeType): Sheet => ({
-  life: type === 'inimigo' ? 12 : 20, defense: type === 'inimigo' ? 11 : 12, resilience: 0, soul: type === 'inimigo' ? 0 : 3, boss: false,
-  attrs: [], actions: [{ name: type === 'inimigo' ? 'Garra' : 'Ataque', hit: '1d20+2', dmg: '1d6' }], cards: [], ai: 'agressiva',
-});
+/** Ficha nova com os campos do sistema de regras da campanha. */
+export const defaultSheet = (type: NodeType, sys: RuleSystem = DEFAULT_SYSTEM()): Sheet => blankSheet(sys, type);
 
-export function newNode(type: NodeType, x: number, y: number, extra: Partial<PlanNode> = {}): PlanNode {
+export function newNode(type: NodeType, x: number, y: number, extra: Partial<PlanNode> = {}, sys?: RuleSystem): PlanNode {
   const d = TYPES[type];
   const titles: Record<NodeType, string> = {
     personagem: 'Novo personagem', npc: 'Novo NPC', inimigo: 'Nova criatura', local: 'Novo local', item: 'Novo item',
@@ -69,7 +68,7 @@ export function newNode(type: NodeType, x: number, y: number, extra: Partial<Pla
   return {
     id: uid('n'), type, x: Math.round(x - d.w / 2), y: Math.round(y - d.h / 2), w: d.w, h: d.h,
     title: titles[type], subtitle: '', color: d.color, icon: d.icon, image: null, body: '', tags: [],
-    ...(isChar(type) ? { sheet: defaultSheet(type) } : {}), ...extra,
+    ...(isChar(type) ? { sheet: defaultSheet(type, sys) } : {}), ...extra,
   };
 }
 
@@ -129,19 +128,21 @@ export function fitView(nodes: Box[], vw: number, vh: number) {
 
 /* ───────────── Bestiário ───────────── */
 
-export const HUNT_BARS: BarDef[] = [{ id: 'vida', name: 'Vida', color: '#c8463c' }, { id: 'alma', name: 'Alma', color: '#8d5aa3' }];
-
-/** Ficha do quadro no formato usado pelas cartas de personagem e pelo Bestiário. */
-export function nodeActor(n: PlanNode): Actor {
-  const s = n.sheet ?? defaultSheet(n.type);
+/** Ficha do quadro no formato usado pelas cartas de personagem e pelo Bestiário, lida pelo sistema de regras. */
+export function nodeActor(n: PlanNode, sys: RuleSystem = DEFAULT_SYSTEM()): Actor {
+  const s = n.sheet ?? defaultSheet(n.type, sys);
   const kind = n.type === 'inimigo' ? 'enemy' : n.type === 'npc' ? 'npc' : 'pc';
+  const boss = kind === 'enemy' && !!s.boss;
+  const fields = statsFor(sys, n.type);
+  const value = (role: Parameters<typeof roleStat>[1], d: number) => { const st = roleStat(sys, role, n.type); return st ? numOf(valOf(s, st, n.type), d) : d; };
   return {
-    id: n.id, kind, name: n.title || TYPES[n.type].label, subtitle: n.subtitle, color: n.color, image: n.image,
-    bars: { vida: { cur: s.life, max: s.life }, alma: { cur: s.soul, max: s.soul } },
-    attrs: s.attrs, defense: s.defense, actions: s.actions, cards: s.cards, emblem: n.icon, boss: kind === 'enemy' && s.boss,
-    ai: s.ai || 'agressiva', resilience: s.resilience, soul: s.soul, caps: s.caps ?? [],
-    origin: s.origin ?? '', level: s.level, affiliation: s.affiliation ?? '', cliche: s.cliche ?? '',
-    combatActions: Math.max(1, Math.min(9, Math.round(s.combatActions ?? 1))), moveActions: Math.max(0, Math.round(s.moveActions ?? 0)),
+    id: n.id, kind, name: n.title || kindLabel(sys, n.type, boss), subtitle: n.subtitle, color: n.color, image: n.image,
+    emblem: n.icon, boss, ai: s.ai || 'agressiva', actions: s.actions, cards: s.cards, kindLabel: kindLabel(sys, n.type, boss),
+    hp: Math.max(1, value('vida', 10)), defense: value('defesa', 10), armor: Math.max(0, value('armadura', 0)),
+    resources: fields.filter((f) => f.role === 'recurso').map((f) => ({ id: f.id, name: f.name, short: f.short, max: Math.max(0, numOf(valOf(s, f, n.type), 0)) })),
+    combatActions: Math.max(1, Math.min(9, value('acoes', 1))), moveActions: Math.max(0, value('movimento', 0)),
+    stats: fields.map((f) => ({ id: f.id, name: f.name, short: f.short, icon: f.icon, kind: f.kind, role: f.role, card: f.card, value: valOf(s, f, n.type) })),
+    lists: listsFor(sys, n.type).map((l) => ({ id: l.id, name: l.name, icon: l.icon, card: l.card, items: listOf(s, l) })),
   };
 }
 

@@ -6,6 +6,7 @@ import { Modal, confirmDialog, fmtDate } from '../components/ui';
 import { toast } from '../store';
 import { GameIcon, IconPicker } from '../game/icons';
 import type { PlanMeta } from '../game/types';
+import { PRESETS, presetById } from '../game/system';
 import { openPlan, planFileUrl } from './state';
 import './planner.css';
 
@@ -19,6 +20,7 @@ function PlanDialog({ meta, onClose, onSaved }: { meta: PlanMeta | null; onClose
   const [color, setColor] = useState(meta?.color ?? PLAN_COLORS[0]);
   const [current, setCurrent] = useState<PlanMeta | null>(meta);
   const [createdHere, setCreatedHere] = useState(false);
+  const [preset, setPreset] = useState('cogito');
   const fields = () => ({ name: name.trim() || 'Nova campanha', description, icon, color });
   const ensure = async () => {
     if (current) return current;
@@ -33,6 +35,8 @@ function PlanDialog({ meta, onClose, onSaved }: { meta: PlanMeta | null; onClose
   const save = async () => {
     try {
       const m = current ? await api.planUpdateMeta(current.id, fields()) : await api.planCreate(fields());
+      // Campanha nova: grava o sistema de regras escolhido.
+      if (!meta) { const p = await api.planLoad(m.id); p.system = presetById(preset); await api.planSave(p); }
       onSaved(m);
     } catch (e) { toast(errorText(e), 'error'); }
   };
@@ -68,6 +72,14 @@ function PlanDialog({ meta, onClose, onSaved }: { meta: PlanMeta | null; onClose
               <input type="color" value={color} onChange={(e) => setColor(e.target.value)} aria-label="Outra cor" />
             </div>
           </div>
+          {!meta && (
+            <label className="field"><span>Sistema de regras</span>
+              <select value={preset} aria-label="Sistema de regras" onChange={(e) => setPreset(e.target.value)}>
+                {PRESETS.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+              <small className="muted">{PRESETS.find((p) => p.id === preset)?.hint}. Tudo pode ser mudado depois, no painel da campanha.</small>
+            </label>
+          )}
           <div className="field"><span>Ícone</span><IconPicker value={icon} onChange={setIcon} /></div>
         </div>
       </div>

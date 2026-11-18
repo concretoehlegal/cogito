@@ -6,13 +6,22 @@
  */
 import { roll } from '../lib/dice.ts';
 import type { Actor, Card, CombatAction } from '../game/types.ts';
+import { numOf, roleStat, type CombatRules, type RuleSystem } from '../game/system.ts';
 
 export type Effect = 'dano' | 'cura' | 'defesa';
-export interface HuntBar { id: string; name: string; color: string; cur: number; max: number }
+export interface HuntBar { id: string; name: string; short: string; color: string; cur: number; max: number }
 export interface Combatant {
   id: string; name: string; color: string; image: string | null; emblem: string; kind: 'pc' | 'npc' | 'enemy'; boss: boolean;
   hp: number; max: number; defense: number; guard: number; actions: CombatAction[]; ai: string;
-  actorId: string; resilience: number; soul: number;
+  actorId: string; armor: number;
+}
+/** Como o sistema da campanha resolve os ataques, e os nomes que aparecem no registro. */
+export interface HuntRules extends CombatRules { hpName: string; hpShort: string; defName: string; defShort: string }
+export const DEFAULT_RULES: HuntRules = { hit: 'contra-defesa', crit: 'max', armor: false, defaultHit: '1d20', hpName: 'Vida', hpShort: 'PV', defName: 'Defesa', defShort: 'DEF' };
+export function rulesOf(sys: RuleSystem): HuntRules {
+  const hp = roleStat(sys, 'vida', 'personagem') ?? roleStat(sys, 'vida', 'inimigo');
+  const def = roleStat(sys, 'defesa', 'personagem') ?? roleStat(sys, 'defesa', 'inimigo');
+  return { ...sys.combat, hpName: hp?.name ?? 'Vida', hpShort: hp?.short || 'PV', defName: def?.name ?? 'Defesa', defShort: def?.short || 'DEF' };
 }
 export interface HuntAction {
   id: string; source: 'ataque' | 'carta'; name: string; icon: string; effect: Effect; hit: string; value: string;
@@ -24,6 +33,8 @@ export interface LogLine { id: number; round: number; side: 'heroi' | 'inimigo' 
 export type Phase = 'heroi' | 'inimigos' | 'vitoria' | 'derrota' | 'fuga';
 export interface HuntState {
   round: number; phase: Phase; hero: Hero; enemies: Combatant[];
+  /** Regras de combate do sistema da campanha. */
+  rules: HuntRules;
   /** Ações de combate que o caçador ainda tem neste turno. */
   left?: number;
   cooldowns: Record<string, number>; uses: Record<string, number>; log: LogLine[]; seq: number;
@@ -44,12 +55,12 @@ export function parseCooldown(text: string): number {
   const m = t.match(/(\d+)/);
   return m ? Math.min(99, Number(m[1])) : 0;
 }
-/** Custo em barra: "2 Alma" gasta 2 da barra Alma. Outros textos ($800, 1 ação) não gastam nada. */
-export function parseCost(text: string, bars: { name: string }[]): { bar: string | null; n: number } {
+/** Custo em recurso: "2 Alma" ou "2 PE" gasta 2 do recurso com esse nome ou sigla. Outros textos ($800, 1 ação) não gastam nada. */
+export function parseCost(text: string, bars: { name: string; short?: string }[]): { bar: string | null; n: number } {
   const m = String(text || '').trim().match(/^(\d+)\s+(.+)$/);
   if (!m) return { bar: null, n: 0 };
   const name = m[2].toLowerCase();
-  const bar = bars.find((b) => b.name.toLowerCase() === name || b.name.toLowerCase().startsWith(name) || name.startsWith(b.name.toLowerCase()));
+  const bar = bars.find((b) => { const nm = b.name.toLowerCase(); const sh = (b.short ?? '').toLowerCase(); return nm === name || (sh && sh === name) || nm.startsWith(name) || name.startsWith(nm); });
   return bar ? { bar: bar.name, n: Number(m[1]) } : { bar: null, n: 0 };
 }
 
@@ -92,46 +103,94 @@ export function distribution(formula: string): Map<number, number> {
   }
   return dist;
 }
-const mean = (d: Map<number, number>) => { let m = 0; for (const [v, p] of d) m += Math.max(0, v) * p; return m; };
+/** Dano que passa depois da redução (armadura, proteção), dobrado no crítico. */
+const dealt = (v: number, mult: number, red: number) => Math.max(0, Math.max(0, v) * mult - red);
+const mean = (d: Map<number, number>, red = 0) => { let m = 0; for (const [v, p] of d) m += dealt(v, 1, red) * p; return m; };
 /** Média do dano que realmente conta: o que passa da vida restante é desperdício. */
-const meanCapped = (d: Map<number, number>, cap: number, mult = 1) => { let m = 0; for (const [v, p] of d) m += Math.min(cap, Math.max(0, v) * mult) * p; return m; };
-const atLeast = (d: Map<number, number>, x: number, mult = 1) => { let q = 0; for (const [v, p] of d) if (Math.max(0, v) * mult >= x) q += p; return q; };
-const firstIsD20 = (formula: string) => { const t = termsOf(formula)[0]; return 'sides' in t && t.sides === 20 && t.count === 1 && t.sign > 0; };
+const meanCapped = (d: Map<number, number>, cap: number, mult = 1, red = 0) => { let m = 0; for (const [v, p] of d) m += Math.min(cap, dealt(v, mult, red)) * p; return m; };
+const atLeast = (d: Map<number, number>, x: number, mult = 1, red = 0) => { let q = 0; for (const [v, p] of d) if (dealt(v, mult, red) >= x) q += p; return q; };
+/** Primeiro termo da fórmula, quando é um dado positivo (ex.: o d20 de "1d20+5", os 2d12 de "2d12+2"). */
+const firstDie = (formula: string) => { const t = termsOf(formula)[0]; return 'sides' in t && t.sign > 0 ? t : null; };
+/** Fórmula sem o primeiro dado (ou sem os dois primeiros, se `two`). */
+const restOf = (formula: string, two = false) => {
+  const terms = termsOf(formula); const f = terms[0];
+  const out: string[] = [];
+  if ('sides' in f && f.count > (two ? 2 : 1)) out.push(`${f.count - (two ? 2 : 1)}d${f.sides}`);
+  for (const t of terms.slice(1)) out.push(`${t.sign < 0 ? '-' : '+'}${'sides' in t ? `${t.count}d${t.sides}` : t.value}`);
+  return out.join('').replace(/^\+/, '') || '0';
+};
+/**
+ * Chance de um valor percentual (Call of Cthulhu): "50", "Lutar 55" → 50, 55 (entre 1 e 99).
+ * Uma fórmula de dados (ação feita em outro sistema, como "1d20+5") não é uma chance: vale 50%.
+ */
+export const percentOf = (hit: string) => (/\d*d\d/i.test(hit) ? 50 : Math.max(1, Math.min(99, numOf(hit, 50))));
 
-/** Chance de acerto contra uma defesa, separando o 20 natural (crítico, dano dobrado) e o 1 natural (erro). */
-export function hitChances(hit: string, defense: number): { normal: number; crit: number } {
-  if (!hit) return { normal: 1, crit: 0 };
-  const d20 = firstIsD20(hit);
-  if (!d20) return { normal: atLeast(distribution(hit), defense), crit: 0 };
-  // Com d20 na frente: 1 erra sempre, 20 acerta com crítico; do 2 ao 19 compara o total.
-  const rest = hit.replace(/^\s*1?d20/i, '0');
-  const bonus = distribution(rest);
-  let normal = 0;
-  for (let face = 2; face <= 19; face++) for (const [v, p] of bonus) if (face + v >= defense) normal += p / 20;
-  return { normal, crit: 1 / 20 };
+/**
+ * Chance de acerto e de crítico de uma rolagem contra uma defesa, conforme as regras do sistema:
+ * contra a defesa (com 1 natural errando e crítico pelo dado máximo, por 10 acima ou por dados iguais), porcentagem (d100) ou automático.
+ */
+export function hitChances(hit: string, defense: number, rules: Pick<CombatRules, 'hit' | 'crit'> = DEFAULT_RULES): { normal: number; crit: number } {
+  if (!hit || rules.hit === 'automatico') return { normal: 1, crit: 0 };
+  if (rules.hit === 'percentual') {
+    const p = percentOf(hit) / 100;
+    const crit = rules.crit === 'extremo' ? Math.floor(percentOf(hit) / 5) / 100 : 0;
+    return { normal: Math.max(0, p - crit), crit };
+  }
+  const die = firstDie(hit);
+  if (!die || rules.crit === 'nenhum' || rules.crit === 'extremo') return { normal: atLeast(distribution(hit), defense), crit: 0 };
+  if (rules.crit === 'iguais') {
+    if (die.count < 2) return { normal: atLeast(distribution(hit), defense), crit: 0 };
+    const rest = distribution(restOf(hit, true)); const s = die.sides;
+    let normal = 0; let crit = 0;
+    for (let a = 1; a <= s; a++) for (let b = 1; b <= s; b++) {
+      const pf = 1 / (s * s);
+      if (a === b) { crit += pf; continue; }
+      for (const [v, p] of rest) if (a + b + v >= defense) normal += pf * p;
+    }
+    return { normal, crit };
+  }
+  if (die.count !== 1) return { normal: atLeast(distribution(hit), defense), crit: 0 };
+  // Um dado na frente: o 1 natural erra sempre; o máximo acerta com crítico ("max") ou só dá crítico se passar por 10 ("dez").
+  const rest = distribution(restOf(hit)); const s = die.sides;
+  let normal = 0; let crit = 0;
+  for (let face = 1; face <= s; face++) {
+    for (const [v, p] of rest) {
+      const pf = p / s; const total = face + v;
+      if (face === 1) continue;
+      if (rules.crit === 'max') { if (face === s) crit += pf; else if (total >= defense) normal += pf; }
+      else if (face === s && s === 20) crit += pf;
+      else if (total >= defense + 10) crit += pf;
+      else if (total >= defense) normal += pf;
+    }
+  }
+  return { normal, crit };
 }
 
 /* ───────────── IA dos inimigos ───────────── */
 
 export interface AiChoice { index: number; expected: number; chance: number; kill: number; reason: string }
-type AiProfile = (me: Combatant, hero: Hero) => AiChoice;
+type AiProfile = (me: Combatant, hero: Hero, rules: HuntRules) => AiChoice;
+/** Defesa efetiva do alvo e o quanto do dano ele segura (armadura e proteção). Fora do modo "contra a defesa", a proteção vira redução de dano. */
+export function defenseOf(foe: Combatant, rules: HuntRules) {
+  const vsDef = rules.hit === 'contra-defesa';
+  return { def: foe.defense + (vsDef ? foe.guard : 0), red: (rules.armor ? foe.armor : 0) + (vsDef ? 0 : foe.guard) };
+}
 
 /**
  * Agressiva: escolhe o golpe que tira, em média, a maior parte da vida que resta ao caçador neste turno
  * (dano acima da vida restante não conta), com um pequeno peso extra para a chance de derrubá-lo agora.
  * Com o caçador inteiro isso é o maior dano esperado; quase caindo, é o golpe mais certeiro.
  */
-const agressiva: AiProfile = (me, hero) => {
-  const def = hero.defense + hero.guard;
+const agressiva: AiProfile = (me, hero, rules) => {
+  const { def, red } = defenseOf(hero, rules);
   let best: AiChoice | null = null; let bestScore = -1; let bestMax = -1;
   me.actions.forEach((a, index) => {
     if (!a.dmg) return;
-    const { normal, crit } = hitChances(a.hit, def);
+    const { normal, crit } = hitChances(a.hit, def, rules);
     const dmg = distribution(a.dmg);
-    const avg = mean(dmg);
-    const expected = normal * avg + crit * avg * 2;
-    const kill = normal * atLeast(dmg, hero.hp) + crit * atLeast(dmg, hero.hp, 2);
-    const useful = normal * meanCapped(dmg, hero.hp) + crit * meanCapped(dmg, hero.hp, 2);
+    const expected = normal * mean(dmg, red) + crit * meanCapped(dmg, Infinity, 2, red);
+    const kill = normal * atLeast(dmg, hero.hp, 1, red) + crit * atLeast(dmg, hero.hp, 2, red);
+    const useful = normal * meanCapped(dmg, hero.hp, 1, red) + crit * meanCapped(dmg, hero.hp, 2, red);
     const score = useful + kill * 0.5;
     let max = 0; for (const v of dmg.keys()) max = Math.max(max, v);
     if (score > bestScore + 1e-9 || (Math.abs(score - bestScore) < 1e-9 && max > bestMax)) {
@@ -144,14 +203,14 @@ const agressiva: AiProfile = (me, hero) => {
 export const AI: Record<string, { name: string; choose: AiProfile }> = {
   agressiva: { name: 'Agressiva: máximo de dano no menor tempo', choose: agressiva },
 };
-export const chooseAction = (me: Combatant, hero: Hero): AiChoice => (AI[me.ai] ?? AI.agressiva).choose(me, hero);
+export const chooseAction = (me: Combatant, hero: Hero, rules: HuntRules = DEFAULT_RULES): AiChoice => (AI[me.ai] ?? AI.agressiva).choose(me, hero, rules);
 
 /* ───────────── montagem ───────────── */
 
 const ICON_OF: Record<string, string> = { item: 'revolver', habilidade: 'raio', feitico: 'vela' };
 
 /** Ações do caçador: ataques da ficha (combate) e cartas com efeito na caçada. */
-export function heroActions(actor: Actor, bars: { name: string }[]): HuntAction[] {
+export function heroActions(actor: Actor, bars: { name: string; short?: string }[] = actor.resources): HuntAction[] {
   const baseHit = actor.actions.find((a) => a.hit)?.hit || '1d20';
   const list: HuntAction[] = actor.actions.filter((a) => a.dmg).map((a, i) => ({
     id: `atk-${i}`, source: 'ataque', name: a.name || 'Ataque', icon: 'faca', effect: 'dano', hit: a.hit, value: a.dmg,
@@ -170,36 +229,36 @@ export function heroActions(actor: Actor, bars: { name: string }[]): HuntAction[
   return list;
 }
 
-function combatant(actor: Actor, hpBarId: string | undefined, name: string, id: string): Combatant {
-  const v = hpBarId ? actor.bars[hpBarId] : undefined;
-  const max = Math.max(1, v ? v.max : 10);
+function combatant(actor: Actor, name: string, id: string): Combatant {
+  const max = Math.max(1, actor.hp || 10);
   return {
     id, name, color: actor.color, image: actor.image, emblem: actor.emblem, kind: actor.kind, boss: !!actor.boss,
     hp: max, max, defense: Number.isFinite(actor.defense) ? actor.defense : 10, guard: 0,
     // Criaturas usam 2 habilidades; chefes, 4.
     actions: (actor.actions.length ? actor.actions : [{ name: 'Ataque', hit: '1d20', dmg: '1d4' }]).slice(0, actor.kind === 'enemy' ? (actor.boss ? 4 : 2) : 8),
-    ai: actor.ai || 'agressiva', actorId: actor.id, resilience: actor.resilience ?? 0, soul: actor.soul ?? 0,
+    ai: actor.ai || 'agressiva', actorId: actor.id, armor: actor.armor ?? 0,
   };
 }
 
-export function newHunt(campaign: { bars: { id: string; name: string; color: string }[] }, heroActor: Actor, prey: Actor[], rng?: Rng): HuntState {
-  const hpBar = campaign.bars[0];
-  const base = combatant(heroActor, hpBar?.id, heroActor.name, 'heroi');
-  const bars: HuntBar[] = campaign.bars.map((b) => { const v = heroActor.bars[b.id] ?? { cur: 0, max: 0 }; return { id: b.id, name: b.name, color: b.color, cur: v.max, max: v.max }; });
+const BAR_COLORS = ['#9a9a9a', '#7aa7d6', '#a493c4', '#d8c26a'];
+export function newHunt(campaign: { system?: RuleSystem; rules?: HuntRules }, heroActor: Actor, prey: Actor[], rng?: Rng): HuntState {
+  const rules = campaign.rules ?? (campaign.system ? rulesOf(campaign.system) : DEFAULT_RULES);
+  const base = combatant(heroActor, heroActor.name, 'heroi');
+  const bars: HuntBar[] = heroActor.resources.filter((r) => r.max > 0).map((r, i) => ({ id: r.id, name: r.name, short: r.short, color: BAR_COLORS[i % BAR_COLORS.length], cur: r.max, max: r.max }));
   const hero: Hero = {
-    ...base, bars: bars.filter((b) => b.id !== hpBar?.id && b.max > 0), hpBar: bars.find((b) => b.id === hpBar?.id) ?? null,
-    actionsList: heroActions(heroActor, campaign.bars), equipped: heroActor.cards.filter((c) => c.equipped), passives: heroActor.cards.filter((c) => c.mode === 'passivo'),
+    ...base, bars, hpBar: { id: 'vida', name: rules.hpName, short: rules.hpShort, color: '#c8463c', cur: base.hp, max: base.max },
+    actionsList: heroActions(heroActor, heroActor.resources), equipped: heroActor.cards.filter((c) => c.equipped), passives: heroActor.cards.filter((c) => c.mode === 'passivo'),
     combatActions: Math.max(1, Math.min(9, Math.round(heroActor.combatActions ?? 1))), moveActions: Math.max(0, Math.round(heroActor.moveActions ?? 0)),
   };
   const count = new Map<string, number>();
   const enemies = prey.map((a, i) => {
     const n = (count.get(a.id) ?? 0) + 1; count.set(a.id, n);
     const total = prey.filter((x) => x.id === a.id).length;
-    return combatant(a, hpBar?.id, total > 1 ? `${a.name} ${n}` : a.name, `presa-${i}`);
+    return combatant(a, total > 1 ? `${a.name} ${n}` : a.name, `presa-${i}`);
   });
   const uses: Record<string, number> = {};
   for (const a of hero.actionsList) if (a.consumable && a.card) uses[a.id] = a.card.qty;
-  const s: HuntState = { round: 1, phase: 'heroi', hero, enemies, cooldowns: {}, uses, log: [], seq: 0, stats: { dealt: 0, taken: 0, healed: 0, crits: 0, turns: 0 }, left: hero.combatActions };
+  const s: HuntState = { round: 1, phase: 'heroi', rules, hero, enemies, cooldowns: {}, uses, log: [], seq: 0, stats: { dealt: 0, taken: 0, healed: 0, crits: 0, turns: 0 }, left: hero.combatActions };
   const ini = (r: number) => roll('1d20', rngFn(rng)).total + r;
   const heroIni = ini(0); const preyIni = Math.max(...enemies.map(() => ini(0)));
   line(s, 'sistema', 'Bestiário', `O confronto começa: ${hero.name} contra ${enemies.map((e) => e.name).join(', ')}.`, 'info');
@@ -226,23 +285,42 @@ export function canUse(s: HuntState, a: HuntAction): Check {
   return { ok: true };
 }
 
-/** Golpe com acerto contra a defesa; 20 natural dobra o dano, 1 natural erra. */
-function attack(s: HuntState, side: 'heroi' | 'inimigo', me: Combatant, foe: Combatant, name: string, hit: string, dmgF: string, rng?: Rng) {
-  let ok = true; let crit = false; let detail = 'acerto automático';
-  const def = foe.defense + foe.guard;
-  if (hit) {
-    const r = roll(hit, rngFn(rng));
-    const first = r.parts[0]?.rolls[0]; const d20 = firstIsD20(hit);
-    crit = d20 && first === 20; const fumble = d20 && first === 1;
-    ok = crit || (!fumble && r.total >= def);
-    detail = `${r.formula} = ${r.total} contra Defesa ${def}${crit ? ' · crítico!' : fumble ? ' · falha crítica' : ''}`;
+/** Rola o acerto conforme as regras do sistema: devolve se acertou, se foi crítico e o texto do registro. */
+export function rollHit(rules: HuntRules, hit: string, def: number, rng?: Rng): { ok: boolean; crit: boolean; detail: string } {
+  if (!hit || rules.hit === 'automatico') return { ok: true, crit: false, detail: 'acerto automático' };
+  if (rules.hit === 'percentual') {
+    const chance = percentOf(hit); const r = roll('1d100', rngFn(rng)).total;
+    const crit = rules.crit === 'extremo' && r <= Math.floor(chance / 5);
+    const fumble = r === 100 || (chance < 50 && r >= 96);
+    const ok = !fumble && r <= chance;
+    return { ok, crit: ok && crit, detail: `1d100 = ${r} contra ${chance}%${crit && ok ? ' · extremo!' : fumble ? ' · desastre' : ''}` };
   }
+  const r = roll(hit, rngFn(rng));
+  const die = firstDie(hit);
+  const faces = r.parts[0]?.rolls ?? [];
+  let crit = false; let fumble = false;
+  if (die && die.count === 1 && rules.crit !== 'nenhum' && rules.crit !== 'iguais' && rules.crit !== 'extremo') {
+    fumble = faces[0] === 1;
+    crit = rules.crit === 'max' ? faces[0] === die.sides : (faces[0] === 20 && die.sides === 20) || r.total >= def + 10;
+  } else if (die && die.count >= 2 && rules.crit === 'iguais') crit = faces[0] === faces[1];
+  const ok = crit || (!fumble && r.total >= def);
+  return { ok, crit: ok && crit, detail: `${r.formula} = ${r.total} contra ${rules.defName} ${def}${crit && ok ? ' · crítico!' : fumble ? ' · falha crítica' : ''}` };
+}
+
+/** Golpe: acerto conforme o sistema; crítico dobra o dano; armadura (se o sistema usa) e proteção descontam. */
+function attack(s: HuntState, side: 'heroi' | 'inimigo', me: Combatant, foe: Combatant, name: string, hit: string, dmgF: string, rng?: Rng) {
+  const rules = s.rules ?? DEFAULT_RULES;
+  const { def, red } = defenseOf(foe, rules);
+  const { ok, crit, detail: d0 } = rollHit(rules, hit, def, rng);
+  let detail = d0;
   if (!ok) { line(s, side, me.name, `${name}: errou ${foe.name}.`, 'erro', { detail, target: foe.id }); return 0; }
-  const dmg = Math.max(0, roll(dmgF, rngFn(rng)).total) * (crit ? 2 : 1);
+  const raw = Math.max(0, roll(dmgF, rngFn(rng)).total) * (crit ? 2 : 1);
+  const dmg = Math.max(0, raw - red);
+  if (red > 0) detail += ` · ${raw} − ${red} de proteção`;
   foe.hp = Math.max(0, foe.hp - dmg);
   line(s, side, me.name, `${name}: ${crit ? 'CRÍTICO! ' : ''}${dmg} de dano em ${foe.name}.`, crit ? 'critico' : 'acerto', { detail, dmg, target: foe.id });
   if (crit) s.stats.crits += 1;
-  if (foe.hp <= 0) line(s, 'sistema', 'Bestiário', side === 'heroi' ? `${foe.name} caiu.` : `${foe.name} caiu.`, 'fim', { target: foe.id });
+  if (foe.hp <= 0) line(s, 'sistema', 'Bestiário', `${foe.name} caiu.`, 'fim', { target: foe.id });
   return dmg;
 }
 
@@ -272,11 +350,12 @@ export function heroAct(prev: HuntState, actionId: string, targetId: string | nu
     const v = Math.max(0, roll(a.value, rngFn(rng)).total);
     const healed = Math.min(v, s.hero.max - s.hero.hp);
     s.hero.hp += healed; s.stats.healed += healed;
-    line(s, 'heroi', s.hero.name, `${a.name}: recupera ${healed} de vida.`, 'cura', { detail: `${a.value} = ${v}` });
+    line(s, 'heroi', s.hero.name, `${a.name}: recupera ${healed} de ${(s.rules ?? DEFAULT_RULES).hpName}.`, 'cura', { detail: `${a.value} = ${v}` });
   } else {
     const v = Math.max(0, roll(a.value, rngFn(rng)).total);
     s.hero.guard = v;
-    line(s, 'heroi', s.hero.name, `${a.name}: +${v} de Defesa até o próximo turno.`, 'defesa', { detail: `${a.value} = ${v}` });
+    const vsDef = (s.rules ?? DEFAULT_RULES).hit === 'contra-defesa';
+    line(s, 'heroi', s.hero.name, vsDef ? `${a.name}: +${v} de ${(s.rules ?? DEFAULT_RULES).defName} até o próximo turno.` : `${a.name}: segura ${v} de dano até o próximo turno.`, 'defesa', { detail: `${a.value} = ${v}` });
   }
   if (s.hero.hpBar) s.hero.hpBar.cur = s.hero.hp;
   s.stats.turns += 1;
@@ -296,7 +375,7 @@ export function enemyTurns(prev: HuntState, rng?: Rng): HuntState[] {
   const frames: HuntState[] = [];
   for (const e of s.enemies) {
     if (e.hp <= 0 || s.hero.hp <= 0) continue;
-    const choice = chooseAction(e, s.hero);
+    const choice = chooseAction(e, s.hero, s.rules ?? DEFAULT_RULES);
     const act = e.actions[choice.index];
     line(s, 'inimigo', e.name, `${e.name} vai de ${act.name} (${choice.reason}: ${Math.round(choice.chance * 100)}% de acerto, ≈ ${fmt(choice.expected)} de dano esperado).`, 'intencao');
     frames.push(clone(s));
