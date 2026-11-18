@@ -134,7 +134,7 @@
 .pc-world { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
 .pc-links { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; }
 .pc-link { pointer-events: stroke; cursor: pointer; }
-.pc-link .hit { stroke: transparent; stroke-width: 14; }
+.pc-link .hit { fill: none; stroke: transparent; stroke-width: 14; }
 .pc-link .vis { fill: none; }
 .pc-link:hover .vis, .pc-link.selected .vis { filter: drop-shadow(0 0 3px rgba(184, 255, 44, .45)); }
 .pc-textlink { stroke: rgba(200, 200, 200, .35); stroke-width: 1.5; stroke-dasharray: 5 5; }

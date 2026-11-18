@@ -67,7 +67,7 @@ Para copiar seus livros para outro computador ou fazer um backup externo, basta 
 
 **Edição de Natal**: luzinhas no alto da janela e gorro no logo. As luzes fazem o **pisca-pisca clássico** (sequência,
 alternado, todas piscam, ondas, acende devagar, cintilante, combinação e acesas, em ciclo). Em ⚙ Configurações →
-**Enfeites de Natal** escolha **Pisca-pisca clássico**, **Cintilar suave** ou **Sempre acesas**, ou desligue os enfeites.
+**Enfeites de Natal** escolha **Pisca-pisca** (o programa clássico), **Suave** (cintilar devagar) ou **Sempre acesas**, ou desligue os enfeites.
 
 Paleta cinza (escuro: `#0A0A0A` `#171717` `#262626` `#373737` … `#FAFAFA`; claro: o inverso) com um único destaque
 **verde-limão fluorescente** `#B8FF2C` nos botões principais, itens ativos e links. A tela inicial tem uma **barra

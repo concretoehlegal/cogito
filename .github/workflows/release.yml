@@ -50,6 +50,12 @@ jobs:
       - if: steps.versao.outputs.publicar == 'sim'
         run: npm run dist
       - if: steps.versao.outputs.publicar == 'sim'
+        name: Cópias com nome fixo (os botões do README baixam sempre a versão mais nova)
+        shell: bash
+        run: |
+          cp release/COGITO-Instalador-*.exe release/COGITO-Instalador.exe
+          cp release/COGITO-*-windows-x64.zip release/COGITO-windows-x64.zip
+      - if: steps.versao.outputs.publicar == 'sim'
         name: Notas da versão
         shell: bash
         run: node scripts/release-notes.cjs "${{ steps.versao.outputs.tag }}" > notas.md
@@ -64,3 +70,5 @@ jobs:
           files: |
             release/COGITO-Instalador-*.exe
             release/COGITO-*-windows-x64.zip
+            release/COGITO-Instalador.exe
+            release/COGITO-windows-x64.zip
