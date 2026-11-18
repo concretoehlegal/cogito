@@ -99,7 +99,7 @@ As cartas de personagem, NPC e criatura do Planejador ficaram mais discretas: fu
 e um ícone em cada número, atributo e capacidade. O **chefe** virou uma carta larga, do tamanho de duas, com a arte
 maior. Campanhas antigas se ajustam sozinhas, e o que estava ao lado do chefe abre espaço para ele.
 
-<img src="docs/screenshots/quadro.png" alt="Quadro com cartas de personagem, NPC, criatura e o chefe em carta larga" width="100%">
+<img src="docs/screenshots/planejador-cartas.png" alt="Cartas de personagem, NPC e criatura no quadro, com o chefe em carta larga" width="100%">
 
 ### Contador de páginas
 
@@ -119,28 +119,28 @@ movimento do Windows ligada, elas ficam paradas.
 
 ## As três áreas
 
-<table>
-  <tr>
-    <td width="33%" valign="top">
-      <img src="docs/screenshots/escritor.png" alt="Escritor" width="100%"><br>
-      <b>Escritor</b><br>
-      <sub>Livros diagramados página a página, com capítulos, sumário automático, tabelas com fórmulas, formas, fichas e
-      blocos de criatura. Exporta em PDF e DOCX com as fontes embutidas.</sub>
-    </td>
-    <td width="33%" valign="top">
-      <img src="docs/screenshots/campanhas.png" alt="Planejador de Campanhas" width="100%"><br>
-      <b>Planejador de Campanhas</b><br>
-      <sub>Um quadro infinito por campanha: fichas de jogo, locais, facções, sessões, notas em Markdown e links
-      <code>[[assim]]</code> entre tudo.</sub>
-    </td>
-    <td width="33%" valign="top">
-      <img src="docs/screenshots/cacada-mesa.png" alt="Bestiário" width="100%"><br>
-      <b>Bestiário</b><br>
-      <sub>Combate em turnos sobre uma mesa de investigador. Você escreve o que o personagem faz; as criaturas sempre
-      procuram o golpe mais letal.</sub>
-    </td>
-  </tr>
-</table>
+### Escritor
+
+Livros diagramados página a página, com capítulos, sumário automático, tabelas com fórmulas, tabelas de rolagem,
+formas, imagens com contorno de texto, fichas e blocos de criatura. Veja uma página ou duas lado a lado, e exporte em
+PDF e DOCX com as fontes embutidas.
+
+<img src="docs/screenshots/area-escritor.png" alt="Escritor com duas páginas lado a lado: capítulo com mapa, bloco de criatura e tabela de rolagem" width="100%">
+
+### Planejador de Campanhas
+
+Um quadro infinito por campanha. Personagens, NPCs e criaturas viram cartas com a ficha de jogo; locais, facções,
+sessões e notas viram cartões com Markdown e links <code>[[assim]]</code> entre eles. O painel da direita edita o que
+estiver selecionado.
+
+<img src="docs/screenshots/area-planejador.png" alt="Quadro da campanha Cair da Noite com o chefe selecionado e o painel de edição aberto" width="100%">
+
+### Bestiário
+
+Combate em turnos sobre uma mesa de investigador. Você escreve o que o personagem faz e o jogo entende com as armas,
+itens e habilidades da ficha. As criaturas sempre procuram o golpe mais letal.
+
+<img src="docs/screenshots/area-bestiario.png" alt="Bestiário: HUD do caçador sobre a mesa de investigador, com as criaturas em cartas" width="100%">
 
 O passo a passo de cada recurso está no **[Manual](docs/MANUAL.md)**.
 
