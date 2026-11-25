@@ -10,7 +10,7 @@ passando) → **concluído** (testado, documentado e entregue). Atualize a cada 
 | Decisões aprovadas registradas | concluído | `DECISIONS.md` (ADR-001 a ADR-012) |
 | Documentação permanente (`CLAUDE.md`, `docs/`) | concluído | 1.0-a |
 | Testes de interface no repositório (`tests/e2e`) | testado | 1.0-a; 12 roteiros, 195 verificações; `npm run test:e2e` |
-| Testes de interface no CI | implementado | 1.0-a; job `interface` (ubuntu + xvfb + poppler); confirmar na primeira execução no GitHub |
+| Testes de interface no CI | concluído | 1.0-a; job `interface` (ubuntu + xvfb + poppler) passando no PR concretoehlegal/cogito#1 |
 | Linter (oxlint, zero avisos) | concluído | 1.0-a (ADR-005b); 27 avisos iniciais corrigidos (código morto e estilo) |
 | Design System: tokens e componentes base | testado | 1.0-b; tokens, apelidos dos nomes antigos, botões; campos/menus/diálogos migram com a shell (1.0-c) |
 | RPG e Natal isolados do CSS principal | testado | 1.0-b; verde só em `data-module=rpg`; Natal em `seasonal.css` com modo automático (ADR-010, ADR-013) |
