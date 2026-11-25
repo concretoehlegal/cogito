@@ -7,7 +7,10 @@ const res = []; const ok = (n, c, x = '') => res.push(`${c ? 'PASS' : 'FAIL'}  $
   fs.rmSync(S + '/dataxl', { recursive: true, force: true });
   const { app, win, logs } = await launch('dataxl');
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1600, 960));
-  await win.waitForSelector('.home h1'); await sleep(500);
+  await win.waitForSelector('.home h1');
+  // Independe da data: força os enfeites ligados ("Sempre").
+  await win.evaluate(() => { const p = JSON.parse(localStorage.getItem('cogito.prefs') || '{}'); localStorage.setItem('cogito.prefs', JSON.stringify({ ...p, xmas: 'on' })); });
+  await win.reload(); await win.waitForSelector('.home h1'); await sleep(500);
   const read = () => win.evaluate(() => [...document.querySelectorAll('.xmas-lights')].map((s) => [...s.querySelectorAll('.xl-glow')].map((e) => e.style.opacity).join(',')));
   const samples = [];
   for (let i = 0; i < 25; i++) { samples.push((await read())[0]); await sleep(170); }
@@ -26,6 +29,11 @@ const res = []; const ok = (n, c, x = '') => res.push(`${c ? 'PASS' : 'FAIL'}  $
   const a = (await read())[0]; await sleep(700); const b = (await read())[0];
   ok('de volta ao clássico, o relógio volta a andar', a !== b || a.includes('0'), `${a} → ${b}`);
   await shot(win, 'xl02-config');
+  ok('enfeites com três modos: na época, sempre, desligados', (await win.locator('.xmas-mode button').allTextContents()).join('|') === 'Na época|Sempre|Desligados');
+  await win.click('.xmas-mode button:has-text("Desligados")'); await sleep(300);
+  ok('desligados: sem luzinhas e sem gorro', (await read()).length === 0 && (await win.locator('.santa-hat').count()) === 0);
+  await win.click('.xmas-mode button:has-text("Sempre")'); await sleep(300);
+  ok('sempre: luzinhas de volta', (await read()).length === 2);
   res.forEach((x) => console.log(x)); console.log('LOGS', JSON.stringify(logs));
   await app.close();
 })().catch((e) => { res.forEach((x) => console.log(x)); console.error(e); process.exit(1); });

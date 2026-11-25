@@ -38,7 +38,14 @@ const results = []; const ok = (n, c, x = '') => results.push(`${c ? 'PASS' : 'F
   const keyed = await win.evaluate(() => [...document.querySelectorAll('.hud-left .hud-item.usable')].map((el) => [Number(el.querySelector('.hi-key')?.textContent), el.querySelector('strong').textContent.replace(/ ×\d+$/, '')]).sort((a, b) => a[0] - b[0]).map((x) => x[1]).join('|'));
   ok('caçada abre com 3 presas e as ações da ficha no painel (teclas 1–5)', await win.locator('.hunt-enemy').count() === 3 && keyed === 'Soco|Revólver .38|Remédio|Colete|Sussurro do Abismo', keyed);
   ok('HUD: seções, inimigo na mira, PV/PA, atalhos e instrumento', (await win.locator('.hud-sec h3').allTextContents()).join('|') === 'Habilidades de Origem|Habilidades|Ocultos|Equipamentos|Ataques|Atributos|Capacidades' && await win.locator('.hud-foe').count() === 1 && (await win.locator('.hud-hero .hb-bar b').allTextContents()).join('|') === '30 / 30 PV|8 / 8 PA' && (await win.locator('.hin-name').textContent()).includes('Revólver .38') && await win.locator('.hk-slot').count() === 5);
-  await until(async () => (await win.locator('.hunt-turn').textContent()) === 'Sua vez', 12000);
+  // Os dados são aleatórios: se as criaturas começam e acertam um crítico, a caçadora pode cair antes da vez dela.
+  // O jogo encerra certo ("Derrota"); o teste recomeça o confronto, como faria um jogador.
+  const turn = () => win.locator('.hunt-turn').textContent();
+  for (let tries = 0; tries < 6; tries++) {
+    await until(async () => ['Sua vez', 'Derrota'].includes(await turn()), 20000);
+    if ((await turn()) === 'Sua vez') break;
+    await win.click('text=Enfrentar de novo'); await sleep(600);
+  }
   await shot(win, 'h02-sua-vez');
   // escreve a ação no quadro
   await win.click('#action-text'); await win.keyboard.type('Sussurro as palavras proibidas contra o chefe');

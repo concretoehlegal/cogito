@@ -1,5 +1,6 @@
 /* Configurações: livro aberto, backups e preferências do aplicativo (sons, animação, tema, fonte dos títulos). */
 import { useEffect, useState } from 'react';
+import { xmasOn } from '../lib/season';
 import { FolderOpen, RotateCcw } from 'lucide-react';
 import { api, errorText, formatBytes, type BackupInfo } from '../api';
 import { loadUserFonts, useFonts, type FontSource } from '../lib/fonts';
@@ -26,8 +27,15 @@ function Preferences() {
         <input type="checkbox" checked={prefs.spell} onChange={(e) => setPrefs({ spell: e.target.checked })} /> Corretor ortográfico (português)
       </label>
       <label className="check"><input type="checkbox" checked={prefs.diceAnim} onChange={(e) => setPrefs({ diceAnim: e.target.checked })} /> Animar a rolagem dos dados</label>
-      <label className="check" title="Luzinhas piscando e o gorro de Papai Noel no logo (edição Pesadelos Antes do Natal)"><input type="checkbox" checked={prefs.xmas} onChange={(e) => setPrefs({ xmas: e.target.checked })} /> Enfeites de Natal</label>
-      {prefs.xmas && (
+      <div className="field">
+        <span>Enfeites de Natal</span>
+        <div className="seg xmas-mode" role="radiogroup" aria-label="Enfeites de Natal">
+          {([['auto', 'Na época', 'Luzinhas e gorro no logo de 15 de novembro a 6 de janeiro'], ['on', 'Sempre', 'Enfeites o ano inteiro'], ['off', 'Desligados', 'Sem enfeites']] as const).map(([k, l, t]) => (
+            <button key={k} type="button" title={t} className={prefs.xmas === k ? 'on' : ''} onClick={() => setPrefs({ xmas: k })}>{l}</button>
+          ))}
+        </div>
+      </div>
+      {xmasOn(prefs.xmas) && (
         <div className="seg xmas-seg" role="radiogroup" aria-label="Como as luzinhas piscam">
           {([['classica', 'Pisca-pisca', 'Programa de pisca-pisca: sequência, alternado, todas piscam, ondas, acende devagar, cintilante…'], ['suave', 'Suave', 'Cada lâmpada cintila devagar'], ['fixa', 'Sempre acesas', 'Sem piscar']] as const).map(([k, l, t]) => (
             <button key={k} type="button" title={t} className={prefs.xmasAnim === k ? 'on' : ''} onClick={() => setPrefs({ xmasAnim: k })}>{l}</button>

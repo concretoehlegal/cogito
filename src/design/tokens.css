@@ -1,0 +1,71 @@
+/*
+ * COGITO — tokens do Design System (fonte única de cores, tipografia, espaçamento, raios, sombras e movimento).
+ * Neutros dominam; um único destaque (--accent), usado com moderação: seleção, foco e a ação principal.
+ * Módulos com identidade própria (RPG, Suas Finanças) redefinem só os tokens de destaque no seu escopo
+ * (ex.: :root[data-module='rpg']), nunca os neutros. Ver docs/DESIGN_SYSTEM.md.
+ */
+:root {
+  /* superfícies (escuro) */
+  --surface-0: #0e0e0f;      /* fundo da janela */
+  --surface-1: #141415;      /* barras e painéis */
+  --surface-2: #19191b;      /* cartões, menus, diálogos */
+  --surface-3: #212124;      /* itens dentro de cartões */
+  --surface-4: #2a2a2e;      /* selecionado, botões */
+  --surface-field: #111112;  /* campos rebaixados */
+  --surface-hover: rgba(255, 255, 255, .05);
+  /* linhas */
+  --line-1: #232326; --line-2: #36363b;
+  /* texto */
+  --text-1: #f2f2f3; --text-2: #a3a3a8; --text-3: #6f6f76;
+  /* destaque */
+  --accent: #8f98f5; --accent-hover: #a7aef8; --accent-ink: #0d0e1a;
+  --accent-soft: rgba(143, 152, 245, .14); --accent-glow: transparent;
+  /* preenchimento da ação principal (pode diferir do destaque de linhas e textos) */
+  --accent-fill: var(--accent); --accent-fill-hover: var(--accent-hover);
+  --focus-ring: rgba(143, 152, 245, .55);
+  /* estados */
+  --ok: #7cc79a; --warn: #e3c37e; --danger: #f08b8b;
+  --ok-soft: rgba(124, 199, 154, .12); --warn-soft: rgba(227, 195, 126, .12); --danger-soft: rgba(240, 139, 139, .12);
+  /* espaçamento (4 px) */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-8: 32px;
+  /* raios */
+  --radius-s: 4px; --radius-m: 6px; --radius-l: 8px; --radius-xl: 10px;
+  /* tipografia */
+  --font-ui: 'Inter Variable', 'Inter', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Cascadia Mono', Consolas, monospace;
+  --text-xs: 11px; --text-s: 12.5px; --text-m: 13.5px; --text-l: 15px; --text-xl: 20px;
+  /* elevação */
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .45);
+  --shadow-2: 0 16px 44px rgba(0, 0, 0, .55), 0 0 0 1px var(--line-1);
+  /* movimento */
+  --ease: cubic-bezier(.2, .7, .2, 1); --dur-fast: 120ms; --dur: 180ms;
+  color-scheme: dark;
+}
+:root[data-theme='light'] {
+  --surface-0: #f3f3f4; --surface-1: #f9f9fa; --surface-2: #ffffff; --surface-3: #f6f6f7; --surface-4: #e6e6e9;
+  --surface-field: #f3f3f4; --surface-hover: rgba(0, 0, 0, .045);
+  --line-1: #e3e3e6; --line-2: #d0d0d5;
+  --text-1: #141416; --text-2: #55555c; --text-3: #9e9ea6;
+  --accent: #4a55c9; --accent-hover: #3c46b0; --accent-ink: #ffffff;
+  --accent-soft: rgba(74, 85, 201, .1); --focus-ring: rgba(74, 85, 201, .45);
+  --ok: #2f7d52; --warn: #8a6410; --danger: #c03b3b;
+  --ok-soft: rgba(47, 125, 82, .1); --warn-soft: rgba(138, 100, 16, .1); --danger-soft: rgba(192, 59, 59, .1);
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .08);
+  --shadow-2: 0 16px 44px rgba(0, 0, 0, .12), 0 0 0 1px var(--line-1);
+  color-scheme: light;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur-fast: 0ms; --dur: 0ms; }
+}
+
+/* ── Módulo RPG: o verde-limão e o brilho continuam só aqui (ADR-011) ── */
+:root[data-module='rpg'] {
+  --accent: #b8ff2c; --accent-hover: #ccff66; --accent-ink: #0a0a0a;
+  --accent-soft: rgba(184, 255, 44, .12); --accent-glow: rgba(184, 255, 44, .55); --focus-ring: rgba(184, 255, 44, .6);
+  --accent-fill: #b8ff2c; --accent-fill-hover: #ccff66;
+}
+:root[data-module='rpg'][data-theme='light'] {
+  --accent: #4d8a00; --accent-hover: #3b6b00; --accent-ink: #0a0a0a;
+  --accent-soft: rgba(132, 204, 22, .16); --accent-glow: rgba(132, 204, 22, .5); --focus-ring: rgba(77, 138, 0, .5);
+  --accent-fill: #b8ff2c; --accent-fill-hover: #a6ee14;
+}

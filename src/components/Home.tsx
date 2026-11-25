@@ -9,6 +9,7 @@ import { HuntHome } from '../hunt/HuntHome';
 import { BrandLogo, TitleStrip, XmasLights } from './Logo';
 import { Settings } from './Settings';
 import { IconLibrary } from './icons';
+import { xmasOn } from '../lib/season';
 import { Menu, Modal, confirmDialog, fmtDate, promptDialog } from './ui';
 
 function NewBookDialog({ onClose }: { onClose: () => void }) {
@@ -50,7 +51,7 @@ export function Home() {
   const [creating, setCreating] = useState(false);
   const [settings, setSettings] = useState(false);
   const [dataDir, setDataDir] = useState('');
-  const xmas = useApp((st) => st.prefs.xmas);
+  const xmas = useApp((st) => xmasOn(st.prefs.xmas));
   useEffect(() => { void refreshBooks(); api.info().then((i) => setDataDir(i.dataDir), () => {}); }, []);
   // Planejador e Bestiário usam o tema noir de Cair da Noite; o Escritor mantém o visual de editor.
   useEffect(() => {

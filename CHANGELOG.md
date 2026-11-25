@@ -7,12 +7,22 @@ Para baixar, use a página de [Releases](../../releases).
 
 Primeira etapa da transformação do COGITO num ecossistema de criatividade e organização. Ainda não publicada.
 
+### Visual
+- **Design System**: cores, raios, tipografia e espaçamento vêm de um conjunto único de tokens, nos temas claro e escuro.
+- A interface principal (início, Escritor, Configurações) ganhou um destaque azul-lavanda sóbrio; o verde-limão
+  continua no Planejador e no Bestiário.
+- Botões com fundo liso e cantos menos arredondados; barra lateral do início sem degradês.
+- **Enfeites de Natal** com três modos: **na época** (de 15 de novembro a 6 de janeiro, o padrão), **sempre** ou
+  **desligados**. Quem tinha desligado continua com eles desligados.
+
 ### Desenvolvimento
 - Documentação permanente do projeto: visão do produto, arquitetura, roadmap, decisões, modelo de dados, migração,
   design system, módulos, segurança, monetização e backlog (`CLAUDE.md` e `docs/`).
 - Testes de interface (Playwright controlando o Electron) agora no repositório: 12 roteiros cobrindo Escritor,
   Planejador, sistema de regras, Bestiário e enfeites (`npm run test:e2e`), e um job próprio no CI.
 - Linter (oxlint) sem nenhum aviso, também no CI; código sem uso removido.
+- Dois testes de interface ficaram estáveis: o do Bestiário recomeça o confronto se a caçadora cair antes da vez dela
+  (dados aleatórios), e o de fechar o app espera o campo do nome ganhar o foco antes de digitar.
 
 ## [0.17.0] — 2026-11-18 · Qualquer sistema
 

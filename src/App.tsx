@@ -33,6 +33,13 @@ export function App() {
   const busy = useApp((s) => s.busy);
   const theme = useApp((s) => s.theme);
 
+  const homeTab = useApp((s) => s.homeTab);
+  // Módulo ativo na janela: o RPG (Planejador e Bestiário) tem destaque próprio (tokens em src/design/tokens.css).
+  useEffect(() => {
+    const rpg = screen === 'plano' || screen === 'bestiario' || (screen === 'home' && homeTab !== 'livros');
+    if (rpg) document.documentElement.dataset.module = 'rpg'; else delete document.documentElement.dataset.module;
+  }, [screen, homeTab]);
+
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
     void api.setTheme(theme);

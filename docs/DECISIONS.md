@@ -85,6 +85,14 @@ Cada decisão tem contexto, decisão, alternativas e estado. **Aprovada** = o do
   abas, barra lateral, painel direito, barra de status). O visual verde-limão/noir sai da interface principal e fica só
   no módulo RPG.
 
+## ADR-013 — Cor de destaque da interface principal
+- **Estado:** em vigor (2026-11-25), proposta na 1.0-b; aguarda confirmação do dono do produto.
+- **Contexto:** com o verde-limão restrito ao RPG (ADR-011), a interface principal precisava de um destaque próprio.
+- **Decisão:** destaque azul-lavanda sóbrio — `#8f98f5` no tema escuro e `#4a55c9` no claro —, usado só em seleção,
+  foco e ação principal. Trocar é mudar os tokens `--accent*` em `src/design/tokens.css`.
+- **Alternativas:** destaque monocromático (branco/preto, mais austero, menos legível em seleção e foco); manter o
+  verde-limão (contraria o ADR-011).
+
 ## ADR-012 — Cadastro e provedor de autenticação: adiado
 - **Estado:** pendente de decisão (prazo: antes da 1.4).
 - **Decisão até lá:** nenhuma tela de login simulada. Na 1.0 entram só as interfaces locais `AccountService` e

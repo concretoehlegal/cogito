@@ -21,7 +21,19 @@ sobriedade de editores de conhecimento e a consistência de apps desktop profiss
 - Evitar: gradientes e vidro exagerados, excesso de cartões, raios grandes, emojis como ícones, estética gamer/medieval
   na interface principal, menus complexos.
 
-## Tokens (alvo da 1.0-b, arquivo `src/design/tokens.css`)
+## Implementado na 1.0-b
+- `src/design/tokens.css`: superfícies, linhas, texto, destaque (`--accent`, `--accent-fill` para a ação principal),
+  estados, espaçamento, raios, tipografia, elevação e movimento, nos temas claro e escuro.
+- Os nomes antigos (`--bg`, `--card`, `--brand`…) viraram apelidos dos tokens novos em `src/styles/app.css`.
+- Escopo de módulo: `:root[data-module='rpg']` redefine só o destaque (verde-limão e brilho); o atributo é ligado pela
+  interface quando o Planejador ou o Bestiário estão abertos (`src/App.tsx`).
+- `src/design/components.css`: botões, botões de ícone, links, caixas de marcação e seletores, com raios da escala e
+  fundo liso (sem degradê).
+- `src/design/seasonal.css`: enfeites de Natal fora do CSS principal; modo automático pela época (15/11 a 6/1),
+  sempre ou desligados (`src/lib/season.ts`).
+- Destaque da interface principal: azul-lavanda (ADR-013).
+
+## Tokens (`src/design/tokens.css`)
 | Grupo | Tokens |
 | --- | --- |
 | Superfícies | `--surface-0` (fundo da janela), `--surface-1` (painéis), `--surface-2` (elevado), `--surface-field` |
