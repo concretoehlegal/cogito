@@ -4,7 +4,6 @@ import { heroAct, newHunt } from '../src/hunt/engine.ts';
 import { interpret } from '../src/hunt/interpret.ts';
 
 const faces = (...f: number[]) => { let i = 0; return () => (f[i++ % f.length] ?? 1) - 1; };
-const bars = [{ id: 'vida', name: 'Vida', color: '#c00' }, { id: 'san', name: 'Sanidade', color: '#80f' }];
 const card = (p: Record<string, unknown>) => ({ id: 'c' + Math.random().toString(36).slice(2, 7), type: 'item', name: 'Carta', icon: '', image: null, color: '#c27a33', rarity: 'comum', cost: '', roll: '', tags: '', description: '', qty: 1, consumable: false, equipped: false, mode: 'ativo', cooldown: '', stats: [], hunt: '', ...p });
 const actor = (p: Record<string, unknown>) => {
   const { bars: b0, ...rest } = p as { bars?: Record<string, { cur: number; max: number }> };

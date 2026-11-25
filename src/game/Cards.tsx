@@ -30,7 +30,7 @@ export function setCardLabels(sys: { cardTypes: Record<CardType, { label: string
   named = sys ? { ...sys.cardTypes } : {};
   originName = sys?.labels?.origem || 'Habilidades de Origem';
 }
-export const typeOf = (t: CardType) => { const base = CARD_TYPES.find((x) => x.id === t) ?? CARD_TYPES[0]; return { ...base, ...(named[base.id] ?? {}) }; };
+export const typeOf = (t: CardType) => { const base = CARD_TYPES.find((x) => x.id === t) ?? CARD_TYPES[0]; return { ...base, ...named[base.id] }; };
 export const rarityOf = (r: Rarity) => RARITIES.find((x) => x.id === r) ?? RARITIES[0];
 
 export const blankCard = (type: CardType = 'item'): Card => ({

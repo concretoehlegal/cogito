@@ -9,7 +9,7 @@ const start = lines.findIndex((l) => new RegExp(`^## \\[?${tag.replace(/\./g, '\
 let body = '';
 if (start >= 0) {
   const rest = lines.slice(start + 1);
-  const end = rest.findIndex((l) => /^## /.test(l) || /^\[[^\]]+\]:/.test(l));
+  const end = rest.findIndex((l) => l.startsWith('## ') || /^\[[^\]]+\]:/.test(l));
   body = (end >= 0 ? rest.slice(0, end) : rest).join('\n').trim();
 }
 const download = [

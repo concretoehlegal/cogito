@@ -27,7 +27,7 @@ export function ShapeView({ node, updateAttributes, selected, editor, getPos }: 
   const a = node.attrs as ShapeAttrs;
   const [live, setLive] = useState<{ width: number; height: number } | null>(null);
   const box = useRef<HTMLDivElement>(null);
-  const cur = { ...a, ...(live ?? {}) };
+  const cur = { ...a, ...live };
 
   const start = (e: RPointerEvent, h: (typeof HANDLES)[number]) => {
     e.preventDefault(); e.stopPropagation();

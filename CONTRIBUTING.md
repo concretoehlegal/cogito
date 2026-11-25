@@ -34,9 +34,13 @@ Para rodar o projeto:
 ```bash
 npm install
 npm run dev     # app em modo de desenvolvimento
-npm test        # testes automáticos
-npm run build   # verificação de tipos e build
+npm run lint       # linter (oxlint, sem avisos)
+npm test           # testes de unidade
+npm run build      # verificação de tipos e build
+npm run test:e2e   # testes de interface (depois do build; no Linux, com xvfb-run -a)
 ```
+
+As instruções permanentes de desenvolvimento e a documentação técnica estão em `CLAUDE.md` e na pasta `docs/`.
 
 ## Como as versões são publicadas
 

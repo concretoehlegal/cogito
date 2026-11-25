@@ -26,7 +26,6 @@ function Text({ value, onChange, k, placeholder, multiline, rows, inputRef, onKe
     ? <textarea ref={inputRef} value={value} rows={rows ?? 8} placeholder={placeholder} onChange={(e) => onChange(e.target.value, e.target.selectionStart ?? e.target.value.length)} onKeyDown={onKeyDown} onSelect={onSelect} className="pn-scroll" />
     : <input ref={inputRef} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value, e.target.selectionStart ?? e.target.value.length)} onKeyDown={onKeyDown} />;
 }
-const num = (v: string, d = 0) => { const n = Number(String(v).replace(',', '.')); return Number.isFinite(n) ? Math.round(n) : d; };
 
 /** Uma lista do sistema (Atributos, Perícias…) na ficha: cada item com ícone, nome e valor próprios. */
 function ListEditor({ l, items, up }: { l: ListDef; items: ListValue[]; up: (fn: (list: ListValue[]) => void, key?: string) => void }) {
@@ -135,7 +134,7 @@ function SheetEditor({ n }: { n: PlanNode }) {
 function TextEditor({ n }: { n: PlanNode }) {
   const up = (fn: (m: PlanNode) => void, key?: string) => edit((d) => { const m = d.nodes.find((x) => x.id === n.id); if (m) fn(m); }, key ? { key: `${n.id}:${key}` } : {});
   const f = n.font ?? {};
-  const setFont = (p: Partial<NonNullable<PlanNode['font']>>, key?: string) => up((m) => { m.font = { ...(m.font ?? {}), ...p }; }, key);
+  const setFont = (p: Partial<NonNullable<PlanNode['font']>>, key?: string) => up((m) => { m.font = { ...m.font, ...p }; }, key);
   const size = f.size ?? (n.type === 'texto' ? 26 : 16);
   const remove = () => { edit((d) => { d.nodes = d.nodes.filter((x) => x.id !== n.id); d.links = d.links.filter((l) => l.from !== n.id && l.to !== n.id); }); select([]); };
   const colors = n.type === 'texto' ? ['#f2f2f2', '#a3a3a3', '#b8ff2c', '#FF2E88', '#00C2CB', '#F4B400', '#d77a6e'] : ['#737373', '#d4d4d4', '#b8ff2c', '#FF2E88', '#00C2CB', '#F4B400', '#7aa7d6'];

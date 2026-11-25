@@ -3,6 +3,17 @@
 Todas as mudanças de cada versão. A mais nova fica no topo.
 Para baixar, use a página de [Releases](../../releases).
 
+## [1.0.0] — em desenvolvimento · Foundation (projeto Genesis)
+
+Primeira etapa da transformação do COGITO num ecossistema de criatividade e organização. Ainda não publicada.
+
+### Desenvolvimento
+- Documentação permanente do projeto: visão do produto, arquitetura, roadmap, decisões, modelo de dados, migração,
+  design system, módulos, segurança, monetização e backlog (`CLAUDE.md` e `docs/`).
+- Testes de interface (Playwright controlando o Electron) agora no repositório: 12 roteiros cobrindo Escritor,
+  Planejador, sistema de regras, Bestiário e enfeites (`npm run test:e2e`), e um job próprio no CI.
+- Linter (oxlint) sem nenhum aviso, também no CI; código sem uso removido.
+
 ## [0.17.0] — 2026-11-18 · Qualquer sistema
 
 ### Sistema de regras por campanha

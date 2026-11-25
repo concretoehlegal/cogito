@@ -7,7 +7,7 @@
  *   e o cartão do Instrumento (a arma em mãos).
  */
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { ArrowLeft, ChartColumn, Footprints, Image as ImageIcon, CornerDownLeft, Flag, Flame, Heart, Layers, MessageSquareMore, RotateCcw, Settings as Gear, Shield, Star, Swords, Zap } from 'lucide-react';
+import { ArrowLeft, Footprints, Image as ImageIcon, CornerDownLeft, Flag, Flame, Heart, Layers, MessageSquareMore, RotateCcw, Shield, Star, Swords, Zap } from 'lucide-react';
 import { playClick, playCrit, playDice, playFumble } from '../lib/sound';
 import { useApp } from '../store';
 import { GameCard, cardPair, typeOf } from '../game/Cards';
@@ -15,7 +15,7 @@ import { CharCard, dataFromActor, type CharData } from '../game/CharCard';
 import type { Actor, Card } from '../game/types';
 import { tagline } from '../game/system';
 import { GameIcon } from '../game/icons';
-import { pairById, type CardPair } from '../game/palette';
+import type { CardPair } from '../game/palette';
 import { canUse, enemyTurns, flee, heroAct, newHunt, type Combatant, type HuntAction, type HuntState, type LogLine } from './engine';
 import { interpret } from './interpret';
 import { preyList, useHunt } from './state';
@@ -317,7 +317,6 @@ export function HuntScreen() {
   const spells = cards.filter((c) => c.type === 'feitico');
   const items = cards.filter((c) => c.type === 'item');
   const attacks = list.filter((a) => a.source === 'ataque');
-  const charcoal = pairById('charcoal');
 
   // Instrumento: a arma em mãos (item equipado com rolagem), senão o primeiro item com rolagem, senão o 1º ataque.
   const inst = items.find((c) => c.equipped && c.roll && c.hunt === 'dano') ?? items.find((c) => c.equipped && c.roll) ?? items.find((c) => c.roll) ?? null;
@@ -327,7 +326,6 @@ export function HuntScreen() {
   const range = findStat(/alcance/i)?.v ?? instTags.find((t) => /\d+\s*m\b|alcance|dist[aâ]ncia|corpo a corpo/i.test(t)) ?? (inst ? '—' : 'Corpo a corpo');
   const upgrades = (inst?.stats ?? []).filter((s) => !/alcance|dano|recarga/i.test(s.l)).slice(0, 3).map((s) => ({ t: s.l, v: s.v }));
   for (const t of instTags) { if (upgrades.length >= 3) break; if (t !== range) upgrades.push({ t: 'Melhoria', v: t }); }
-  const instPair = inst ? cardPair(inst) : charcoal;
   const instCd = instAct ? game.cooldowns[instAct.id] ?? 0 : 0;
   const instKey = instAct ? list.indexOf(instAct) : -1;
 
@@ -337,7 +335,6 @@ export function HuntScreen() {
   const n = Math.max(1, game.enemies.length);
   const hasBoss = game.enemies.some((e) => e.boss);
   const cardW = Math.round(Math.max(96, Math.min((areaH - 34) / 1.36 / (hasBoss ? 1.12 : 1), (areaW - 52 * n) / n, 240)));
-  const heroTitle = actor?.subtitle ? `${hero.name}, ${actor.subtitle.charAt(0).toLowerCase()}${actor.subtitle.slice(1)}` : hero.name;
 
   return (
     <div className={`hunt hunt-hud ${mood} bg-${prefs.huntBg}`}>

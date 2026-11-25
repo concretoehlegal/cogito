@@ -291,9 +291,9 @@ export function fixSystem(raw: Partial<RuleSystem> | undefined | null): RuleSyst
   const lists = Array.isArray(raw.lists) ? raw.lists.filter((l) => l && l.id).map((l) => ({ id: l.id, name: l.name ?? l.id, icon: l.icon ?? 'estrela', who: Array.isArray(l.who) ? l.who : ALL, card: !!l.card, items: Array.isArray(l.items) ? l.items.map((i) => ({ k: String(i?.k ?? ''), icon: String(i?.icon ?? '') })) : [] })) : base.lists;
   return {
     base: raw.base ?? base.base, name: raw.name ?? base.name, icon: raw.icon ?? base.icon, stats, lists,
-    labels: { ...base.labels, ...(raw.labels ?? {}) },
-    cardTypes: { item: { ...base.cardTypes.item, ...(raw.cardTypes?.item ?? {}) }, habilidade: { ...base.cardTypes.habilidade, ...(raw.cardTypes?.habilidade ?? {}) }, feitico: { ...base.cardTypes.feitico, ...(raw.cardTypes?.feitico ?? {}) } },
-    combat: { ...base.combat, ...(raw.combat ?? {}) },
+    labels: { ...base.labels, ...raw.labels },
+    cardTypes: { item: { ...base.cardTypes.item, ...raw.cardTypes?.item }, habilidade: { ...base.cardTypes.habilidade, ...raw.cardTypes?.habilidade }, feitico: { ...base.cardTypes.feitico, ...raw.cardTypes?.feitico } },
+    combat: { ...base.combat, ...raw.combat },
   };
 }
 
@@ -304,12 +304,12 @@ type LegacySheet = Sheet & {
 /** Ficha das versões até a 0.16 (campos fixos do COGITO) → valores ligados aos campos do sistema COGITO. */
 export function migrateSheet(sheet: LegacySheet): Sheet {
   if (sheet.vals && sheet.lists) return sheet;
-  const vals: Record<string, string> = { ...(sheet.vals ?? {}) };
+  const vals: Record<string, string> = { ...sheet.vals };
   const put = (id: string, v: unknown) => { if (v !== undefined && v !== null && v !== '' && vals[id] === undefined) vals[id] = String(v); };
   put('vida', sheet.life); put('defesa', sheet.defense); put('resiliencia', sheet.resilience); put('alma', sheet.soul);
   put('acoes', sheet.combatActions); put('movimento', sheet.moveActions);
   put('origem', sheet.origin); put('nivel', sheet.level); put('filiacao', sheet.affiliation); put('cliche', sheet.cliche);
-  const lists: Record<string, ListValue[]> = { ...(sheet.lists ?? {}) };
+  const lists: Record<string, ListValue[]> = { ...sheet.lists };
   if (sheet.attrs && !lists.atributos) lists.atributos = sheet.attrs.map((a) => ({ k: a.k, v: a.v }));
   if (sheet.caps && !lists.capacidades) lists.capacidades = sheet.caps.map((a) => ({ k: a.k, v: a.v }));
   const out: LegacySheet = { ...sheet, vals, lists };

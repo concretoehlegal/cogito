@@ -215,7 +215,9 @@ Antes de relatar um problema, veja se ele já está na [lista de problemas abert
 ```bash
 npm install
 npm run dev        # abre o app em modo de desenvolvimento
-npm test           # testes automáticos
+npm run lint       # linter
+npm test           # testes de unidade
+npm run test:e2e   # testes de interface (depois do build)
 npm run dist       # instalador e .zip para Windows
 ```
 
