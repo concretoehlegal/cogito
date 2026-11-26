@@ -7,16 +7,18 @@ passando) → **concluído** (testado, documentado e entregue). Atualize a cada 
 | Item | Estado | Observações |
 | --- | --- | --- |
 | Auditoria técnica do repositório | concluído | 2026-11-25; resumo em `ARCHITECTURE.md`, riscos em `SECURITY.md` |
-| Decisões aprovadas registradas | concluído | `DECISIONS.md` (ADR-001 a ADR-012) |
+| Decisões aprovadas registradas | concluído | `DECISIONS.md` (ADR-001 a ADR-016; ADR-013, ADR-016 e parte do ADR-014 aguardam confirmação) |
 | Documentação permanente (`CLAUDE.md`, `docs/`) | concluído | 1.0-a |
-| Testes de interface no repositório (`tests/e2e`) | testado | 1.0-a; 12 roteiros, 195 verificações; `npm run test:e2e` |
+| Testes de interface no repositório (`tests/e2e`) | testado | 1.0-a; 11 roteiros desde a remoção do Bestiário; `npm run test:e2e` |
 | Testes de interface no CI | concluído | 1.0-a; job `interface` (ubuntu + xvfb + poppler) passando no PR concretoehlegal/cogito#1 |
 | Linter (oxlint, zero avisos) | concluído | 1.0-a (ADR-005b); 27 avisos iniciais corrigidos (código morto e estilo) |
 | Design System: tokens e componentes base | testado | 1.0-b; tokens, apelidos dos nomes antigos, botões; campos/menus/diálogos migram com a shell (1.0-c) |
+| Foco generalista: quatro pilares registrados | concluído | 2026-11-26; `PRODUCT_VISION.md`, `MODULES.md`, `ROADMAP.md` (ADR-014) |
+| Bestiário removido, dados preservados | testado | 2026-11-26 (ADR-015); 34 testes de unidade, 11 roteiros de interface |
 | RPG e Natal isolados do CSS principal | testado | 1.0-b; verde só em `data-module=rpg`; Natal em `seasonal.css` com modo automático (ADR-010, ADR-013) |
 | Shell: barra superior com abas, lateral, painel direito, barra de status | planejado | 1.0-c |
-| Registro de módulos e carregamento sob demanda | planejado | 1.0-d |
-| RPG liga/desliga nas Configurações | planejado | 1.0-d |
+| Registro de módulos e extensões, carregamento sob demanda | planejado | 1.0-d (ADR-016) |
+| RPG como extensão, liga/desliga nas Configurações | planejado | 1.0-d (ADR-016); ligada para quem já tem campanhas |
 | Registro de objetos (`.cogito/indice.json`) e serviço de arquivos | planejado | 1.0-e |
 | Recentes, favoritos, renomear, duplicar, lixeira e restauração universais | planejado | 1.0-e |
 | Referências `cogito://obj/<id>` | planejado | 1.0-e |
@@ -37,6 +39,7 @@ passando) → **concluído** (testado, documentado e entregue). Atualize a cada 
 | Menu de aplicativo no macOS | planejado | porte (ADR-007) |
 
 ## Depois da 1.0
-Ver `ROADMAP.md`: Knowledge (1.1), Life (1.2), Create (1.3), Connect (1.4), lançamento comercial (2.0 provisório).
-Pendências do produto: regra de acerto e Resiliência do sistema COGITO (perguntadas ao dono do produto); gerador de
-personagens e criaturas a partir do sistema de regras (relatório entregue em 2026-11-18).
+Ver `ROADMAP.md`: Escrita + Quadro e Memórias (1.1), Finanças (1.2), Editor de imagens (1.3), Connect e loja de
+extensões (1.4), lançamento comercial (2.0 provisório).
+Extensão RPG (sem versão): regra de acerto e Resiliência do sistema COGITO (perguntadas ao dono do produto); gerador
+de personagens e criaturas a partir do sistema de regras (relatório entregue em 2026-11-18).

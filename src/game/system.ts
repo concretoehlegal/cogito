@@ -1,13 +1,13 @@
 /*
  * Sistema de regras de uma campanha: tudo o que a ficha tem (números, barras, textos, listas), o nome e o ícone de
- * cada coisa e como o Bestiário resolve um ataque. Cada campanha guarda o seu, começando de um modelo pronto
+ * cada coisa e as regras de rolagem. Cada campanha guarda o seu, começando de um modelo pronto
  * (COGITO, D&D 5e, Call of Cthulhu, Ordem Paranormal, Daggerheart, Pathfinder 2e ou em branco) que pode ser
  * mudado à vontade. As fichas guardam só os valores, ligados pelo id de cada campo.
  */
 import type { CardType, NodeType, Plan, Sheet } from './types.ts';
 
 export type StatKind = 'barra' | 'numero' | 'texto';
-/** O que o número significa para o Bestiário. */
+/** O que o número significa na ficha (vida, defesa, recurso…). */
 export type StatRole = '' | 'vida' | 'defesa' | 'recurso' | 'armadura' | 'acoes' | 'movimento';
 export type Who = 'personagem' | 'npc' | 'inimigo';
 export const WHO: Who[] = ['personagem', 'npc', 'inimigo'];
@@ -16,7 +16,7 @@ export interface StatDef {
   id: string; name: string; short: string; icon: string; kind: StatKind; role: StatRole;
   /** Fichas que têm este campo. */
   who: Who[];
-  /** Aparece na carta do quadro e do Bestiário. */
+  /** Aparece na carta do quadro. */
   card: boolean;
   /** Valor inicial nas fichas novas (para criaturas, defEnemy quando houver). */
   def: string; defEnemy?: string;
@@ -32,7 +32,7 @@ export interface CombatRules {
   hit: HitMode;
   /** max: resultado máximo do primeiro dado; dez: superar a defesa por 10 (ou 20 natural); iguais: os dois primeiros dados iguais; extremo: até 1/5 do valor (percentual). */
   crit: CritMode;
-  /** A armadura do alvo desconta do dano. */
+  /** A armadura do alvo desconta do dano. Guardado no arquivo; sem tela desde a 1.0 (era usado pelo Bestiário). */
   armor: boolean;
   /** Rolagem de acerto das ações novas. */
   defaultHit: string;
@@ -231,13 +231,13 @@ export const presetById = (id: string) => (PRESETS.find((p) => p.id === id) ?? P
 export const DEFAULT_SYSTEM = () => presetById('cogito');
 
 export const ROLES: { id: StatRole; label: string; hint: string }[] = [
-  { id: '', label: 'Só mostrar', hint: 'Aparece na ficha e na carta, sem efeito no Bestiário.' },
-  { id: 'vida', label: 'Vida', hint: 'Quando chega a zero, a ficha cai no Bestiário.' },
+  { id: '', label: 'Só mostrar', hint: 'Aparece na ficha e na carta, sem função especial.' },
+  { id: 'vida', label: 'Vida', hint: 'A barra de vida da ficha, em destaque na carta do quadro.' },
   { id: 'defesa', label: 'Defesa (alvo do ataque)', hint: 'O número que a rolagem de acerto precisa alcançar.' },
   { id: 'recurso', label: 'Recurso (custo de cartas)', hint: 'Cartas com custo “2 <nome>” gastam deste número.' },
-  { id: 'armadura', label: 'Armadura (reduz o dano)', hint: 'Desconta do dano recebido quando o sistema usa armadura.' },
-  { id: 'acoes', label: 'Ações por turno', hint: 'Quantas ações de combate o caçador faz por turno.' },
-  { id: 'movimento', label: 'Movimento', hint: 'Mostrado no Bestiário ao lado das ações.' },
+  { id: 'armadura', label: 'Armadura (reduz o dano)', hint: 'Quanto a ficha desconta do dano recebido.' },
+  { id: 'acoes', label: 'Ações por turno', hint: 'Quantas ações a ficha faz por turno.' },
+  { id: 'movimento', label: 'Movimento', hint: 'Quanto a ficha se desloca por turno.' },
 ];
 export const KINDS: { id: StatKind; label: string }[] = [{ id: 'barra', label: 'Barra (atual/máx.)' }, { id: 'numero', label: 'Número' }, { id: 'texto', label: 'Texto' }];
 export const HIT_MODES: { id: HitMode; label: string; hint: string }[] = [

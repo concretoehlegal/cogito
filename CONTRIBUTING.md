@@ -6,7 +6,7 @@ Obrigado por querer ajudar o COGITO! Este é um projeto pessoal, mas toda opini�
 
 1. Veja se ele já não está na lista de [issues](../../issues).
 2. Abra um **[relato de bug](../../issues/new?template=bug.yml)** dizendo:
-   - em que área aconteceu (Escritor, Planejador de Campanhas ou Bestiário);
+   - em que área aconteceu (Escritor ou Planejador de Campanhas);
    - a versão do COGITO;
    - os passos para repetir o problema;
    - uma captura de tela, se puder.

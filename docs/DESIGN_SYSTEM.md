@@ -26,7 +26,7 @@ sobriedade de editores de conhecimento e a consistência de apps desktop profiss
   estados, espaçamento, raios, tipografia, elevação e movimento, nos temas claro e escuro.
 - Os nomes antigos (`--bg`, `--card`, `--brand`…) viraram apelidos dos tokens novos em `src/styles/app.css`.
 - Escopo de módulo: `:root[data-module='rpg']` redefine só o destaque (verde-limão e brilho); o atributo é ligado pela
-  interface quando o Planejador ou o Bestiário estão abertos (`src/App.tsx`).
+  interface quando o Planejador está aberto (`src/App.tsx`).
 - `src/design/components.css`: botões, botões de ícone, links, caixas de marcação e seletores, com raios da escala e
   fundo liso (sem degradê).
 - `src/design/seasonal.css`: enfeites de Natal fora do CSS principal; modo automático pela época (15/11 a 6/1),
@@ -48,7 +48,7 @@ sobriedade de editores de conhecimento e a consistência de apps desktop profiss
 | Movimento | `--ease`, `--dur-fast` (120 ms), `--dur` (180 ms); `prefers-reduced-motion` respeitado |
 
 Os tokens atuais (`--bg`, `--card`…) continuam existindo como apelidos durante a transição, para não quebrar telas.
-Cores próprias de módulo (RPG, Suas Finanças) ficam em tokens com prefixo do módulo, no CSS do módulo.
+Cores próprias de módulo ou extensão (RPG, Finanças) ficam em tokens com prefixo do módulo, no CSS do módulo.
 
 ## Componentes base (consolidar os existentes em `src/design`)
 Botão (primário, padrão, fantasma, perigo), botão de ícone, campo, seleção, caixa de marcação, controle segmentado,

@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="#o-que-chegou-na-016"><img src="docs/natal/banner.svg" alt="COGITO: Escritor, Planejador de Campanhas e Bestiário. Edição de Natal." width="100%"></a>
+  <a href="#o-que-chegou-na-016"><img src="docs/natal/banner.svg" alt="COGITO: Escritor e Planejador de Campanhas. Edição de Natal." width="100%"></a>
 </p>
 
 <p align="center">
@@ -34,23 +34,17 @@ da janela e um gorro no logo. As novidades das duas vêm logo abaixo.
 
 Cada campanha agora tem o seu **sistema de regras**, e tudo nele se edita: o nome, a sigla e o ícone de cada número,
 barra e texto da ficha, as listas (Atributos, Perícias, Características…), os nomes dos tipos de ficha e de carta e
-a forma como o Bestiário resolve um ataque. Para começar, há modelos de **D&D 5ª edição**, **Call of Cthulhu**,
+as rolagens de acerto. Para começar, há modelos de **D&D 5ª edição**, **Call of Cthulhu**,
 **Ordem Paranormal**, **Daggerheart**, **Pathfinder 2ª edição**, do sistema **COGITO** e um **em branco**. Trocar de
 sistema não apaga nenhum valor já preenchido.
 
 <img src="docs/screenshots/sistema-editor.png" alt="Editor do sistema de regras com os campos do D&D 5ª edição" width="100%">
 
-Cada campo pode ter uma função no combate: vida, defesa, recurso que as cartas gastam, armadura que desconta do
-dano ou ações por turno. O acerto pode ser uma rolagem contra a defesa, uma porcentagem com 1d100 (como no Call of
-Cthulhu) ou automático, e o crítico segue a regra do sistema: dado máximo, 10 acima da defesa, dados iguais ou acerto
-extremo.
+Cada campo pode ter uma função na ficha: vida, defesa, recurso que as cartas gastam, armadura ou ações por turno.
+O acerto pode ser uma rolagem contra a defesa, uma porcentagem com 1d100 (como no Call of Cthulhu) ou automático.
 
-<table>
-  <tr>
-    <td width="50%" valign="top"><img src="docs/screenshots/sistema-quadro.png" alt="Quadro com cartas no sistema D&D: PV, CA, Espaços de Magia e um campo novo" width="100%"><br><sub>Cartas no D&D, com um campo criado na hora (Corrupção).</sub></td>
-    <td width="50%" valign="top"><img src="docs/screenshots/sistema-bestiario.png" alt="Bestiário no Call of Cthulhu, com características, perícias e acerto em porcentagem" width="100%"><br><sub>O mesmo quadro trocado para Call of Cthulhu: ataque em porcentagem no Bestiário.</sub></td>
-  </tr>
-</table>
+<img src="docs/screenshots/sistema-quadro.png" alt="Quadro com cartas no sistema D&D: PV, CA, Espaços de Magia e um campo novo" width="100%">
+<sub>Cartas no D&D, com um campo criado na hora (Corrupção).</sub>
 
 <p align="center"><img src="docs/natal/divisor.svg" alt="" width="100%"></p>
 
@@ -159,13 +153,6 @@ estiver selecionado.
 
 <img src="docs/screenshots/area-planejador.png" alt="Quadro da campanha Cair da Noite com o chefe selecionado e o painel de edição aberto" width="100%">
 
-### Bestiário
-
-Combate em turnos sobre uma mesa de investigador. Você escreve o que o personagem faz e o jogo entende com as armas,
-itens e habilidades da ficha. As criaturas sempre procuram o golpe mais letal.
-
-<img src="docs/screenshots/area-bestiario.png" alt="Bestiário: HUD do caçador sobre a mesa de investigador, com as criaturas em cartas" width="100%">
-
 O passo a passo de cada recurso está no **[Manual](docs/MANUAL.md)**.
 
 ## Instalar
@@ -191,10 +178,8 @@ pasta. O aplicativo também faz cópias automáticas enquanto você trabalha.
 
 ## Próximos passos
 
-- Bestiário com cara de jogo de cartas, com mão, mesa e mana.
-- Regras de **Resiliência** e **Pontos de Alma** no combate.
-- Comportamentos próprios de caça para criaturas específicas.
-- Um gerador de personagens, criaturas e NPCs a partir do sistema de regras da campanha.
+- **COGITO 1.0**: o app deixa de ser só de RPG e vira uma ferramenta geral, com quatro pilares: **Escrita**,
+  **Quadro e Memórias**, **Finanças** e **Editor de imagens**. O Bestiário sai; o RPG passa a ser uma extensão à parte.
 
 Tem uma ideia? [Sugira aqui](../../issues/new?template=ideia.yml) ou comente nas [Discussões](../../discussions).
 

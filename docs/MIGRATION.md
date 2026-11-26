@@ -19,6 +19,8 @@ Objetivo: nenhum usuário perde dados ao atualizar. Vale para qualquer mudança 
 | Preferências | `localStorage` → arquivo de configurações | baixo | na primeira abertura, lê o `localStorage` e grava o arquivo; o `localStorage` não é apagado |
 | Cópia de segurança | `Documentos/COGITO-copia-antes-da-1.0-<data>/` | espaço em disco | cópia completa na primeira abertura da 1.0, com conferência de tamanho e quantidade de arquivos e aviso se faltar espaço; o usuário pode apagá-la depois |
 | Tela inicial | substituída pela shell nova | nenhum para dados | só interface |
+| Bestiário (ADR-015) | sai do app | nenhum para dados | `Bestiario/` fica no disco, intocada; campos de combate do `plano.json` continuam guardados; a aba "bestiário" lembrada pelo app abre o Planejador; as preferências do Bestiário saem do `localStorage` |
+| RPG como extensão (ADR-016, proposta) | Planejador liga/desliga | nenhum para dados | ligado automaticamente para quem já tem campanhas; desligar não apaga nada |
 
 Volta atrás: como os formatos não mudam, a 0.17 continua abrindo os mesmos livros e campanhas; os arquivos novos
 (`.cogito/`) são ignorados por ela.

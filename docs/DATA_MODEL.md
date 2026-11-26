@@ -18,7 +18,7 @@ Documentos/COGITO/
     backups/                cópias periódicas
   Biblioteca/               PDFs de consulta + biblioteca.json (títulos)
   Fontes/                   fontes do usuário
-  Bestiario/fundos/         imagens de fundo do Bestiário
+  Bestiario/fundos/         imagens de fundo do Bestiário (sem uso desde a 1.0; fica intocada — ADR-015)
   Lixeira/                  itens apagados (movidos, com data no nome)
 <userData do Electron>/
   recuperacao/<livro-id>.json   cópia de emergência quando a gravação normal falha

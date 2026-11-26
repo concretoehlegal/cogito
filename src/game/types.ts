@@ -9,19 +9,19 @@ export interface Card {
   id: string; type: CardType; name: string; icon: string; image: string | null; color: string; rarity: Rarity;
   cost: string; roll: string; tags: string; description: string; qty: number; consumable: boolean; equipped: boolean;
   mode: '' | 'ativo' | 'passivo'; cooldown: string; stats: { v: string; l: string }[];
-  /** Efeito no Bestiário: '' = nenhum. */
+  /** Efeito da carta em combate ('' = nenhum). Guardado no arquivo; sem tela desde a 1.0 (era usado pelo Bestiário). */
   hunt?: '' | 'dano' | 'cura' | 'defesa';
   /** Habilidade de origem (vem da origem do personagem). */
   origin?: boolean;
 }
 
-/** Um campo da ficha já com o valor, como as cartas e o Bestiário mostram. */
+/** Um campo da ficha já com o valor, como as cartas mostram. */
 export interface ActorStat { id: string; name: string; short: string; icon: string; kind: StatKind; role: StatRole; card: boolean; value: string }
 export interface ActorList { id: string; name: string; icon: string; card: boolean; items: ListValue[] }
 /** Recurso gasto pelas cartas (ex.: "2 Alma", "1 PE"). */
 export interface ActorResource { id: string; name: string; short: string; max: number }
 
-/** Ficha de jogo usada pelas cartas de personagem e pelo Bestiário, já lida pelo sistema de regras da campanha. */
+/** Ficha de jogo usada pelas cartas de personagem, já lida pelo sistema de regras da campanha. */
 export interface Actor {
   id: string; kind: 'pc' | 'npc' | 'enemy'; name: string; subtitle: string; color: string; image: string | null;
   emblem: string; boss: boolean; ai?: string; actions: CombatAction[]; cards: Card[];

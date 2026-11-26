@@ -3,24 +3,14 @@
  * Estilo "neo-brutalista": blocos de cor chapada, bordas grossas, sombra dura e títulos em fonte monoespaçada.
  */
 import { useEffect, type CSSProperties } from 'react';
-import { ArrowLeft, Crosshair, Pencil, X } from 'lucide-react';
+import { ArrowLeft, Pencil, X } from 'lucide-react';
 import { GameIcon } from '../game/icons';
 import { RARITIES, cardPair, typeOf } from '../game/Cards';
 import type { PlanNode } from '../game/types';
 import { tagline, type RuleSystem } from '../game/system';
-import { useHunt } from '../hunt/state';
-import { useApp } from '../store';
 import { nodeActor } from './model';
-import { flushPlan, planFileUrl } from './state';
+import { planFileUrl } from './state';
 
-
-/** Leva a ficha para o Bestiário (inimigo vira presa; personagem vira caçador). */
-export function startHunt(planId: string, n: PlanNode) {
-  const hs = useHunt.getState();
-  if (n.type === 'inimigo') useHunt.setState({ planId, prey: hs.planId === planId ? { ...hs.prey, [n.id]: (hs.prey[n.id] ?? 0) + 1 } : { [n.id]: 1 }, heroId: hs.planId === planId ? hs.heroId : null });
-  else useHunt.setState({ planId, heroId: n.id, prey: hs.planId === planId ? hs.prey : {} });
-  void flushPlan().then(() => useApp.setState({ screen: 'home', homeTab: 'bestiario' }));
-}
 
 const plain = (md: string) => md.replace(/\[\[([^\]|]+)(\|[^\]]*)?\]\]/g, '$1').replace(/[*_`>#]/g, '').replace(/^\s*[-•]\s+/gm, '· ').trim();
 
@@ -74,8 +64,7 @@ export function Ficha({ n, planId, sys, onClose, onEdit }: { n: PlanNode; planId
                 </div>
                 <p className="fi-story">{story || 'Sem história ainda. Escreva no painel do quadro.'}</p>
                 <div className="fi-actions">
-                  <button className="fi-btn dark" onClick={() => startHunt(planId, n)}><Crosshair size={16} /> {enemy ? 'Enfrentar no Bestiário' : 'Caçar com esta ficha'}</button>
-                  <button className="fi-btn" onClick={onEdit}><Pencil size={15} /> Editar ficha</button>
+                  <button className="fi-btn dark" onClick={onEdit}><Pencil size={15} /> Editar ficha</button>
                 </div>
               </div>
             </div>

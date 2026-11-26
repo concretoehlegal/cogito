@@ -8,7 +8,7 @@ const results = []; const ok = (n, c, x = '') => results.push(`${c ? 'PASS' : 'F
   const { app, win, logs } = await launch('dataq');
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setSize(1600, 960));
   await win.waitForSelector('.home h1');
-  ok('três áreas: Escritor, Planejador, Bestiário', (await win.locator('.mode-tab strong').allTextContents()).join('|') === 'Escritor|Planejador de Campanhas|Bestiário');
+  ok('duas áreas: Escritor e Planejador (Bestiário removido na 1.0)', (await win.locator('.mode-tab strong').allTextContents()).join('|') === 'Escritor|Planejador de Campanhas');
   await win.click('.mode-tab >> text=Planejador');
   await win.click('text=Nova campanha >> nth=0'); await win.waitForSelector('.plan-dialog');
   await win.fill('.plan-dialog-form input >> nth=0', 'Cair da Noite');
@@ -84,18 +84,12 @@ const results = []; const ok = (n, c, x = '') => results.push(`${c ? 'PASS' : 'F
   ok('imagem do computador no quadro', await win.locator('.pn-node.t-imagem img').count() === 1);
   await win.click('.plan-tool[title="Enquadrar tudo"]'); await sleep(300);
   await shot(win, 'q01-quadro');
-  // enfrentar no Bestiário
+  // painel do inimigo: ficha e ações do quadro, sem atalho para o Bestiário
   await win.locator('.pn-node.t-inimigo').click({ position: { x: 30, y: 60 } }); await sleep(150);
   await shot(win, 'q02-ficha-inimigo');
-  await win.click('text=Enfrentar no Bestiário'); await win.waitForSelector('.hunt-home');
-  await sleep(500);
-  ok('Bestiário abre com a criatura escolhida', (await win.locator('.hh-card.prey.on').count()) === 1);
-  await win.click('.hh-card >> text=Vera Lins');
-  await win.click('text=Começar o confronto'); await win.waitForSelector('.hunt');
-  ok('confronto com fichas do quadro', await win.locator('.hunt-enemy').count() === 1 && await win.locator('.hud-item.usable').count() >= 1);
-  await win.click('text=Sair');
+  ok('painel do inimigo sem botão do Bestiário', await win.locator('.pp-actions button:has-text("Abrir ficha")').count() === 1 && await win.locator('text=Bestiário').count() === 0);
   // voltar ao planejador: lista com capa
-  await win.click('.mode-tab >> text=Planejador'); await win.waitForSelector('.pd-row');
+  await win.click('.plan-top button:has-text("Campanhas")'); await win.waitForSelector('.pd-row');
   ok('lista mostra capa, ícone e descrição', await win.locator('.pd-row .pd-thumb img').count() === 1 && await win.locator('.pd-cover img').count() === 1 && (await win.locator('.pd-desc').textContent()).includes('Noir'));
   ok('detalhe conta as fichas por tipo', (await win.locator('.pd-tile').allTextContents()).join('|').includes('1Personagens'));
   await win.click('.pd-detail button:has-text("Abrir quadro")'); await win.waitForSelector('.plan-screen');

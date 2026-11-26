@@ -1,9 +1,17 @@
 # Visão do produto — COGITO (projeto Genesis)
 
 ## O que o COGITO quer ser
-Um ecossistema desktop de criatividade, conhecimento, produtividade e organização da vida pessoal e profissional, em que
-documentos, planilhas, quadros, bases de conhecimento, projetos e finanças **se relacionam**, em vez de serem editores
-isolados. Nasceu como app de RPG (Escritor, Planejador de campanhas, Bestiário); o RPG continua como módulo opcional.
+Uma ferramenta desktop **generalista** de criatividade, conhecimento e organização da vida pessoal e profissional.
+Não é mais um app de RPG. Quatro pilares, que **se relacionam** em vez de serem editores isolados:
+
+1. **Escrita** — editor de documentos e livros (o Escritor de hoje).
+2. **Quadro e Memórias** — quadro negro infinito (no espírito do Miro) e banco de memórias com notas ligadas (no
+   espírito do Obsidian), na mesma base.
+3. **Finanças** — controle de finanças pessoais, local e privado.
+4. **Editor de imagens e criação** — edição de fotos e criação gráfica (no espírito do Affinity).
+
+Nasceu como app de RPG (Escritor, Planejador de campanhas, Bestiário). O Bestiário saiu na 1.0 (ADR-015); o RPG
+(Planejador de campanhas) vira uma **extensão à parte**, fora da identidade do app (ADR-016).
 
 ## Diretrizes oficiais
 | Item | Definição |
@@ -35,8 +43,8 @@ isolados. Nasceu como app de RPG (Escritor, Planejador de campanhas, Bestiário)
 - **Teams** (R$ 39,90/usuário/mês ou R$ 399,90/ano): tudo do PRO + ambientes compartilhados, colaboração em tempo real,
   administração, permissões, comentários e menções. Só depois de validar a infraestrutura colaborativa.
 
-## Módulos (ver `MODULES.md`)
-Writer · Sheets · Studio · Canvas · Vault · Projects · Suas Finanças · RPG (opcional).
+## Pilares e extensões (ver `MODULES.md`)
+Escrita · Quadro e Memórias · Finanças · Editor de imagens e criação. Extensão: RPG.
 
 ## O que não fazer
 Copiar interfaces, marcas ou implementações de outros produtos; prometer compatibilidade (Excel, Word) sem testes que a

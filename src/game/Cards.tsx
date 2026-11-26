@@ -159,13 +159,6 @@ export function CardEditor({ card, onSave, onClose, onDelete, images, fileUrl, t
             <label className="field"><span>Recarga</span><input value={c.cooldown} maxLength={12} placeholder="Ex.: 1 cena, 3 turnos" onChange={(e) => up({ cooldown: e.target.value })} /></label>
             <label className="field"><span>Rolagem ao usar</span><input value={c.roll} maxLength={40} placeholder="Ex.: 2d6+3" onChange={(e) => up({ roll: e.target.value })} /></label>
           </div>
-          <div className="field">
-            <span>No Bestiário</span>
-            <div className="seg mini-seg hunt-seg">
-              {([['', 'Nenhum'], ['dano', 'Dano'], ['cura', 'Cura'], ['defesa', 'Defesa']] as const).map(([k, l]) => <button key={k} type="button" className={(c.hunt ?? '') === k ? 'on' : ''} onClick={() => up({ hunt: k })}>{l}</button>)}
-            </div>
-            <small className="muted">{c.hunt === 'dano' ? 'A rolagem é o dano; o acerto usa o primeiro ataque da ficha.' : c.hunt === 'cura' ? 'A rolagem é a vida recuperada.' : c.hunt === 'defesa' ? 'A rolagem soma à Defesa até o próximo turno.' : 'A carta não vira ação no Bestiário.'} Cartas passivas não viram ação; custo como “2 Alma” gasta da barra.</small>
-          </div>
           {c.type === 'habilidade' && <label className="check"><input type="checkbox" checked={!!c.origin} onChange={(e) => up({ origin: e.target.checked })} /> Vai em “{originName}” (vem da origem do personagem)</label>}
           <label className="field"><span>Bônus em linhas (separe com ·)</span><input value={c.tags} maxLength={60} placeholder="Ex.: +2 em Furtividade · Silenciosa · 9 m" onChange={(e) => up({ tags: e.target.value })} /></label>
           <label className="field"><span>Descrição</span><textarea value={c.description} maxLength={800} rows={3} onChange={(e) => up({ description: e.target.value })} /></label>

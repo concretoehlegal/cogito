@@ -11,7 +11,7 @@ electron/
   planner.cjs   campanhas do Planejador (plan:*), arquivos das campanhas
   preload.cjs   ponte única para a interface: window.cogito (só ipcRenderer.invoke)
 src/
-  main.tsx, App.tsx   entrada; troca de tela por um único estado `screen` (home | editor | plano | bestiario)
+  main.tsx, App.tsx   entrada; troca de tela por um único estado `screen` (home | editor | plano)
   store.ts            estado global (zustand) do Escritor, preferências (localStorage), salvamento
   model.ts            formato do livro (capítulos → seções → páginas com documento TipTap)
   api.ts              tipos da ponte window.cogito
@@ -19,7 +19,6 @@ src/
   editor/             extensões TipTap (imagens, formas, tabelas com fórmulas, blocos de RPG)
   export/             pdf.ts (impressão do Chromium), docx.ts (biblioteca docx)
   planner/            Planejador: quadro infinito, painéis, ficha completa, editor do sistema de regras
-  hunt/               Bestiário: motor de turnos, IA, intérprete de ações, telas
   game/               cartas, ícones próprios, sistema de regras (system.ts)
   lib/ dice/ styles/  utilidades, dados, fórmulas, guias, sons, temas
 tests/                43 testes de unidade (node:test)
@@ -52,13 +51,14 @@ Quatro camadas conceituais:
 electron/
   core/      storage.cjs (gravação atômica, .bak, backups, lixeira), workspace.cjs (registro de objetos e índice),
              settings.cjs, protocol.cjs, ipc.cjs
-  modules/   writer.cjs (livros), rpg.cjs (campanhas)
+  modules/   writer.cjs (livros) · extensions/rpg.cjs (campanhas)
   main.cjs   só inicialização, janela e segurança da sessão
 src/
   core/      shell (barra superior com abas, barra lateral, painel direito, barra de status), modules.ts, tabs.ts,
              events.ts, settings.ts, files.ts, entitlements.ts, account.ts
   design/    tokens.css e componentes base (ver DESIGN_SYSTEM.md)
-  modules/   writer/, rpg/ (existentes) · canvas/, vault/, projects/, finance/, sheets/, studio/ (versões seguintes)
+  modules/   writer/ (existente) · board/, finance/, studio/ (versões seguintes)
+  extensions/ rpg/ (existente)
 ```
 
 ### Contrato de módulo
@@ -67,7 +67,7 @@ interface ModuleDef {
   id: string; name: string; icon: string;
   kinds: string[];                     // tipos de objeto que o módulo cria e abre
   load: () => Promise<ModuleView>;     // tela carregada sob demanda (React.lazy)
-  defaultEnabled: boolean;             // o RPG pode vir desligado e ser ligado nas Configurações
+  defaultEnabled: boolean;             // extensões (RPG) podem vir desligadas e ser ligadas nas Configurações
   requires?: string[];                 // permissões de plano (entitlements), quando houver
 }
 ```

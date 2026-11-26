@@ -1,7 +1,8 @@
 # COGITO — instruções permanentes de desenvolvimento
 
 COGITO é um aplicativo desktop **local first**, em português brasileiro, que está deixando de ser um app de RPG para se
-tornar um ecossistema de criatividade, conhecimento e organização (projeto **Genesis**). Leia antes de mudar qualquer coisa:
+tornar uma ferramenta generalista (projeto **Genesis**) com quatro pilares: **Escrita**, **Quadro e Memórias**,
+**Finanças** e **Editor de imagens**. O RPG vira extensão à parte; o Bestiário foi removido. Leia antes de mudar qualquer coisa:
 
 | Documento | Para quê |
 | --- | --- |
@@ -13,7 +14,7 @@ tornar um ecossistema de criatividade, conhecimento e organização (projeto **G
 | `docs/DATA_MODEL.md` | Formatos dos arquivos no disco e o registro de objetos |
 | `docs/MIGRATION.md` | Como mudar formatos e pastas sem perder dados |
 | `docs/DESIGN_SYSTEM.md` | Tokens, componentes e regras visuais |
-| `docs/MODULES.md` | Módulos (Writer, Canvas, Vault, Projects, Suas Finanças, Sheets, Studio, RPG) |
+| `docs/MODULES.md` | Pilares (Escrita, Quadro e Memórias, Finanças, Editor de imagens) e extensões (RPG) |
 | `docs/SECURITY.md` | Modelo de segurança e privacidade |
 | `docs/MONETIZATION.md` | Planos, permissões (entitlements) e regras de cancelamento |
 | `docs/MANUAL.md` | Manual do usuário (o que o app faz hoje) |
@@ -61,7 +62,7 @@ Antes de entregar qualquer mudança: `npm run typecheck && npm run lint && npm t
 - `electron/preload.cjs` — a única ponte para a interface (`window.cogito`).
 - `src/store.ts` — estado do Escritor e preferências · `src/model.ts` — formato do livro.
 - `src/components`, `src/editor`, `src/export` — Escritor (futuro módulo Writer).
-- `src/planner`, `src/hunt`, `src/game` — Planejador, Bestiário e sistema de regras (futuro módulo RPG).
+- `src/planner`, `src/game` — Planejador de campanhas e sistema de regras (futura extensão RPG; o quadro vira a base de Quadro e Memórias).
 - `tests/*.test.ts` — unidade · `tests/e2e/*.cjs` — interface (Playwright + Electron).
 
 ## Convenções

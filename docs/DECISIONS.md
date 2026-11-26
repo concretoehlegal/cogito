@@ -81,7 +81,7 @@ Cada decisão tem contexto, decisão, alternativas e estado. **Aprovada** = o do
 
 ## ADR-011 — Shell nova no lugar da tela inicial atual
 - **Estado:** aprovada (2026-11-25).
-- **Decisão:** a tela inicial com abas Escritor / Planejador / Bestiário dá lugar à shell do Genesis (barra superior com
+- **Decisão:** a tela inicial com abas Escritor / Planejador (o Bestiário saiu — ADR-015) dá lugar à shell do Genesis (barra superior com
   abas, barra lateral, painel direito, barra de status). O visual verde-limão/noir sai da interface principal e fica só
   no módulo RPG.
 
@@ -97,3 +97,41 @@ Cada decisão tem contexto, decisão, alternativas e estado. **Aprovada** = o do
 - **Estado:** pendente de decisão (prazo: antes da 1.4).
 - **Decisão até lá:** nenhuma tela de login simulada. Na 1.0 entram só as interfaces locais `AccountService` e
   `Entitlements` (plano Free definido em configuração, sem rede).
+
+## ADR-014 — COGITO generalista, com quatro pilares
+- **Estado:** aprovada (2026-11-26), exceto o item marcado como proposta.
+- **Contexto:** o plano Genesis listava oito módulos (Writer, Sheets, Studio, Canvas, Vault, Projects, Suas Finanças,
+  RPG) e ainda dava ao RPG um lugar central. O dono do produto definiu o foco: uma ferramenta generalista.
+- **Decisão:** quatro pilares — **Escrita** (`writer`), **Quadro e Memórias** (`board`: quadro negro no espírito do Miro
+  e banco de memórias no espírito do Obsidian, na mesma base), **Finanças** (`finance`) e **Editor de imagens e criação**
+  (`studio`, no espírito do Affinity). A ordem das versões continua: 1.1 Escrita + Quadro e Memórias, 1.2 Finanças,
+  1.3 Editor de imagens.
+- **Proposta (aguarda confirmação):** Planilhas (Sheets) e Projetos/tarefas saem das versões planejadas e ficam como
+  ideias para depois dos quatro pilares.
+
+## ADR-015 — Bestiário removido
+- **Estado:** aprovada (2026-11-26).
+- **Decisão:** o Bestiário (combate em turnos, IA das criaturas, intérprete de ações, fundos de mesa) sai do app na 1.0.
+  Código removido: `src/hunt`, a aba da tela inicial, o pedido `hunt:pickBackground` e a rota `__huntbg` do processo
+  principal, os botões "Enfrentar no Bestiário" e "Caçar com esta ficha", a parte de crítico e armadura do editor do
+  sistema e o campo "No Bestiário" das cartas.
+- **Dados preservados:** a pasta `Documentos/COGITO/Bestiario` fica no disco, intocada. Os campos que só o Bestiário
+  usava (`system.combat.crit`, `system.combat.armor`, `card.hunt`, `sheet.ai`) continuam no `plano.json` e são
+  mantidos pela normalização; nenhum arquivo muda de formato. As preferências do Bestiário (fundo, círculo de runas,
+  escurecer) saem das preferências do app (eram só do `localStorage`).
+- **Volta atrás:** o código está no histórico do git (até a 0.17.0).
+
+## ADR-016 — RPG como extensão à parte
+- **Estado:** proposta (2026-11-26), sugerida pelo dono do produto ("uma extensão à parte, que fica em uma loja de
+  extensões"); detalhes aguardam confirmação.
+- **Decisão proposta:**
+  1. Na 1.0-d, o registro de módulos ganha um contrato de **extensão** (manifesto com id, nome, versão, permissões e o
+     que a extensão oferece), carregada sob demanda e sem acesso direto a outros módulos — só pelo Core.
+  2. O RPG (Planejador de campanhas, sistema de regras, fichas e cartas) é a primeira extensão. Enquanto não houver
+     loja, vem junto com o instalador, **desligada** para quem não tem campanhas e **ligada** para quem já tem (ninguém
+     perde acesso ao que criou). Liga e desliga nas Configurações.
+  3. O quadro genérico vai para o pilar Quadro e Memórias; a extensão RPG passa a usá-lo em vez de ter o seu.
+  4. A **loja de extensões** precisa de rede e entra com a camada Connect (1.4): pacotes assinados e verificados,
+     instalação também a partir de um arquivo local (sem rede) e remoção que não apaga os dados do usuário.
+- **Alternativas:** manter o RPG como módulo embutido (contraria o foco generalista); separar num app próprio (dois
+  produtos para manter).

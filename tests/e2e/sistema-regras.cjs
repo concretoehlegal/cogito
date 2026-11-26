@@ -1,4 +1,4 @@
-// 0.17: sistema de regras por campanha (D&D → editar → Call of Cthulhu → Bestiário em porcentagem).
+// 0.17: sistema de regras por campanha (D&D → editar → Call of Cthulhu → ataque em porcentagem na ficha).
 const { launch, S } = require('./lib.cjs');
 const fs = require('fs'); const path = require('path');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -68,9 +68,9 @@ const snap = (win, name, opt = {}) => win.screenshot({ path: path.join(OUT, name
   await snap(win, 'sy03-editor-nomes');
   await win.click('.se-tabs button:has-text("Listas")'); await sleep(150);
   await snap(win, 'sy04-editor-listas');
-  await win.click('.se-tabs button:has-text("Combate")'); await sleep(150);
-  ok('aba de combate mostra o que o Bestiário usa', (await win.locator('.se-roles').textContent()).includes('Pontos de Vida'));
-  await snap(win, 'sy05-editor-combate');
+  await win.click('.se-tabs button:has-text("Rolagens")'); await sleep(150);
+  ok('aba de rolagens só com o que a ficha usa', await win.locator('.se-pane .field:has-text("Como o ataque acerta")').count() === 1 && await win.locator('.se-pane .field:has-text("Crítico")').count() === 0 && await win.locator('text=Bestiário').count() === 0);
+  await snap(win, 'sy05-editor-rolagens');
   await win.click('.modal button:has-text("Salvar sistema")'); await sleep(600);
   const numLabels2 = (await win.locator('.pp-nums .field > span').allTextContents()).map((t) => t.trim());
   ok('ficha passa a ter o campo novo e o nome novo', numLabels2.includes('Armadura Natural') && numLabels2.includes('Corrupção'), numLabels2.join('|'));
@@ -102,26 +102,11 @@ const snap = (win, name, opt = {}) => win.screenshot({ path: path.join(OUT, name
   await win.locator('.combat-row input').nth(2).fill('1d10+2');
   await sleep(1300);
 
-  // ── Bestiário ──
-  await win.click('.plan-top button:has-text("Campanhas")'); await sleep(400);
-  await win.click('.mode-tab >> text=Bestiário'); await win.waitForSelector('.hunt-home'); await sleep(400);
-  await win.selectOption('.hh-camp select', { label: 'A Mina Perdida' }).catch(() => {}); await sleep(600);
-  const stat = await win.locator('.hh-card .hh-stats').first().textContent();
-  ok('tela do Bestiário usa as siglas do sistema', /PV/.test(stat), stat);
-  await win.click('.hh-card >> nth=0'); await sleep(100);
-  await win.locator('.hh-card.prey button[aria-label="Mais"]').first().click();
-  await win.click('text=Começar o confronto'); await win.waitForSelector('.hunt'); await sleep(2500);
-  const secs = (await win.locator('.hud-sec h3').allTextContents()).join('|');
-  ok('HUD com as listas do Call of Cthulhu', secs.includes('Características') && secs.includes('Perícias') && secs.includes('Traços de Espécie') === false, secs);
-  const bars = (await win.locator('.hud-hero .hb-bar b').allTextContents()).join('|');
-  ok('barras do caçador com PV e PM', /PV/.test(bars) && /PM/.test(bars), bars);
-  // espera a vez do caçador e ataca
-  for (let i = 0; i < 20 && !(await win.locator('.hunt-turn.heroi').count()); i++) await sleep(500);
-  await win.keyboard.press('1'); await sleep(1200);
-  const log = (await win.locator('.hl small').allTextContents()).join(' || ');
-  ok('ataque rolado em porcentagem (1d100 contra 70%)', /1d100 = \d+ contra 70%/.test(log), log.slice(0, 160));
-  await win.mouse.move(1000, 6); await sleep(300);
-  await snap(win, 'sy07-bestiario-coc');
+  d = disk(); pc = d.nodes.find((n) => n.type === 'personagem');
+  ok('ataque em porcentagem guardado na ficha', pc.sheet.actions.some((x) => x.hit === '70' && x.dmg === '1d10+2'), JSON.stringify(pc.sheet.actions));
+  const cardText = await win.locator('.pn-node.t-personagem').first().textContent();
+  ok('carta do quadro usa os nomes do sistema', cardText.includes('Investigador') && cardText.includes('Características'), cardText);
+  await snap(win, 'sy07-ficha-coc');
   res.forEach((r) => console.log(r)); console.log('LOGS', JSON.stringify(logs));
   await app.close();
 })().catch((e) => { res.forEach((r) => console.log(r)); console.error(e); process.exit(1); });
