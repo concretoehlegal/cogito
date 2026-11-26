@@ -75,12 +75,12 @@
 .page-content .tableWrapper { overflow-x: visible; margin: .6em 0 .9em; }
 .page-content .tableWrapper table { margin: 0; }
 .page-content table { table-layout: fixed; }
-.page-content .column-resize-handle { position: absolute; right: -2px; top: 0; bottom: -2px; width: 4px; background: #b8ff2c; pointer-events: none; z-index: 3; }
+.page-content .column-resize-handle { position: absolute; right: -2px; top: 0; bottom: -2px; width: 4px; background: var(--accent); pointer-events: none; z-index: 3; }
 .page-content.resize-cursor, .ProseMirror.resize-cursor { cursor: col-resize; }
 .page-content td.formula-cell:not(.editing), .page-content th.formula-cell:not(.editing) { position: relative; }
 .page-content td.formula-cell:not(.editing) > p, .page-content th.formula-cell:not(.editing) > p { position: absolute; inset: 0; opacity: 0; overflow: hidden; }
 .page-content td.formula-cell:not(.editing)::after, .page-content th.formula-cell:not(.editing)::after { content: attr(data-result); display: block; font-weight: 700; }
-.page-content td.formula-cell.editing { background: rgba(184, 255, 44, .25) !important; font-family: 'Inter Variable', Consolas, monospace; }
+.page-content td.formula-cell.editing { background: var(--accent-soft) !important; font-family: 'Inter Variable', Consolas, monospace; }
 
 /* ── blocos de RPG ── */
 .page-content .rpg-block { margin: .8em 0; padding: .75em .95em; break-inside: avoid; border-radius: 3px; background: var(--soft); font-size: 9.5pt; }

@@ -108,7 +108,7 @@
 
 
 /*
- * COGITO — Planejador e Bestiário: sempre escuros, com a mesma paleta cinza do sistema e destaque verde-limão.
+ * COGITO — Planejador: sempre escuro, com a mesma paleta cinza do sistema e destaque verde-limão.
  * (A classe "noir" no <html> só força o tema escuro nessas áreas; o nome ficou por compatibilidade.)
  */
 :root.noir, :root.noir[data-theme='light'] {

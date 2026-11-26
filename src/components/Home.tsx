@@ -1,14 +1,14 @@
 /* Tela inicial: lista de livros guardados neste computador. */
 import { useEffect, useState } from 'react';
-import { BookOpen, Crosshair, FolderOpen, Home as HomeIcon, Map as MapIcon, MoreHorizontal, Pencil, Plus, Settings as SettingsIcon, Trash2 } from 'lucide-react';
+import { BookOpen, FolderOpen, Home as HomeIcon, Map as MapIcon, MoreHorizontal, Pencil, Plus, Settings as SettingsIcon, Trash2 } from 'lucide-react';
 import { api } from '../api';
 import { FORMATS, type PageFormat } from '../model';
 import { createBook, deleteBook, openBook, refreshBooks, renameBookOnDisk, setHomeTab, useApp, type HomeTab } from '../store';
 import { PlanList } from '../planner/PlanList';
-import { HuntHome } from '../hunt/HuntHome';
 import { BrandLogo, TitleStrip, XmasLights } from './Logo';
 import { Settings } from './Settings';
 import { IconLibrary } from './icons';
+import { xmasOn } from '../lib/season';
 import { Menu, Modal, confirmDialog, fmtDate, promptDialog } from './ui';
 
 function NewBookDialog({ onClose }: { onClose: () => void }) {
@@ -40,7 +40,6 @@ function NewBookDialog({ onClose }: { onClose: () => void }) {
 const MODES: { id: HomeTab; label: string; desc: string; icon: React.ReactNode }[] = [
   { id: 'livros', label: 'Escritor', desc: 'Escreva e diagrame livros', icon: <IconLibrary size={17} /> },
   { id: 'planejador', label: 'Planejador de Campanhas', desc: 'Quadros das suas campanhas', icon: <MapIcon size={17} /> },
-  { id: 'bestiario', label: 'Bestiário', desc: 'Enfrente criaturas em turnos', icon: <Crosshair size={17} /> },
 ];
 
 export function Home() {
@@ -50,9 +49,9 @@ export function Home() {
   const [creating, setCreating] = useState(false);
   const [settings, setSettings] = useState(false);
   const [dataDir, setDataDir] = useState('');
-  const xmas = useApp((st) => st.prefs.xmas);
+  const xmas = useApp((st) => xmasOn(st.prefs.xmas));
   useEffect(() => { void refreshBooks(); api.info().then((i) => setDataDir(i.dataDir), () => {}); }, []);
-  // Planejador e Bestiário usam o tema noir de Cair da Noite; o Escritor mantém o visual de editor.
+  // O Planejador usa o tema noir de Cair da Noite; o Escritor mantém o visual de editor.
   useEffect(() => {
     const on = tab !== 'livros';
     document.documentElement.classList.toggle('noir', on);
@@ -93,7 +92,7 @@ export function Home() {
         <div className="home-main">
         <div className="home-inner">
           <div className="home-crumb"><HomeIcon size={15} /> {MODES.find((m) => m.id === tab)?.label}</div>
-          {tab === 'planejador' ? <PlanList /> : tab === 'bestiario' ? <HuntHome /> : (<>
+          {tab === 'planejador' ? <PlanList /> : (<>
           <div className="home-head">
             <div>
               <h1>Meus livros</h1>

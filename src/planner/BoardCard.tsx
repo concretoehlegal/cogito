@@ -1,7 +1,6 @@
 /*
  * Cartas de personagem, NPC e criatura no quadro do Planejador: tons sóbrios e cinzentos, um filete de cor por tipo e
  * ícones em cada número, atributo e capacidade. O chefe vira uma carta larga (o espaço de duas cartas) com arte maior.
- * (O Bestiário continua usando as cartas coloridas de src/game/CharCard.tsx.)
  */
 import { memo, type CSSProperties } from 'react';
 import { Swords } from 'lucide-react';

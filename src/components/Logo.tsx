@@ -1,11 +1,12 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
 import { GROUPS, level, programAt } from '../lib/xmasProgram';
+import { xmasOn } from '../lib/season';
 import { useApp } from '../store';
 import { IconEye } from './icons';
 
 /** Faixa superior da janela (área de arrastar), com o nome do aplicativo e, no Natal, as luzinhas. */
 export function TitleStrip({ book }: { book?: string }) {
-  const xmas = useApp((s) => s.prefs.xmas);
+  const xmas = useApp((s) => xmasOn(s.prefs.xmas));
   return (
     <header className="titlestrip">
       <span className="strip-name">COGITO</span>
@@ -29,7 +30,7 @@ const HAT = `<path fill="#d42f2f" d="M5 30C6 18 14 7 27 4.5c8-1.5 14 2 16.5 8.5-
 
 /** Logo do COGITO; na edição de Natal, com gorro de Papai Noel. */
 export function BrandLogo({ size = 30 }: { size?: number }) {
-  const xmas = useApp((s) => s.prefs.xmas);
+  const xmas = useApp((s) => xmasOn(s.prefs.xmas));
   return (
     <span className={`brand-logo${xmas ? ' xmas' : ''}`} style={{ width: size, height: size } as CSSProperties}>
       <IconEye size={size} />

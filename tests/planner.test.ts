@@ -5,7 +5,6 @@ import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { backlinks, edgePoint, findByTitle, fitView, linksIn, matches, newNode, nodeActor, segments } from '../src/planner/model.ts';
-import { newHunt } from '../src/hunt/engine.ts';
 
 const { createPlanner } = createRequire(import.meta.url)('../electron/planner.cjs');
 
@@ -28,7 +27,7 @@ test('geometria: ligação sai pela borda e o enquadramento cabe na tela', () =>
   assert.ok(Math.abs(v.zoom - 1.08) < 1e-9 && Math.round(v.x) === 60 && Math.round(v.y) === 80);
 });
 
-test('fichas do quadro viram cartas e lutam no Bestiário', () => {
+test('fichas do quadro viram cartas com vida, recursos e chefe', () => {
   const hero = newNode('personagem', 0, 0, { title: 'Vera' });
   hero.sheet!.vals!.vida = '30'; hero.sheet!.vals!.alma = '4';
   hero.sheet!.cards.push({ id: 'c1', type: 'feitico', name: 'Sussurro', icon: 'vela', image: null, color: '#8d5aa3', rarity: 'epico', cost: '2 Alma', roll: '3d8', tags: '', description: '', qty: 1, consumable: false, equipped: false, mode: 'ativo', cooldown: '', stats: [], hunt: 'dano' });
@@ -36,11 +35,11 @@ test('fichas do quadro viram cartas e lutam no Bestiário', () => {
   boss.sheet!.boss = true; boss.sheet!.actions = [1, 2, 3, 4, 5].map((n) => ({ name: `H${n}`, hit: '1d20', dmg: '1d6' }));
   const a = nodeActor(boss);
   assert.deepEqual([a.kind, a.boss, a.hp, a.kindLabel], ['enemy', true, 12, 'Chefe']);
-  const s = newHunt({}, nodeActor(hero), [a]);
-  assert.equal(s.hero.max, 30);
-  assert.equal(s.hero.bars[0].name, 'Alma');
-  assert.equal(s.hero.actionsList.find((x) => x.name === 'Sussurro')?.costBar, 'Alma');
-  assert.equal(s.enemies[0].actions.length, 4, 'chefe luta com 4 habilidades');
+  const h = nodeActor(hero);
+  assert.equal(h.hp, 30);
+  assert.equal(h.resources[0].name, 'Alma');
+  assert.equal(h.cards[0].name, 'Sussurro');
+  assert.equal(a.actions.length, 5, 'as habilidades do chefe ficam todas na ficha');
 });
 
 test('armazenamento local: criar, listar, salvar, capa, imagem e excluir', async () => {

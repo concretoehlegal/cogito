@@ -1,4 +1,4 @@
-/* Planejador: tipos de ficha do quadro, valores padrão, links [[…]] e conversão para o Bestiário. */
+/* Planejador: tipos de ficha do quadro, valores padrão, links [[…]] e conversão para as cartas. */
 import type { Actor, NodeType, PlanNode, Sheet } from '../game/types.ts';
 import { DEFAULT_SYSTEM, blankSheet, kindLabel, listOf, listsFor, numOf, roleStat, statsFor, valOf, type RuleSystem } from '../game/system.ts';
 
@@ -126,9 +126,9 @@ export function fitView(nodes: Box[], vw: number, vh: number) {
   return { x: vw / 2 - ((minX + maxX) / 2) * zoom, y: vh / 2 - ((minY + maxY) / 2) * zoom, zoom };
 }
 
-/* ───────────── Bestiário ───────────── */
+/* ───────────── Cartas ───────────── */
 
-/** Ficha do quadro no formato usado pelas cartas de personagem e pelo Bestiário, lida pelo sistema de regras. */
+/** Ficha do quadro no formato usado pelas cartas de personagem, lida pelo sistema de regras. */
 export function nodeActor(n: PlanNode, sys: RuleSystem = DEFAULT_SYSTEM()): Actor {
   const s = n.sheet ?? defaultSheet(n.type, sys);
   const kind = n.type === 'inimigo' ? 'enemy' : n.type === 'npc' ? 'npc' : 'pc';

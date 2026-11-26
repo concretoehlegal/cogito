@@ -23,7 +23,7 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'cogito', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } },
 ]);
 
-let DATA, BOOKS, LIB, TRASH, RECOVERY, FONTS, HUNT_BG;
+let DATA, BOOKS, LIB, TRASH, RECOVERY, FONTS;
 let planner = null;
 let win = null;
 let allowClose = false;
@@ -296,7 +296,6 @@ function registerProtocol() {
       if (parts[0] === '__ref' && parts.length === 3) return serveFile(path.join(bookDir(parts[1]), 'anexos', safeName(parts[2])), request);
       if (parts[0] === '__lib' && parts.length === 2) return serveFile(path.join(LIB, safeName(parts[1])), request);
       if (parts[0] === '__font' && parts.length === 2) return serveFile(path.join(FONTS, safeName(parts[1])), request);
-      if (parts[0] === '__huntbg' && parts.length === 2) return serveFile(path.join(HUNT_BG, safeName(parts[1])), request);
       if (parts[0] === '__plan' && parts.length === 3) { const f = planner && planner.localFile(parts[1], parts[2]); return f ? serveFile(f, request) : new Response('Não encontrado', { status: 404 }); }
       const rel = parts.length ? path.join(...parts) : 'index.html';
       const file = path.resolve(DIST, rel);
@@ -425,25 +424,6 @@ function registerIpc() {
     return names.filter((n) => /\.(ttf|otf|woff2?)$/i.test(n)).map((n) => ({ name: n, url: `${APP_ORIGIN}/__font/${encodeURIComponent(n)}` }));
   });
   handle('fonts:openFolder', async () => { await fsp.mkdir(FONTS, { recursive: true }); await shell.openPath(FONTS); });
-  // Fundo do Bestiário escolhido pela pessoa: copiado para Documentos\COGITO\Bestiario\fundos (só o mais recente fica).
-  handle('hunt:pickBackground', async () => {
-    const exts = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'bmp'];
-    const r = await dialog.showOpenDialog(win, { title: 'Imagem de fundo do Bestiário', properties: ['openFile'], filters: [{ name: 'Imagens', extensions: exts }] });
-    if (r.canceled || !r.filePaths[0]) return null;
-    const src = r.filePaths[0];
-    const ext = path.extname(src).slice(1).toLowerCase();
-    if (!exts.includes(ext)) throw new Error('Escolha um arquivo de imagem (PNG, JPG, WEBP, GIF ou BMP).');
-    const st = await fsp.stat(src);
-    if (st.size > 25 * 1024 * 1024) throw new Error('Imagem grande demais (máximo de 25 MB).');
-    await fsp.mkdir(HUNT_BG, { recursive: true });
-    const name = `fundo-${Date.now()}.${ext === 'jpeg' ? 'jpg' : ext}`;
-    await fsp.copyFile(src, path.join(HUNT_BG, name));
-    for (const old of await fsp.readdir(HUNT_BG).catch(() => [])) {
-      if (old !== name && /^fundo-\d+\.[a-z]+$/.test(old)) await fsp.rm(path.join(HUNT_BG, old), { force: true }).catch(() => {});
-    }
-    return name;
-  });
-
   handle('app:setSpellcheck', (enabled) => { session.defaultSession.setSpellCheckerEnabled(!!enabled); });
   handle('app:copyText', (text) => { clipboard.writeText(String(text ?? '').slice(0, 4000)); });
   handle('app:setUiScale', (scale) => {
@@ -626,7 +606,6 @@ if (!app.requestSingleInstanceLock()) {
     BOOKS = path.join(DATA, 'Livros'); LIB = path.join(DATA, 'Biblioteca'); TRASH = path.join(DATA, 'Lixeira');
     RECOVERY = path.join(app.getPath('userData'), 'recuperacao');
     FONTS = path.join(DATA, 'Fontes');
-    HUNT_BG = path.join(DATA, 'Bestiario', 'fundos');
     await fsp.mkdir(FONTS, { recursive: true }).catch(() => {});
     await fsp.mkdir(BOOKS, { recursive: true }).catch(() => {});
     await fsp.mkdir(LIB, { recursive: true }).catch(() => {});

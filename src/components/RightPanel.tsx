@@ -1,5 +1,5 @@
 /* Painel direito: inserir conteúdo, rolar dados, biblioteca de PDFs e anexos de consulta. */
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   Dices, ExternalLink, FilePlus2, FileText, FileType2, Heading1, Heading2, Heading3, ImageIcon, MessageSquareQuote, MoreHorizontal,
   Pencil, Plus, ScrollText, Search, Shield, Skull, Sparkles, Table2, Trash2, X,

@@ -1,6 +1,6 @@
 /* Painel à direita do quadro: edita a ficha, a ligação ou a campanha selecionada. */
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { ArrowLeftRight, Copy, Crosshair, IdCard, ImagePlus, Plus, Settings2, Trash2, X } from 'lucide-react';
+import { ArrowLeftRight, Copy, IdCard, ImagePlus, Plus, Settings2, Trash2, X } from 'lucide-react';
 import { api, errorText } from '../api';
 import { toast } from '../store';
 import { CardEditor, CardTile, blankCard } from '../game/Cards';
@@ -10,7 +10,6 @@ import { DEFAULT_SYSTEM, ROLES, kindLabel, listOf, listsFor, statsFor, valOf, ty
 import { statIcon } from './statIcons';
 import { openSystemEditor } from './SystemEditor';
 import { PRESETS, capPath, dashArray, rememberLinkStyle, styleOf, type LinkStyle } from './links';
-import { startHunt } from './Ficha';
 import { canvas } from './Canvas';
 import { ORDER, fitCard, fitCardRoom, TYPES, backlinks, defaultSheet, findByTitle, isChar, isText, linksIn, newNode, norm, uid } from './model';
 import { PLAN_COLORS } from './PlanList';
@@ -26,7 +25,6 @@ function Text({ value, onChange, k, placeholder, multiline, rows, inputRef, onKe
     ? <textarea ref={inputRef} value={value} rows={rows ?? 8} placeholder={placeholder} onChange={(e) => onChange(e.target.value, e.target.selectionStart ?? e.target.value.length)} onKeyDown={onKeyDown} onSelect={onSelect} className="pn-scroll" />
     : <input ref={inputRef} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value, e.target.selectionStart ?? e.target.value.length)} onKeyDown={onKeyDown} />;
 }
-const num = (v: string, d = 0) => { const n = Number(String(v).replace(',', '.')); return Number.isFinite(n) ? Math.round(n) : d; };
 
 /** Uma lista do sistema (Atributos, Perícias…) na ficha: cada item com ícone, nome e valor próprios. */
 function ListEditor({ l, items, up }: { l: ListDef; items: ListValue[]; up: (fn: (list: ListValue[]) => void, key?: string) => void }) {
@@ -135,7 +133,7 @@ function SheetEditor({ n }: { n: PlanNode }) {
 function TextEditor({ n }: { n: PlanNode }) {
   const up = (fn: (m: PlanNode) => void, key?: string) => edit((d) => { const m = d.nodes.find((x) => x.id === n.id); if (m) fn(m); }, key ? { key: `${n.id}:${key}` } : {});
   const f = n.font ?? {};
-  const setFont = (p: Partial<NonNullable<PlanNode['font']>>, key?: string) => up((m) => { m.font = { ...(m.font ?? {}), ...p }; }, key);
+  const setFont = (p: Partial<NonNullable<PlanNode['font']>>, key?: string) => up((m) => { m.font = { ...m.font, ...p }; }, key);
   const size = f.size ?? (n.type === 'texto' ? 26 : 16);
   const remove = () => { edit((d) => { d.nodes = d.nodes.filter((x) => x.id !== n.id); d.links = d.links.filter((l) => l.from !== n.id && l.to !== n.id); }); select([]); };
   const colors = n.type === 'texto' ? ['#f2f2f2', '#a3a3a3', '#b8ff2c', '#FF2E88', '#00C2CB', '#F4B400', '#d77a6e'] : ['#737373', '#d4d4d4', '#b8ff2c', '#FF2E88', '#00C2CB', '#F4B400', '#7aa7d6'];
@@ -202,7 +200,6 @@ function NodeEditor({ n }: { n: PlanNode }) {
   const pickImage = async () => {
     try { const [img] = await api.planPickImages(plan.id); if (img) up((m) => { m.image = img.file; if (!m.title && m.type === 'imagem') m.title = ''; }); } catch (e) { toast(errorText(e), 'error'); }
   };
-  const hunt = () => startHunt(plan.id, n);
   const remove = () => { edit((d) => { d.nodes = d.nodes.filter((x) => x.id !== n.id); d.links = d.links.filter((l) => l.from !== n.id && l.to !== n.id); }); select([]); };
   const duplicate = () => { const c = { ...JSON.parse(JSON.stringify(n)) as PlanNode, id: uid('n'), x: n.x + 30, y: n.y + 30 }; edit((d) => { d.nodes.push(c); }); select([c.id]); };
   const createCited = (title: string) => { const c = canvas.centerWorld(); const m = newNode('nota', c.x + 40, c.y + 40, { title }); edit((d) => { d.nodes.push(m); }); select([m.id]); };
@@ -284,8 +281,6 @@ function NodeEditor({ n }: { n: PlanNode }) {
 
       <div className="pp-actions">
         {isChar(n.type) && <button className="btn small" onClick={() => window.dispatchEvent(new CustomEvent('plan:open-sheet', { detail: n.id }))}><IdCard size={13} /> Abrir ficha</button>}
-        {n.type === 'inimigo' && <button className="btn small primary" onClick={hunt}><Crosshair size={13} /> Enfrentar no Bestiário</button>}
-        {(n.type === 'personagem' || n.type === 'npc') && <button className="btn small primary" onClick={hunt}><Crosshair size={13} /> Caçar com esta ficha</button>}
         <button className="btn small" onClick={duplicate}><Copy size={13} /> Duplicar</button>
         <button className="btn small danger-ghost" onClick={remove}><Trash2 size={13} /> Excluir</button>
       </div>

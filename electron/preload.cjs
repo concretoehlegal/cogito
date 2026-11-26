@@ -51,7 +51,6 @@ contextBridge.exposeInMainWorld('cogito', {
   planPutFile: call('plan:putFile'),
   planDelete: call('plan:delete'),
   planOpenFolder: call('plan:openFolder'),
-  huntPickBackground: call('hunt:pickBackground'),
 
   chooseExportPath: call('export:choosePath'),
   printPdf: call('export:printPdf'),

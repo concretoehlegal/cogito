@@ -1,5 +1,6 @@
 /* Estado da aplicação, ações sobre o livro e salvamento automático. */
 import { create } from 'zustand';
+import { normalizeSeasonPref, type SeasonPref } from './lib/season';
 import { produce } from 'immer';
 import type { Editor } from '@tiptap/core';
 import { api, errorText } from './api';
@@ -12,27 +13,24 @@ import {
 export type Selection = { kind: 'toc' } | { kind: 'page'; pageId: string };
 export type SaveStatus = { state: 'saved' | 'dirty' | 'saving' | 'error'; at?: number; error?: string };
 export type RightTab = 'inserir' | 'dados' | 'biblioteca' | 'anexos';
-/** As três áreas do app. Valores antigos (campanhas, caçada) caem no lugar novo. */
-export type HomeTab = 'livros' | 'planejador' | 'bestiario';
-const homeTabOf = (v: string): HomeTab => (v === 'planejador' || v === 'campanhas' ? 'planejador' : v === 'bestiario' || v === 'cacada' ? 'bestiario' : 'livros');
+/** As áreas da tela inicial. Valores antigos (campanhas; bestiário e caçada, removidos na 1.0) caem no Planejador. */
+export type HomeTab = 'livros' | 'planejador';
+const homeTabOf = (v: string): HomeTab => (['planejador', 'campanhas', 'bestiario', 'cacada'].includes(v) ? 'planejador' : 'livros');
 
 export interface Viewer { key: string; kind: 'pdf' | 'image' | 'other'; title: string; url: string; source: 'biblioteca' | 'anexo'; name?: string }
-export type HuntBackdrop = 'mesa' | 'ritual' | 'preto' | 'cinza' | 'branco' | 'imagem';
 export interface Prefs {
   sound: boolean; volume: number; diceAnim: boolean; spell: boolean; uiScale: number; leftWidth: number; rightWidth: number; diceColor: string;
-  /** Fundo do Bestiário, a imagem própria (nome do arquivo), se o círculo de runas aparece e quanto escurecer a imagem. */
-  huntBg: HuntBackdrop; huntBgImage: string | null; huntCircle: boolean; huntBgDim: number;
   /** Larguras das barras do Planejador. */
   planLeftWidth: number; planRightWidth: number;
-  /** Enfeites de Natal (luzinhas e gorro no logo). */
-  xmas: boolean;
+  /** Enfeites de Natal (luzinhas e gorro no logo): automático na época (15/11 a 6/1), sempre ou desligado. */
+  xmas: SeasonPref;
   /** Como as luzinhas piscam: programa clássico de pisca-pisca, cintilar suave ou sempre acesas. */
   xmasAnim: 'classica' | 'suave' | 'fixa';
 }
 export interface Toast { id: number; kind: 'info' | 'error' | 'ok'; text: string; action?: { label: string; run: () => void } }
 
 interface AppState {
-  screen: 'home' | 'editor' | 'plano' | 'bestiario';
+  screen: 'home' | 'editor' | 'plano';
   homeTab: HomeTab;
   books: BookMeta[];
   booksLoaded: boolean;
@@ -68,8 +66,15 @@ export const useApp = create<AppState>(() => ({
   save: { state: 'saved' }, contentRev: {}, epoch: 0, activeEditor: null, toasts: [], viewer: null,
   theme: stored('cogito.theme', 'dark'), leftOpen: true, rightTab: stored('cogito.rightTab', 'inserir'),
   renaming: null, busy: null,
-  prefs: { sound: true, volume: 0.6, diceAnim: true, spell: true, uiScale: 1, leftWidth: 286, rightWidth: 300, diceColor: '#f2f2f2', huntBg: 'mesa', huntBgImage: null, huntCircle: true, huntBgDim: 0.25, planLeftWidth: 84, planRightWidth: 340, xmas: true, xmasAnim: 'classica', ...stored<Partial<Prefs>>('cogito.prefs', {}) },
+  prefs: { sound: true, volume: 0.6, diceAnim: true, spell: true, uiScale: 1, leftWidth: 286, rightWidth: 300, diceColor: '#f2f2f2', planLeftWidth: 84, planRightWidth: 340, xmas: 'auto', xmasAnim: 'classica', ...stored<Partial<Prefs>>('cogito.prefs', {}) },
 }));
+
+// Preferência antiga dos enfeites (liga/desliga) → modo novo.
+useApp.setState((st) => {
+  // Preferências do Bestiário (removido na 1.0) saem das preferências guardadas.
+  const { huntBg: _a, huntBgImage: _b, huntCircle: _c, huntBgDim: _d, ...prefs } = st.prefs as Prefs & Record<string, unknown>;
+  return { prefs: { ...prefs, xmas: normalizeSeasonPref(st.prefs.xmas) } };
+});
 
 const get = useApp.getState;
 const set = useApp.setState;

@@ -329,7 +329,7 @@ export function Canvas({ plan, search, textLinks, tool = 'mover', onToolDone }: 
   const dropImages = async (files: File[], at: { x: number; y: number }) => {
     let i = 0;
     for (const f of files) {
-      if (!/^image\//.test(f.type)) continue;
+      if (!f.type.startsWith('image/')) continue;
       try {
         const bytes = new Uint8Array(await f.arrayBuffer());
         const file = await api.planPutFile(plan.id, f.name || 'imagem.png', bytes);
@@ -344,7 +344,7 @@ export function Canvas({ plan, search, textLinks, tool = 'mover', onToolDone }: 
   useEffect(() => {
     const onPaste = (e: ClipboardEvent) => {
       if ((e.target as HTMLElement)?.closest?.('input, textarea')) return;
-      const files = [...(e.clipboardData?.files ?? [])].filter((f) => /^image\//.test(f.type));
+      const files = [...(e.clipboardData?.files ?? [])].filter((f) => f.type.startsWith('image/'));
       if (!files.length) return;
       e.preventDefault(); void dropImages(files, canvas.centerWorld());
     };

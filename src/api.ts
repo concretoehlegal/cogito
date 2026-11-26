@@ -55,8 +55,6 @@ export interface CogitoApi {
   planPutFile(id: string, name: string, bytes: Uint8Array): Promise<string>;
   planDelete(id: string): Promise<{ where: string }>;
   planOpenFolder(id?: string): Promise<void>;
-  /** Escolhe uma imagem de fundo para o Bestiário; devolve o nome do arquivo copiado (ou null se cancelar). */
-  huntPickBackground(): Promise<string | null>;
 
   chooseExportPath(kind: 'pdf' | 'docx', defaultName: string): Promise<string | null>;
   printPdf(path: string): Promise<{ path: string; size: number }>;

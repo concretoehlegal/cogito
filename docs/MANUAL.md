@@ -2,14 +2,12 @@
 
 > Guia completo de uso. Para baixar o aplicativo, veja a [página principal](../README.md) ou as [Releases](../../../releases/latest).
 
-Aplicativo para **Windows** com três áreas separadas, escolhidas na barra lateral da tela inicial:
+Aplicativo para **Windows** com duas áreas separadas, escolhidas na barra lateral da tela inicial:
 
 - **Escritor (local, offline)**: escrever, diagramar e exportar livros de RPG, com biblioteca de PDFs de consulta.
   Nada disso sai do seu computador.
 - **Planejador de campanhas**: um quadro livre para cada campanha (no espírito do Miro e do Obsidian), com
   personagens, NPCs, inimigos, locais, itens, facções, sessões, notas, imagens e molduras ligados entre si.
-- **Bestiário**: combate em turnos com visual de RPG de computador, usando os personagens e os inimigos dos quadros
-  do Planejador. Você escreve o que o personagem faz e o Bestiário interpreta.
 
 Tudo fica neste computador: não há contas, internet nem servidor.
 
@@ -71,7 +69,7 @@ alternado, todas piscam, ondas, acende devagar, cintilante, combinação e acesa
 
 Paleta cinza (escuro: `#0A0A0A` `#171717` `#262626` `#373737` … `#FAFAFA`; claro: o inverso) com um único destaque
 **verde-limão fluorescente** `#B8FF2C` nos botões principais, itens ativos e links. A tela inicial tem uma **barra
-lateral** com as três áreas (Escritor, Planejador de Campanhas, Bestiário), Configurações e a pasta dos dados; o logo
+lateral** com as áreas (Escritor e Planejador de Campanhas), Configurações e a pasta dos dados; o logo
 **brilha em verde** ao passar o mouse.
 
 **Interface**: Inter (embutida). **Fichas e cartas de personagem**: IBM Plex Mono (embutida).
@@ -169,20 +167,17 @@ pasta, Excluir (vai para a lixeira) e **Abrir quadro** (ou dois cliques na campa
 - **Desfazer e refazer** (Ctrl+Z / Ctrl+Y), **Delete** apaga, **Ctrl+D** duplica, **Ctrl+A** seleciona tudo.
 - **Painel da direita**: edita a ficha selecionada (tipo, nome, subtítulo, cor, ícone, imagem, etiquetas, texto e,
   nos personagens e inimigos, a ficha de jogo — Vida, Resiliência, Defesa, Alma, atributos, **capacidades**, ataques e cartas); sem seleção, mostra a campanha e os atalhos.
-- **Enfrentar no Bestiário**: no painel de um inimigo (ou "Caçar com esta ficha" num personagem) leva direto para o
-  Bestiário com essa ficha escolhida.
 - **Salvamento automático** a cada alteração, com cópia da versão anterior e cópias periódicas na pasta `backups`.
 
 **Cartas no quadro**: tons cinza sóbrios, com um filete de cor discreto por tipo e ícones em todos os números, atributos
 e capacidades. O **chefe** vira uma carta larga, do tamanho de duas cartas lado a lado, com a arte maior à esquerda.
 
-**Cartas de personagem no Bestiário** (bordas grossas, sombra dura e blocos de cor chapada, em pares de cor: um tom escuro no corpo e
+**Cartas de personagem** (bordas grossas, sombra dura e blocos de cor chapada, em pares de cor: um tom escuro no corpo e
 um vivo no destaque): jogadores azul-marinho e amarelo-ouro, NPCs verde-floresta e sálvia, criaturas meia-noite e pink,
 chefes bordô e bege. As cartas de equipamento, habilidade e poder oculto usam a mesma paleta de 10 pares (escolha o par
 no editor da carta). A arte é o retrato (sem retrato, o ícone).
 **Dois cliques na carta** (ou "Abrir ficha" no painel) abrem a **ficha completa**: retrato, Vida, Resiliência, Defesa e
-Alma (nas criaturas, o Dano), a história, os atributos, as ações e a lista de cartas, nos cinzas do sistema, com os botões para levar ao
-Bestiário ou editar.
+Alma (nas criaturas, o Dano), a história, os atributos, as ações e a lista de cartas, nos cinzas do sistema, com o botão para editar.
 - Canto superior esquerdo: **Vida** (gota) e **Resiliência** (escudo); direito: **Defesa** (alvo) e **Alma** (espírito).
 - Nome no centro, **atributos** abaixo (3 letras e o valor, até 6) e o **instrumento** no rodapé: a arma equipada com
   rolagem, com o dano e as ações para recarregar.
@@ -190,8 +185,8 @@ Bestiário ou editar.
 
 ## Sistema de regras (qualquer RPG)
 
-Cada campanha do Planejador tem o seu **sistema de regras**. Ele define o que existe nas fichas e como o Bestiário
-resolve os ataques, para você testar o seu sistema próprio ou jogar com D&D, Call of Cthulhu, Ordem Paranormal,
+Cada campanha do Planejador tem o seu **sistema de regras**. Ele define o que existe nas fichas e como os ataques
+são rolados, para você testar o seu sistema próprio ou jogar com D&D, Call of Cthulhu, Ordem Paranormal,
 Daggerheart, Pathfinder ou qualquer outro.
 
 **Escolher**: ao criar a campanha, em **Sistema de regras**. Depois, em **Editar sistema** (painel da campanha, sem
@@ -208,72 +203,27 @@ nada selecionado, ou no topo da ficha de jogo de um personagem ou criatura).
 | Em branco | Só Vida e Defesa e uma lista de Atributos vazia |
 
 **O editor tem quatro abas**:
-- **Campos**: cada número, barra ou texto da ficha, com ícone, nome, sigla, tipo, **função no Bestiário**, quem tem
+- **Campos**: cada número, barra ou texto da ficha, com ícone, nome, sigla, tipo, **função**, quem tem
   (personagem, NPC, criatura), se aparece na carta e o valor inicial (e um valor próprio para criaturas). As setas
   mudam a ordem; o X remove. Os botões embaixo criam um número, uma barra ou um texto.
 - **Listas**: grupos de nome e valor (Atributos, Perícias…), com ícone, quem tem, se aparecem na carta e os itens de
   partida das fichas novas (cada item com ícone).
 - **Nomes**: como se chamam personagem, NPC, criatura e chefe; ataques, habilidades, acerto, dano e as habilidades de
   origem; e os três tipos de carta (ex.: Item, Poder e Ritual, ou Equipamento, Característica e Magia).
-- **Combate**: como o ataque acerta (rolagem contra a defesa, porcentagem com 1d100 ou automático), o crítico, se a
-  armadura desconta do dano e a rolagem de acerto das ações novas. Embaixo, o resumo do que o Bestiário está usando.
+- **Rolagens**: como o ataque acerta (rolagem contra a defesa, porcentagem com 1d100 ou automático) e a rolagem de
+  acerto das ações novas.
 
-**Funções dos campos**: *Vida* (quando chega a zero, a ficha cai), *Defesa* (o número que o acerto precisa alcançar),
-*Recurso* (o que as cartas gastam: uma carta com custo “2 PE” gasta 2 do recurso de sigla PE), *Armadura* (desconta
-do dano), *Ações por turno* e *Movimento*. Campos sem função aparecem na ficha e na carta sem efeito no combate.
+**Funções dos campos**: *Vida* (a barra em destaque na carta), *Defesa* (o número que o acerto precisa alcançar),
+*Recurso* (o que as cartas gastam: uma carta com custo “2 PE” gasta 2 do recurso de sigla PE), *Armadura*, *Ações por
+turno* e *Movimento*. Campos sem função aparecem na ficha e na carta.
 
 **Na ficha**: o painel mostra os textos (identidade), os números e as listas do sistema. Cada item de lista tem
 ícone, nome e valor próprios, e dá para somar ou tirar itens só naquela ficha. Valores aceitam texto (“16 (+3)”,
-“9 m”, “5%”); o Bestiário usa o primeiro número.
+“9 m”, “5%”).
 
 **Trocar de sistema não apaga nada**: os valores ficam guardados pelo nome interno de cada campo; campos novos
 recebem o valor inicial; listas com o mesmo nome levam os valores dos itens iguais, e itens antigos preenchidos
 continuam no fim da lista. **Copiar de outra campanha** traz o sistema inteiro de outra campanha.
-
-## Bestiário
-
-Na tela inicial, área **Bestiário**. Escolha a campanha do Planejador, o **caçador** (um personagem ou NPC) e até **4 criaturas**
-(inimigos, inclusive repetidos) e comece. Tudo acontece só neste computador: as fichas da campanha não mudam.
-
-- **Tela de jogo**: ao fundo, a **mesa de um investigador** vista de cima — tábuas de madeira com moldura, abajur verde,
-  cinzeiro com fumaça, copo, caneca, telefone de disco, arquivo de fichas, fotos presas com clipe, caderno com caneta,
-  pasta de caso e um papel com sigilo — e no meio um **círculo de runas** que brilha (laranja na sua vez, vermelho e mais
-  rápido na vez das criaturas). As criaturas ficam sobre a mesa, como cartas, com a barra de vida; a que está na mira
-  ganha contorno turquesa. Uma faixa repete o último acontecimento. Números de dano e cura saltam de quem foi atingido.
-- **HUD do jogador**:
-  - **No alto, à esquerda**: Sair, a rodada, de quem é a vez, Recuar e **Fundo** (escolhe o fundo da mesa: mesa do
-    investigador, mesa de ritual, preto, cinza escuro, branco ou uma imagem sua, com o círculo de runas opcional e a
-    opção de escurecer a imagem; a escolha fica salva e também aparece na preparação do confronto).
-  - **Painel da esquerda**: **Habilidades de Origem** (cartas de habilidade marcadas como "Habilidade de origem"),
-    **Habilidades** (habilidades e poderes ocultos), **Itens**, **Atributos** e **Capacidades** (os ataques da ficha e as
-    capacidades com valor), cada seção com seu ícone. O que pode ser usado mostra a tecla (1 a 9), fica clicável e mostra
-    a recarga; passe o mouse para ver a carta inteira.
-  - **No alto, no meio**: o **inimigo na mira**, com retrato, **PV** e **PA** (ou Defesa e Resiliência, se ele não tiver Alma).
-  - **No alto, à direita**: o nome do caçador com o subtítulo, a **Defesa** e as **Ações** do turno.
-  - **Embaixo**: os **atalhos numerados** (uma caixa por ação, com recarga, usos e custo); **O que você faz?** com o
-    **Histórico de Ações** logo abaixo (suas falas em verde, as criaturas em rosa, o sistema no meio, separados por
-    rodada); e, à direita, as barras de **PV** e **PA** e o cartão do **Instrumento** — a arma em mãos, com dano,
-    recarga, alcance (um número chamado "Alcance" na carta, ou um bônus como "20 m") e melhorias. Clique na arma para usá-la.
-- **O que você faz?**: escreva a ação com suas palavras, por exemplo
-  “atiro no segundo cultista”, “tomo o remédio”, “me protejo com o colete” ou “sussurro as palavras contra o chefe”.
-  O Bestiário escolhe, entre os ataques, armas, itens e habilidades da ficha, o que combina com o texto e o alvo
-  (pelo nome, “o segundo…”, “o chefe”, “o mais ferido”), mostra o que entendeu antes de agir e sugere outras opções.
-  “Ataco o verme” usa a melhor opção de dano disponível; o que está em recarga ou acabou é explicado; “fujo” recua.
-  Enter age. A frase vai para o registro. É uma leitura por palavras-chave, sem internet, para ser aprimorada depois.
-- **Teclas 1 a 9**: usam, pela ordem, os ataques da ficha e as cartas com efeito no Bestiário (o número aparece no painel).
-- **Cartas no Bestiário**: no editor de cartas, o campo **No Bestiário** escolhe **Dano**, **Cura**, **Defesa** ou Nenhum.
-  A rolagem da carta é o valor (o acerto das cartas de dano usa o primeiro ataque da ficha). A **recarga** vem do texto
-  ("3 turnos"; "1 cena" = uma vez por confronto), o **custo** em barra também ("2 Alma" gasta 2 de Alma), e os consumíveis
-  acabam. Cartas passivas não viram ação. Cartas antigas com rolagem já vêm como Dano.
-- **Turnos**: iniciativa com 1d20; você age, depois cada criatura. 20 natural acerta e dobra o dano; 1 natural erra.
-- **IA das criaturas (Agressiva)**: cada criatura calcula, para cada golpe, a chance de acerto contra a sua Defesa e o dano
-  médio, e escolhe o que tira mais vida **neste turno** (dano que passaria da vida restante não conta), dando um peso
-  extra à chance de derrubar você agora. Com você inteiro, ela vai no maior dano esperado; com você quase caindo, no
-  golpe mais certeiro. Outros comportamentos por criatura ficam para depois (o campo já existe nas fichas).
-- **Histórico de Ações** (embaixo, no centro, logo abaixo de "O que você faz?"): narra cada decisão das criaturas ("vai de Mordida: 65% de acerto, ≈ 7,5 de dano
-  esperado") e cada resultado, com as rolagens.
-- **Fim**: vitória, derrota ou recuo, com rodadas, dano causado e sofrido, cura e críticos; **Enfrentar de novo** repete
-  o mesmo confronto.
 
 ## Desenvolvimento
 
@@ -297,6 +247,4 @@ Tecnologia: Electron + React + TypeScript (Vite). Editor TipTap/ProseMirror, lei
 - `electron/planner.cjs` — campanhas do Planejador no disco (gravação atômica, cópias, imagens).
 - `src/planner/` — lista de campanhas, quadro infinito, painel e modelo (`model.ts`, testado em `tests/planner.test.ts`).
 - `src/game/` — cartas, cartas de personagem, ícones do sistema e tipos.
-- `src/hunt/` — Bestiário: motor em turnos e IA (`engine.ts`), intérprete das ações escritas (`interpret.ts`) a tela de jogo e a mesa de fundo (`Desk.tsx`)
-  (testados em `tests/hunt.test.ts` e `tests/interpret.test.ts`).
 - `src/styles/page.css` — aparência das páginas (a mesma no editor e no PDF).

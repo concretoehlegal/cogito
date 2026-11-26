@@ -20,6 +20,8 @@ const MAX_FILE = 25 * 1024 * 1024;
 const BACKUP_INTERVAL = 5 * 60 * 1000;
 const BACKUP_KEEP = 30;
 
+// Remove caracteres de controle de textos vindos da interface (intencional).
+// eslint-disable-next-line no-control-regex
 const str = (v, max) => String(v ?? '').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').slice(0, max);
 const color = (v, d) => (/^#[0-9a-f]{6}$/i.test(String(v)) ? String(v).toLowerCase() : d);
 const uid = (p) => `${p}-${crypto.randomBytes(6).toString('hex')}`;
@@ -188,7 +190,7 @@ function createPlanner(env) {
 
   /** Arquivo de imagem de uma campanha, para o protocolo interno do app. */
   const localFile = (id, name) => (ID_RE.test(String(id)) && FILE_RE.test(String(name)) ? path.join(filesDir(id), name) : null);
-  const flush = async () => { await Promise.all([...queues.values()]); };
+  const flush = async () => { await Promise.all(queues.values()); };
 
   return { registerIpc, localFile, flush, save, read, list, create };
 }

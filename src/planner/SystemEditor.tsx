@@ -1,7 +1,7 @@
 /*
- * Editor do sistema de regras da campanha: os campos da ficha (nome, sigla, ícone, tipo, função no Bestiário, quem
- * tem, se aparece na carta e o valor inicial), as listas (Atributos, Perícias…), os nomes de cada coisa e como o
- * Bestiário resolve os ataques. Começa de um modelo pronto ou copia o sistema de outra campanha.
+ * Editor do sistema de regras da campanha: os campos da ficha (nome, sigla, ícone, tipo, função, quem tem, se aparece
+ * na carta e o valor inicial), as listas (Atributos, Perícias…), os nomes de cada coisa e as rolagens de acerto.
+ * Começa de um modelo pronto ou copia o sistema de outra campanha.
  */
 import { useEffect, useState } from 'react';
 import { create } from 'zustand';
@@ -13,7 +13,7 @@ import { setCardLabels } from '../game/Cards';
 import { IconButton } from '../game/icons';
 import type { CardType, PlanMeta } from '../game/types';
 import {
-  CRIT_MODES, HIT_MODES, KINDS, PRESETS, ROLES, WHO, applySystem, fixSystem, newId, presetById,
+  HIT_MODES, KINDS, PRESETS, ROLES, WHO, applySystem, fixSystem, newId, presetById,
   type ListDef, type RuleSystem, type StatDef, type Who,
 } from '../game/system';
 import { edit, usePlan } from './state';
@@ -24,7 +24,7 @@ export const openSystemEditor = () => useSystemEditor.setState({ open: true });
 
 const WHO_LABEL = (sys: RuleSystem): Record<Who, string> => ({ personagem: sys.labels.personagem, npc: sys.labels.npc, inimigo: sys.labels.inimigo });
 const clone = <T,>(x: T): T => JSON.parse(JSON.stringify(x)) as T;
-type Tab = 'campos' | 'listas' | 'nomes' | 'combate';
+type Tab = 'campos' | 'listas' | 'nomes' | 'rolagens';
 
 function WhoChips({ sys, value, onChange }: { sys: RuleSystem; value: Who[]; onChange: (v: Who[]) => void }) {
   const names = WHO_LABEL(sys);
@@ -59,7 +59,7 @@ function StatRow({ sys, s, i, n, set, move, remove }: { sys: RuleSystem; s: Stat
         <select value={s.kind} aria-label="Tipo" onChange={(e) => set({ kind: e.target.value as StatDef['kind'], ...(e.target.value === 'texto' ? { role: '', card: false } : {}) })}>
           {KINDS.map((k) => <option key={k.id} value={k.id}>{k.label}</option>)}
         </select>
-        <select value={s.role} aria-label="Função no Bestiário" title={role?.hint} disabled={s.kind === 'texto'} onChange={(e) => set({ role: e.target.value as StatDef['role'] })}>
+        <select value={s.role} aria-label="Função" title={role?.hint} disabled={s.kind === 'texto'} onChange={(e) => set({ role: e.target.value as StatDef['role'] })}>
           {ROLES.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
         </select>
         <Move i={i} n={n} onMove={move} onRemove={remove} what="o campo" />
@@ -112,7 +112,7 @@ export function SystemEditor({ onClose }: { onClose: () => void }) {
   const fromPreset = async (id: string) => {
     if (!id) return;
     const p = PRESETS.find((x) => x.id === id);
-    if (!(await confirmDialog({ title: `Usar o modelo ${p?.name}?`, message: 'Os campos, listas, nomes e regras de combate deste editor serão trocados pelos do modelo. Os valores já preenchidos nas fichas continuam guardados.', confirmText: 'Usar o modelo' }))) return;
+    if (!(await confirmDialog({ title: `Usar o modelo ${p?.name}?`, message: 'Os campos, listas, nomes e rolagens deste editor serão trocados pelos do modelo. Os valores já preenchidos nas fichas continuam guardados.', confirmText: 'Usar o modelo' }))) return;
     setSys(presetById(id));
   };
   const fromCampaign = async (id: string) => {
@@ -149,14 +149,14 @@ export function SystemEditor({ onClose }: { onClose: () => void }) {
         </div>
 
         <div className="seg se-tabs" role="tablist">
-          {([['campos', `Campos (${sys.stats.length})`], ['listas', `Listas (${sys.lists.length})`], ['nomes', 'Nomes'], ['combate', 'Combate']] as [Tab, string][]).map(([k, l]) => (
+          {([['campos', `Campos (${sys.stats.length})`], ['listas', `Listas (${sys.lists.length})`], ['nomes', 'Nomes'], ['rolagens', 'Rolagens']] as [Tab, string][]).map(([k, l]) => (
             <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>
           ))}
         </div>
 
         {tab === 'campos' && (
           <div className="se-pane">
-            <p className="muted small">Números, barras e textos de cada ficha. A <b>função</b> diz ao Bestiário o que o número significa: a vida que acaba, a defesa que o ataque precisa vencer, o recurso que as cartas gastam (“2 {sys.stats.find((x) => x.role === 'recurso')?.short || 'PE'}”), a armadura que desconta do dano e quantas ações o caçador faz por turno.</p>
+            <p className="muted small">Números, barras e textos de cada ficha. A <b>função</b> diz o que o número significa na ficha: a vida (a barra em destaque na carta), a defesa, o recurso que as cartas gastam (“2 {sys.stats.find((x) => x.role === 'recurso')?.short || 'PE'}”), a armadura, as ações e o movimento.</p>
             {sys.stats.map((s, i) => (
               <StatRow key={s.id} sys={sys} s={s} i={i} n={sys.stats.length}
                 set={(p) => up((x) => { Object.assign(x.stats[i], p); if (p.defEnemy === undefined && 'defEnemy' in p) delete x.stats[i].defEnemy; })}
@@ -207,7 +207,7 @@ export function SystemEditor({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        {tab === 'combate' && (
+        {tab === 'rolagens' && (
           <div className="se-pane">
             <label className="field"><span>Como o ataque acerta</span>
               <select value={sys.combat.hit} onChange={(e) => up((x) => { x.combat.hit = e.target.value as RuleSystem['combat']['hit']; if (x.combat.hit === 'percentual' && x.combat.crit !== 'nenhum') x.combat.crit = 'extremo'; if (x.combat.hit === 'contra-defesa' && x.combat.crit === 'extremo') x.combat.crit = 'max'; })}>
@@ -215,21 +215,7 @@ export function SystemEditor({ onClose }: { onClose: () => void }) {
               </select>
               <small className="muted">{hit?.hint}</small>
             </label>
-            <label className="field"><span>Crítico</span>
-              <select value={sys.combat.crit} onChange={(e) => up((x) => { x.combat.crit = e.target.value as RuleSystem['combat']['crit']; })}>
-                {CRIT_MODES.filter((c) => (sys.combat.hit === 'percentual' ? c.id === 'extremo' || c.id === 'nenhum' : c.id !== 'extremo')).map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-              </select>
-            </label>
-            <label className="check"><input type="checkbox" checked={sys.combat.armor} onChange={(e) => up((x) => { x.combat.armor = e.target.checked; })} /> A armadura do alvo desconta do dano (campo com a função “Armadura”)</label>
             <label className="field"><span>Rolagem de acerto das ações novas</span><input value={sys.combat.defaultHit} maxLength={20} placeholder={sys.combat.hit === 'percentual' ? 'Ex.: 50' : 'Ex.: 1d20+5'} onChange={(e) => up((x) => { x.combat.defaultHit = e.target.value.replace(/\s+/g, ''); })} /></label>
-            <div className="se-roles">
-              <b>O que o Bestiário usa</b>
-              {(['vida', 'defesa', 'recurso', 'armadura', 'acoes'] as const).map((r) => {
-                const f = sys.stats.filter((s) => s.role === r);
-                const info = ROLES.find((x) => x.id === r)!;
-                return <span key={r}><em>{info.label}</em>{f.length ? f.map((s) => s.name).join(', ') : <i>nenhum campo{r === 'vida' ? ' (usa 10)' : r === 'defesa' ? ' (usa 10)' : ''}</i>}</span>;
-              })}
-            </div>
           </div>
         )}
       </div>

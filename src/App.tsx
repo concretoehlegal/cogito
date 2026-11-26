@@ -5,7 +5,6 @@ import { EditorScreen } from './components/EditorScreen';
 import { Home } from './components/Home';
 import { PlanScreen } from './planner/PlanScreen';
 import { flushPlan } from './planner/state';
-import { HuntScreen } from './hunt/HuntScreen';
 import './game/game.css';
 import { DialogHost, confirmDialog } from './components/ui';
 import { loadUserFonts } from './lib/fonts';
@@ -32,6 +31,13 @@ export function App() {
   const screen = useApp((s) => s.screen);
   const busy = useApp((s) => s.busy);
   const theme = useApp((s) => s.theme);
+
+  const homeTab = useApp((s) => s.homeTab);
+  // Módulo ativo na janela: o RPG (Planejador) tem destaque próprio (tokens em src/design/tokens.css).
+  useEffect(() => {
+    const rpg = screen === 'plano' || (screen === 'home' && homeTab !== 'livros');
+    if (rpg) document.documentElement.dataset.module = 'rpg'; else delete document.documentElement.dataset.module;
+  }, [screen, homeTab]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -71,7 +77,7 @@ export function App() {
 
   return (
     <>
-      {screen === 'home' ? <Home /> : screen === 'plano' ? <PlanScreen /> : screen === 'bestiario' ? <HuntScreen /> : <EditorScreen />}
+      {screen === 'home' ? <Home /> : screen === 'plano' ? <PlanScreen /> : <EditorScreen />}
       <DialogHost />
       <Toasts />
       {busy && <div className="busy" role="status"><Loader2 size={22} className="spin" /> {busy}</div>}

@@ -1,0 +1,26 @@
+/*
+ * COGITO — componentes base do Design System (botões, botões de ícone, links, caixas de marcação, seletores).
+ * Usam só tokens de src/design/tokens.css. Importado antes de src/styles/app.css, que pode especializar por contexto.
+ */
+
+/* ── botões ── */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 32px; padding: 0 13px; border-radius: var(--radius-m); border: 1px solid var(--line-2); background: var(--surface-3); box-shadow: var(--shadow-1); white-space: nowrap; font: 500 13px/1 var(--f-ui); color: var(--text); transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), box-shadow var(--dur) var(--ease); }
+.btn:hover:not(:disabled) { background: var(--raised); }
+.btn.primary { background: var(--accent-fill); border-color: transparent; color: var(--accent-ink); font-weight: 600; }
+.btn.primary:hover:not(:disabled) { background: var(--accent-fill-hover); box-shadow: 0 0 18px var(--accent-glow); }
+.btn.danger { background: var(--danger); border-color: transparent; color: #200808; font-weight: 600; }
+.btn.ghost { background: transparent; border-color: transparent; color: var(--muted); }
+.btn.ghost:hover { color: var(--text); background: var(--hover); }
+.btn.small { height: 27px; padding: 0 10px; font-size: var(--text-s); border-radius: var(--radius-m); }
+.btn.big { height: 40px; padding: 0 18px; font-size: 14px; border-radius: var(--radius-l); }
+.btn.block { width: 100%; }
+.icon-btn { display: inline-grid; place-items: center; width: 28px; height: 28px; border: 0; border-radius: var(--radius-m); background: transparent; color: var(--muted); flex: none; transition: background .12s, color .12s; }
+.icon-btn:hover:not(:disabled), .icon-btn.active { background: var(--hover); color: var(--text); }
+.icon-btn.on { color: var(--text); background: var(--raised); box-shadow: var(--lift); }
+.link-btn { border: 0; background: none; padding: 2px 4px; color: var(--muted); border-radius: 4px; display: inline-flex; align-items: center; gap: 5px; text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; font-size: 12.5px; }
+.link-btn:hover { color: var(--text); text-decoration-color: var(--text); }
+.check { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; cursor: pointer; }
+.check input { accent-color: var(--brand); width: 15px; height: 15px; margin: 0; }
+.mini-select, .tool-select { height: 28px; border-radius: var(--radius-m); border: 1px solid var(--line-1); background: var(--surface-field); padding: 0 6px; font: 500 12.5px var(--f-ui); }
+.tool-sep { width: 1px; height: 16px; background: var(--border-strong); margin: 0 5px; flex: none; }
+

@@ -1,5 +1,5 @@
 /*
- * Cartas de personagem: como personagens, NPCs, chefes e criaturas aparecem no Planejador e no Bestiário.
+ * Cartas de personagem: como personagens, NPCs, chefes e criaturas aparecem no Planejador.
  * Visual limpo e discreto: cada tipo tem só um tom suave (jogadores bronze, NPCs lilás acinzentado, chefes azul ardósia com filete duplo, criaturas ferrugem).
  * Os números dos cantos, os atributos e os nomes vêm do sistema de regras da campanha (ver dataFromActor).
  * Nome no centro, atributos abaixo e o instrumento (dano e ações para recarregar) no rodapé.

@@ -8,9 +8,13 @@ on:
 permissions:
   contents: read
 
+env:
+  # O app usa o Playwright só para controlar o Electron; navegadores não são necessários.
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+
 jobs:
   testes:
-    name: Testes e verificação de tipos
+    name: Tipos, linter, testes de unidade e build
     runs-on: ubuntu-latest
     env:
       ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
@@ -21,5 +25,21 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run lint
       - run: npm test
       - run: npm run build
+
+  interface:
+    name: Testes de interface (Electron)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Tela virtual e ferramentas de PDF usadas pelos testes
+        run: sudo apt-get update && sudo apt-get install -y xvfb poppler-utils unzip
+      - run: npm ci
+      - run: npm run build
+      - run: xvfb-run -a npm run test:e2e
